@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 const nav = [
   { href: "/overview", label: "Overview", match: "/overview" },
   { href: "/search", label: "Discover", match: "/search" },
+  { href: "/agent", label: "Agent", match: "/agent" },
 ];
 
 export function Header() {
