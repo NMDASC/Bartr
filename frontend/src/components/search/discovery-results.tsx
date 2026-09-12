@@ -98,7 +98,7 @@ export function DiscoveryResults({
         return true;
       });
 
-    return filtered.toSorted((a, b) => {
+    return [...filtered].sort((a, b) => {
       if (a.status !== b.status) return a.status === "ready" ? -1 : 1;
       if (sort === "recommended") {
         const confidence = (b.confidence ?? -1) - (a.confidence ?? -1);

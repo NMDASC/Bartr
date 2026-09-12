@@ -276,7 +276,9 @@ export function streamSearch(
           .map((id) => CARDS.find((company) => company._id === id))
           .filter((company): company is CompanyCard => Boolean(company))
       : filtered
-  ).toSorted((a, b) => (b.confidence ?? -1) - (a.confidence ?? -1));
+  )
+    .slice()
+    .sort((a, b) => (b.confidence ?? -1) - (a.confidence ?? -1));
 
   const rankedStubs = matches.map((company) => ({
     ...company,
