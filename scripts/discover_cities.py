@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--city", action="append", help="Repeat to search multiple cities")
     parser.add_argument("--category", default="laundromat")
     parser.add_argument("--limit", type=int, default=12, choices=range(1, 51), metavar="1..50")
+    parser.add_argument("--verify-sources", action="store_true", help="Fetch each result's profile to check source links")
     args = parser.parse_args()
     base = args.api.rstrip("/")
 
@@ -54,10 +55,12 @@ def main():
                 if event["type"] == "done":
                     terminal = event
                     break
-        sourced = 0
-        for company in companies:
-            detail = get("/api/v1/companies/" + company["_id"])
-            sourced += bool(detail.get("sources"))
+        sourced = None
+        if args.verify_sources:
+            sourced = 0
+            for company in companies:
+                detail = get("/api/v1/companies/" + company["_id"])
+                sourced += bool(detail.get("sources"))
         print(json.dumps({"city": city, "companies": len(companies), "with_sources": sourced,
             "status": terminal.get("status") if terminal else "interrupted",
             "warnings": terminal.get("warnings", []) if terminal else []}), flush=True)
