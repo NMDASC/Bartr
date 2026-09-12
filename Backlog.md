@@ -52,3 +52,24 @@ conversation with a business owner.
 - Also lines up with the MLH ElevenLabs prize track, which we currently skip.
 - Unknowns: latency on a laptop over conference wifi, cost per minute, and
   whether a live demo call is too risky on stage versus a recorded clip.
+
+## Automated market maker (platform provided liquidity)
+
+Designed on Fri night, then cut. A platform run account that posts a two sided ladder
+every round using Avellaneda Stoikov (reservation price `r = s - q * gamma * sigma^2 * tau`,
+spread `delta = gamma * sigma^2 * tau + (2/gamma) ln(1 + gamma/k)`), skews against its
+inventory, borrows from the owner retained stake to go short, and is capped at +/- 15%
+of the float. Bounded loss, like Hanson's LMSR.
+
+What it buys: immediacy in dead rounds (a seller at 3:00 trades with the market maker
+instead of waiting for a buyer at 3:05), noise damping in 4 person markets, a live
+looking tape.
+
+Why it was cut: the platform trading against its own users is a conflict of interest a
+judge will ask about, it is the most complex piece of the exchange, and the owner
+buyback floor plus the demo bots already cover the benefit. The owner is the one party
+who is fine being stuck holding shares of their own company.
+
+Bring it back if: real owners will not post a floor, or markets with no owner
+participation need a quote. Then it should be a designated third party (the NYSE
+model) or funded by a listing bond from the owner, not the platform's own book.

@@ -1,41 +1,45 @@
 # JB (HackCMU 2026)
 
-Read `docs/STEERING.md` once per session, and `docs/DECISIONS.md` every time before you change a schema, route, or shared type.
+Read `Plan.md` once per session (sections 7 and 8 first), and `docs/DECISIONS.md` every time before you change a schema, route, shared type, or db collection.
 
 Before starting work: `git pull --rebase`.
 
-## Ownership
+Ownership is at the file level inside a pair and the directory level between pairs (Plan.md section 10). Do not edit the other pair's directory; append a request to `docs/DECISIONS.md` instead.
 
-- `app/services/market/` + `app/routers/market.py` + `compliance.py` + `portfolio_agent.py` = **Nico & Aditya** (market pair)
-- `apps/web/` + `packages/contracts/` + `app/services/discovery/` + `db.py` + `llm.py` + `identity.py` + deploy = **Vir & Zhiyuan** (platform pair)
+- Market pair, Nico and Aditya: `apps/api/app/services/market`, `apps/api/app/routers/market.py`, the websocket hub, `apps/api/app/services/agents/{compliance,portfolio_agent}.py`, `apps/api/tests`
+- Platform pair, Vir and Zhiyuan: `apps/web`, `packages/contracts`, `apps/api/app/services/discovery`, `apps/api/app/routers/{discovery,companies,portfolio,acquire,agent,surveillance}.py`, `db.py`, `identity.py`, `llm.py`, `migrations/`, `seeds/`, deploy, `docs/`
 
-Do not edit the other pair's directory; append a request to `docs/DECISIONS.md` instead. Inside a pair, see `Plan.md` section 10 for the file-level split.
+Any change to `packages/contracts`, `apps/api/app/schemas.py`, or a db collection shape requires:
+1. an entry in `docs/DECISIONS.md` (id, time, author, what changed, who must react),
+2. regenerating `packages/contracts/openapi.yaml` and `types.ts` (`./scripts/gen_contract.sh`),
+3. a commit message starting with `contract:`.
 
-## Contract changes
+Commit small and often on your own branch (`nico/`, `aditya/`, `vir/`, `zhiyuan/` prefixes); merge to `main` only when `pytest` passes. Never force push `main`.
 
-Any change to `packages/contracts/`, `apps/api/app/schemas.py`, or a Mongo collection requires:
+Keys live in `.env` (never committed). `.env.example` lists every variable.
 
-1. an entry in `docs/DECISIONS.md` with id, time, author, what changed, who must react;
-2. regenerating `openapi.yaml` and `types.ts` (`./scripts/gen_contract.sh`);
-3. a commit prefixed `contract:`.
+Grok and K2 are used only through API calls inside the app (extraction, valuation opinions, compliance review, chat agent). Do not use them to write code.
 
-## Conventions
+Writing style for docs and UI copy: no em dashes, no filler.
 
-- Every route in `Plan.md` section 7 already exists as a stub returning `packages/contracts/examples/*.json`. Replace the body, keep the signature. Stubs are marked `TODO(owner)`.
-- Prices are floats in the contract, `Decimal` inside the matching engine. Convert at the boundary.
+## API conventions
+
+Every route in Plan.md section 7 already exists as a stub returning `packages/contracts/examples/*.json`, validated against its `response_model`. Replace the body, keep the signature. Stubs carry a `TODO(owner)` marker.
+
+- Prices are floats in the contract. The engine dataclasses in `services/market/auction.py` use `limit` and `seq`; the router maps between them.
 - All model calls go through `app/llm.py`. Nothing else imports `openai`.
-- Identity: every row referencing a person uses `users._id`, never a subject string. Auth is demo-only right now; do not branch on provider anywhere outside `app/identity.py`.
-- Run the API with **one uvicorn worker**. The WebSocket hub and batch scheduler are in-process singletons.
-- Commit small and often to your own branch (`nico/`, `aditya/`, `vir/`, `zhiyuan/`). Merge to `main` only when tests pass. Never force-push `main`.
-- Keys live in `.env`, never committed. `.env.example` lists every variable and who is fetching it.
+- Indexes and seed documents live in `migrations/`, never in application startup. `migrate.py` is the only thing that creates them.
+- Identity: every row referencing a person stores `users._id`, never a name or a subject string. Auth is demo only right now; do not branch on provider outside `app/identity.py`.
+- Run the API with one uvicorn worker. The websocket hub and the batch scheduler are in process singletons.
 
 ## Commands
 
 ```
-cd apps/api && uv sync                              # install (pins Python 3.12)
+cd apps/api && uv sync                              # install
 cd apps/api && uv run uvicorn app.main:app --reload # dev server on :8000
-cd apps/api && uv run pytest                        # smoke tests
-docker compose up mongo                             # local database
-./scripts/gen_contract.sh                           # regenerate openapi.yaml + types.ts
+cd apps/api && uv run pytest                        # tests
+cd apps/api && uv run python migrate.py up          # indexes, search index, seed docs
+docker compose up -d mongo                          # local database
+./scripts/gen_contract.sh                           # regenerate openapi.yaml and types.ts
 curl localhost:8000/readiness                       # what is actually wired up
 ```
