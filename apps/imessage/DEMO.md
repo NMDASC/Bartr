@@ -41,12 +41,13 @@ curl localhost:8000/api/v1/agent/channel -H 'x-demo-user: you@example.com'
 #   want: "connected": true, "last_seen" within 120s
 ```
 
-`/agent` shows the same thing: the line number, a heartbeat age, and a **Live** chip.
+The **Agent** section at the bottom of `/overview` shows the same thing: the line number, a
+heartbeat age, and a **Live** chip.
 
 ## Pairing, which is what makes it one account
 
-The bridge can only report a sender's number, so the number is the account. On `/agent`, under
-**your number**, enter the phone you will text from and press **Pair**. Signup and login also take
+The bridge can only report a sender's number, so the number is the account. On `/overview`, in the
+Agent section under **your number**, enter the phone you will text from and press **Pair**. Signup and login also take
 the number directly.
 
 Unpaired, a texted order opens a second account with its own starting cash and nothing shows on
@@ -72,11 +73,10 @@ decimals.
 
 ## The beat
 
-1. `/agent` open on screen. Line reads **Live**, your number shows as paired.
+1. `/overview` open on screen, scrolled to Agent. Line reads **Live**, your number shows as paired.
 2. Text `buy 20 of Squirrel Hill Wash and Fold at 56` from your phone.
-3. Within ~4s the transcript gains two turns tagged `· imessage`, with the `place_order` card, and
-   the account table adds the row. No reload.
-4. Open `/overview`. Same cash, same holdings.
+3. Within ~4s the transcript gains two turns tagged `· imessage`, with the `place_order` card.
+4. Within ~6s the account value, cash and the Positions ledger above it move too. No reload.
 
 ## If it goes wrong
 
