@@ -77,7 +77,7 @@ Note on the rule "not permitted to start building or designing until the event":
 - Gemini, ElevenLabs, Solana: skip (Gemini conflicts with the Grok story; Solana tokenized shares is a stretch idea only).
 
 **Business data sources for discovery (validated).**
-- Google Places API (New) Text Search: 5,000 free calls/month on Pro SKU, 10,000 on Essentials. Gives name, address, rating, review count, hours, phone, website. Best structured source for "laundromats in Tulsa, OK".
+- Google Places API (New) Text Search: 5,000 free calls/month on Pro SKU, 10,000 on Essentials. Gives name, address, rating, review count, hours, phone, website. Best structured source for "laundromats in Pittsburgh, PA".
 - Yelp Fusion: free tier is gone, 30 day trial with 5,000 calls. Backup only.
 - BizBuySell (no API; use Querit search to find listings and Querit contents to read them). Public benchmarks for the valuation anchor: overall small business median sale price $349,250, cash flow (SDE) multiple 2.7x, revenue multiple 0.7x (Q2 2026 Insight Report). Laundromats 3x to 5x SDE single store, margins around 38%. Source pages: https://www.bizbuysell.com/learning-center/industry-valuation-multiples/ and https://www.bizbuysell.com/learning-center/valuation-benchmarks/laundromats-coin-laundry/
 
@@ -124,7 +124,7 @@ Note on the rule "not permitted to start building or designing until the event":
 
 ### 3.1 The two phases
 
-**Phase 1, Discover.** "I want a laundromat in Oklahoma." The pipeline finds real businesses (Places + Querit), reads about them (Querit contents + Grok web_search), extracts a structured profile (Grok structured output), estimates value with a distribution (section 8.2), and lists them with a bid, an ask, and a confidence. Each company page shows: what it does, founders/owners, location, estimated revenue and SDE with sources, valuation range, the live order book, price history, and an "Acquire" button.
+**Phase 1, Discover.** "I want a laundromat in Pittsburgh." The pipeline finds real businesses (Places + Querit), reads about them (Querit contents + Grok web_search), extracts a structured profile (Grok structured output), estimates value with a distribution (section 8.2), and lists them with a bid, an ask, and a confidence. Each company page shows: what it does, founders/owners, location, estimated revenue and SDE with sources, valuation range, the live order book, price history, and an "Acquire" button.
 
 **Phase 2, Trade and Acquire.** Every listed company is split into 10,000 shares. Users place limit orders (fractional allowed, 0.01 share min). A batch auction clears every 10 seconds (demo setting; 30s to 60s in "real" mode). The owner's ask ladder and buyback floor, both derived from the valuation posterior, guarantee there is always a bid and an ask; the platform never trades. "Acquire" opens a flow: a Grok drafted letter of intent and a due diligence checklist specific to the state and business type with citations. A portfolio tab suggests other stakes with Kelly sized amounts. A surveillance panel shows what the compliance agents flagged this session.
 
@@ -132,7 +132,7 @@ Note on the rule "not permitted to start building or designing until the event":
 
 | Route | Purpose | Key components |
 |---|---|---|
-| `/` | Landing + search bar ("laundromat in Oklahoma") + trending companies | SearchBar, TrendingGrid |
+| `/` | Landing + search bar ("laundromat in Pittsburgh") + trending companies | SearchBar, TrendingGrid |
 | `/search?q=` | Results list with bid / ask / last / confidence, filters (state, category, price band) | ResultCard, FilterRail, progress stream while the pipeline runs |
 | `/company/[id]` | Profile, valuation with sources, order book, chart, order ticket, acquire button | ProfileHeader, ValuationCard (range bar), OrderBook (live), PriceChart, OrderTicket, SourcesList |
 | `/company/[id]/acquire` | LOI draft, DD checklist | LoiEditor, ChecklistAccordion |
@@ -242,9 +242,9 @@ sequenceDiagram
   participant QR as Querit
   participant GK as Grok
   participant DB as Atlas
-  U->>API: POST /discovery/search {q:"laundromat in Oklahoma"}
+  U->>API: POST /discovery/search {q:"laundromat in Pittsburgh"}
   API->>GK: parse intent -> {category, location, constraints} (structured)
-  API->>PL: Text Search "laundromat in Oklahoma" (top 20)
+  API->>PL: Text Search "laundromat in Pittsburgh" (top 20)
   API->>DB: upsert stubs, return job_id immediately
   API-->>U: 202 {job_id}, client opens SSE /discovery/jobs/{job_id}
   loop per company (bounded concurrency 4)
@@ -445,7 +445,7 @@ System prompt: an analyst filling a `CompanyProfile` from raw page text; must ci
 For a company with almost no web presence, a second call uses `tools=[{"type":"web_search"}]` on grok-4.6 to look for a BizBuySell or LoopNet listing, owner name, and news, with `allowed_domains` on the first pass (bizbuysell.com, loopnet.com, bizquest.com, yelp.com, facebook.com) and open on the second.
 
 ### 9.2 Discovery intent parser (Grok, structured)
-"Kerosene manufacturers in Oklahoma under 2M" -> `{category, naics_guess, state, city?, max_value, min_value, must_have[]}`. Feeds both Places (text query) and Querit (query expansion into 3 queries).
+"Machine shops near Pittsburgh under 2M" -> `{category, naics_guess, state, city?, max_value, min_value, must_have[]}`. Feeds both Places (text query) and Querit (query expansion into 3 queries).
 
 ### 9.3 Portfolio agent (Grok)
 Given the user's profile and the top matches from vector search plus Kelly numbers, write one sentence per company on fit, and a 3 sentence portfolio summary. Pure narrative on top of deterministic numbers, so the numbers stay auditable.
@@ -473,7 +473,7 @@ Tools: `search_companies(q)`, `get_company(id)`, `get_book(id)`, `place_order(id
 Because the agent endpoint is transport agnostic, the bridge is under 100 lines either way.
 
 ### 9.6 Acquisition and legal flow (Grok with web_search, grounded)
-`POST /acquire/{id}/start` produces: (a) an LOI in markdown with the blanks filled from the profile (price from the last batch, structure asset purchase, 45 day diligence period, non binding), and (b) a due diligence checklist specific to `state` and `category`, each item with a citation from `web_search` (for example, Oklahoma sales tax permit transfer, lease assignment consent, equipment liens via UCC search, environmental for dry cleaners, health permits for food). A disclaimer line: play money, not legal advice. The chat endpoint edits the LOI in place.
+`POST /acquire/{id}/start` produces: (a) an LOI in markdown with the blanks filled from the profile (price from the last batch, structure asset purchase, 45 day diligence period, non binding), and (b) a due diligence checklist specific to `state` and `category`, each item with a citation from `web_search` (for example, PA bulk sale clearance, City of Pittsburgh business registration, Allegheny County health permits, lease assignment consent, equipment liens via UCC search, environmental for dry cleaners, health permits for food). A disclaimer line: play money, not legal advice. The chat endpoint edits the LOI in place.
 
 ---
 
