@@ -14,11 +14,11 @@ This is a copy-ready draft based on the repository. Replace every `TODO` before 
 
 **Team Member 2 Name:** Vir Toolsidass
 
-**Team Member 2 AndrewID:** TODO — not available in the repository
+**Team Member 2 AndrewID:** vtoolsid
 
 **Team Member 3 Name:** Aditya Dewan
 
-**Team Member 3 AndrewID:** TODO — not available in the repository
+**Team Member 3 AndrewID:** adidewan2
 
 **Team Member 4 Name:** Zhiyuan Guo
 
@@ -30,7 +30,7 @@ This is a copy-ready draft based on the repository. Replace every `TODO` before 
 
 **Project Summary:**
 
-Bartr discovers independent businesses that are not publicly for sale, researches and prices them from sourced evidence, and helps buyers make offers. Once an owner accepts, Bartr opens a fractional exchange using fair uniform-price batch auctions, valuation-aware owner liquidity, portfolio sizing, and an AI-assisted market-surveillance console.
+Bartr is the first platform that connects small businesses to investors, potential acquirers, and people who just wanna support local mom and pop shops. Our proprietary search algorithms and quantitative strategies allow you to seamlessly discover, trade and acquire small businesses. 
 
 **Will you be available for a live pitch?**
 
@@ -58,7 +58,7 @@ TODO — no public video URL is recorded in the repository.
 
 **Track Justification:**
 
-Bartr optimizes an illiquid market at three layers: a uniform-price batch auction selects the price that maximizes executable volume; a Bayesian ensemble combines independent business-value estimates and their uncertainty; and a half-Kelly portfolio engine sizes positions while respecting each buyer's budget, risk tolerance, and concentration limits.
+Bartr creates a market where none has existed, confronting thin liquidity, uncertain valuations, and fragile price discovery at three layers: a uniform-price batch auction concentrates liquidity; a Bayesian ensemble reconciles sparse evidence; and a half-Kelly portfolio engine sizes positions within each buyer’s budget, risk tolerance, and concentration limits
 
 **Do you want to be in the IFM Sponsor Track as well?**
 
@@ -133,3 +133,4 @@ N/A
 **How did you use MongoDB Atlas?**
 
 MongoDB Atlas is Bartr's durable primary store when `MONGODB_URI` is configured. It persists discovered companies and their evidence, valuation snapshots, markets, orders, auction rounds, trades, user portfolios, acquisition drafts, owner offers, agent conversations, append-only audit events, and security cases. The store uses natural IDs and idempotent upserts so discovery can enrich an existing company without recreating its market. Forward-only migrations create operational, identity, audit, security-case, and acquisition indexes, plus an Atlas Vector Search index for 384-dimensional company embeddings. The team exercised the real exchange against Atlas and verified that seeded markets, trades, positions, and audit records survived application restarts.
+
