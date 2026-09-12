@@ -79,24 +79,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="border-t border-line">
-        <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-14 xl:border-l xl:border-r xl:border-line">
-          <div className="grid gap-10 md:grid-cols-3">
-            <div>
-              <Label className="mb-3 block">01 Discover</Label>
-              <p className="text-[16px]">Real businesses from Places and the open web, read by Grok, with a source on every number.</p>
-            </div>
-            <div>
-              <Label className="mb-3 block">02 Price</Label>
-              <p className="text-[16px]">A uniform-price batch auction every ten seconds. The owner's ask ladder and buyback floor mean there is always a counterparty. The platform never trades.</p>
-            </div>
-            <div>
-              <Label className="mb-3 block">03 Acquire</Label>
-              <p className="text-[16px]">A letter of intent and a state-specific diligence checklist, drafted with citations, when you want the whole thing.</p>
-            </div>
-          </div>
-        </div>
-      </section>
     </>
   );
 }

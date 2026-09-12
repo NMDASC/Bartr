@@ -21,4 +21,4 @@ Keys live in `.env` (never committed). `.env.example` lists every variable.
 
 Grok and K2 are used only through API calls inside the app (extraction, valuation opinions, compliance review, chat agent). Do not use them to write code.
 
-Writing style for docs and UI copy: no em dashes, no filler.
+Writing style for docs and UI copy: no em dashes, no filler. No explainer text in the UI (formulas, "how it works" captions, helper sentences under controls, subtitles describing the backend): controls and data speak, mechanism lives in Plan.md.

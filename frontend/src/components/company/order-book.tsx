@@ -65,7 +65,7 @@ function Side({ levels, side, max }: { levels: Book["bids"]; side: "bid" | "ask"
   );
 }
 
-export function OrderBook({ book, last, flash }: { book: Book | null; last: number | null; flash: boolean }) {
+export function OrderBook({ book, last, tick }: { book: Book | null; last: number | null; tick: number }) {
   if (!book) return <div className="h-64 bg-surface animate-pulse" aria-hidden />;
   const max = Math.max(1, ...book.bids.map((b) => b.qty), ...book.asks.map((a) => a.qty));
   const bestBid = book.bids[0]?.price ?? null;
@@ -78,12 +78,12 @@ export function OrderBook({ book, last, flash }: { book: Book | null; last: numb
         <div className="flex items-center gap-4 font-mono text-[11px] tabular-nums">
           <span className="text-muted-foreground">
             {spread !== null && spread <= 0 ? (
-              <span className="text-accent uppercase tracking-[0.08em] text-[10px]">crossed · clears next batch</span>
+              <span className="text-accent uppercase tracking-[0.08em] text-[10px]">crossed</span>
             ) : (
               <>spread <span className="text-foreground">{spread !== null ? spread.toFixed(2) : "\u2014"}</span></>
             )}
           </span>
-          <span className={cn("px-1.5 -mx-1.5 text-accent", flash && "jb-clear")}>last {px(last)}</span>
+          <span key={tick} className={cn("px-1.5 -mx-1.5 text-accent", tick > 0 && "jb-clear")}>last {px(last)}</span>
         </div>
       </div>
       <div className="grid grid-cols-2 divide-x divide-line">
@@ -92,7 +92,7 @@ export function OrderBook({ book, last, flash }: { book: Book | null; last: numb
       </div>
       <div className="flex items-center justify-between border-t border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
         <span>band {px(book.band.low)} to {px(book.band.high)}</span>
-        <span>{book.halted ? <span className="text-down">halted</span> : "uniform price · platform never trades"}</span>
+        {book.halted ? <span className="text-down">halted</span> : null}
       </div>
     </div>
   );

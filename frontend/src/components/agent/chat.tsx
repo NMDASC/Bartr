@@ -71,7 +71,6 @@ export function Chat() {
           <span className="font-mono text-[10px] text-muted-foreground">{IS_MOCK ? "mock" : "live"}</span>
         </div>
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-          {msgs.length === 0 ? <p className="text-[14px] secondary">Ask for a business, a book, or an order.</p> : null}
           {msgs.map((m, i) => (
             <div key={i} className={cn("max-w-[72ch]", m.role === "user" ? "self-end" : "self-start")}>
               <Label tracking="tight" className="block mb-1">{m.role === "user" ? "you" : "jb"}</Label>
@@ -108,12 +107,6 @@ export function Chat() {
             {s}
           </button>
         ))}
-        <Label className="mt-4">Tools</Label>
-        <ul className="font-mono text-[11px] text-muted-foreground flex flex-col gap-1">
-          {["search_companies", "get_company", "get_book", "place_order", "suggest_portfolio"].map((t) => (
-            <li key={t}>{t}</li>
-          ))}
-        </ul>
       </aside>
     </div>
   );
