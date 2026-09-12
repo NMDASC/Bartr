@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { listCompanies } from "@/lib/api";
 
 /** Three, because a fourth wraps the hero column onto a second line. */
-const examples = ["laundromat in Pittsburgh", "car wash on McKnight Road", "machine shop in McKees Rocks"];
+const examples = ["laundromat in Pittsburgh", "car wash on Minneapolis", "machine shop in McKees Rocks"];
 
 export default async function Home() {
   const trending = (await listCompanies().catch(() => [])).filter((c) => c.status === "ready").slice(0, 6);
@@ -22,7 +22,7 @@ export default async function Home() {
             <div className="max-w-2xl">
               <Label className="mb-4 block">Discovery engine and exchange</Label>
               <h1 className="text-[33px] lg:text-[40px] 3xl:text-[48px] leading-[1.1] tracking-[-0.01em]">
-                Small businesses have no price. We built one.
+              Small businesses shouldn’t die waiting for a buyer. We built a market for them.
               </h1>
               <p className="mt-subhead text-[18px] leading-[1.3] secondary max-w-xl">
                 Search the laundromats, car washes, and family manufacturers that will never be listed. Price them like a stock, buy a
