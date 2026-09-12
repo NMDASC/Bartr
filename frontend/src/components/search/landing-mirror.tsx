@@ -75,8 +75,8 @@ export function LandingMirror() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
       canvas.style.display = "none";
-      setCleared(1);
-      return;
+      const t = setTimeout(() => setCleared(1), 0);
+      return () => clearTimeout(t);
     }
 
     const dpr = Math.min(2, window.devicePixelRatio || 1);

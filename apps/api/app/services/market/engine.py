@@ -186,14 +186,16 @@ class Engine:
                 out.append(auction.Order(f"T_ask{i}", TREASURY, "sell", lvl["qty"], lvl["price"], 0, "treasury"))
         return out
 
-    def _user_orders(self, mid: str) -> list[auction.Order]:
+    def _user_orders(self, mid: str, rows: list[dict] | None = None) -> list[auction.Order]:
+        rows = self.store.open_orders(mid) if rows is None else rows
         return [auction.Order(o["id"], o["user_id"], o["side"], round(o["qty"] - o["filled_qty"], 2), o["limit_price"], o["seq"], o["origin"])
-                for o in self.store.open_orders(mid)]
+                for o in rows]
 
-    def book(self, mid: str, *, market: dict | None = None) -> dict:
+    def book(self, mid: str, *, market: dict | None = None, open_rows: list[dict] | None = None) -> dict:
+        """open_rows: preloaded open orders for this market (bulk paths), else one store query."""
         from app import views
         m = market if market is not None else self.store.get_market(mid)
-        orders = self._treasury_orders(m) + self._user_orders(mid)
+        orders = self._treasury_orders(m) + self._user_orders(mid, open_rows)
         agg: dict[tuple[str, float, str], float] = {}
         for o in orders:
             k = (o.side, o.limit, o.origin)
@@ -341,10 +343,24 @@ class Engine:
         from app import views
         return views.company(c, self.store.get_market(c["id"]))
 
-    def card(self, c: dict, *, market: dict | None = None) -> dict:
+    def card(self, c: dict, *, market: dict | None = None, open_rows: list[dict] | None = None) -> dict:
         from app import views
         m = market if market is not None else self.store.get_market(c["id"])
-        return views.card(c, m, self.book(c["id"], market=m))
+        return views.card(c, m, self.book(c["id"], market=m, open_rows=open_rows))
+
+    def cards(self, cs: list[dict]) -> list[dict]:
+        """Cards for many companies with two store queries total (markets, open orders) instead of 3 per company."""
+        markets = {m["id"]: m for m in self.store.list_markets()}
+        by_mid: dict[str, list[dict]] = {}
+        for o in self.store.open_orders_all():
+            by_mid.setdefault(o["market_id"], []).append(o)
+        out = []
+        for c in cs:
+            m = markets.get(c["id"])
+            if m is None:
+                continue
+            out.append(self.card(c, market=m, open_rows=by_mid.get(c["id"], [])))
+        return out
 
     def portfolio(self, uid: str) -> dict:
         u = self.user(uid)

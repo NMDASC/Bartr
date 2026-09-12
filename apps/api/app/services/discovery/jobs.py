@@ -82,7 +82,8 @@ class DiscoveryJobs:
 
     def rank(self, job: Job):
         ranked = rank_companies(job.request.q, job.intent, self.engine.store.list_companies())[:job.request.limit]
-        results = [{"company": self.engine.card(c), "relevance": rank} for c, rank in ranked]
+        cards = {card["_id"]: card for card in self.engine.cards([c for c, _ in ranked])}
+        results = [{"company": cards[c["id"]], "relevance": rank} for c, rank in ranked if c["id"] in cards]
         if results == job.results and job.revision:
             return
         job.results = results

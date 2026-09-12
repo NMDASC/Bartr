@@ -77,6 +77,12 @@ class MongoStore:
         cur = self.db.orders.find({"market_id": mid, "status": {"$in": ["open", "partial"]}})
         return [_r(d) for d in cur]
 
+    def open_orders_all(self) -> list[dict]:
+        return [_r(d) for d in self.db.orders.find({"status": {"$in": ["open", "partial"]}})]
+
+    def market_orders(self, mid: str) -> list[dict]:
+        return [_r(d) for d in self.db.orders.find({"market_id": mid})]
+
     def user_orders(self, uid: str, mid: str | None = None) -> list[dict]:
         q: dict = {"user_id": uid}
         if mid is not None:
@@ -97,6 +103,10 @@ class MongoStore:
 
     def trades(self, mid: str, limit: int = 50) -> list[dict]:
         cur = self.db.trades.find({"market_id": mid}).sort("t", DESCENDING).limit(limit)
+        return [_r(d) for d in reversed(list(cur))]
+
+    def trades_recent(self, limit: int = 2000) -> list[dict]:
+        cur = self.db.trades.find().sort("t", DESCENDING).limit(limit)
         return [_r(d) for d in reversed(list(cur))]
 
     # users

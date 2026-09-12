@@ -26,17 +26,23 @@ def audit(limit: int = 200, actor: str | None = None):
 @router.get("/treasury")
 def treasury_summary():
     out = []
+    names = {c["id"]: c["name"] for c in store.list_companies()}
     for m in store.list_markets():
-        c = store.get_company(m["id"])
+        if not m.get("listed", True):
+            continue
         t = m["treasury"]
-        out.append({"market_id": m["id"], "name": c["name"], "proceeds": t["proceeds"], "unsold_float": t["unsold_float"],
+        out.append({"market_id": m["id"], "name": names.get(m["id"], m["id"]), "proceeds": t["proceeds"], "unsold_float": t["unsold_float"],
                     "bought_back": t["bought_back"], "floor_price": t["floor_price"], "fees_collected": m["fees_collected"]})
     return out
 
 
-def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
+def _rule_flags(mid: str, lookback: int = 20, *, trades: list[dict] | None = None, users: list[dict] | None = None,
+                market: dict | None = None) -> list[dict]:
+    """Rules over one market's tape. Callers scanning many markets pass preloaded trades, users and the
+    market so the scan is a handful of queries, not hundreds (Mongo round trips are 15 to 50 ms each)."""
     batches = store.batches(mid, lookback)
-    trades = store.trades(mid, 500)
+    trades = store.trades(mid, 500) if trades is None else trades
+    users = store.list_users() if users is None else users
     flags = []
     if not batches:
         return flags
@@ -60,7 +66,7 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
                           "explanation": f"{a} and {b} have traded {n} times and only with each other; volume between them prints price without changing ownership in any real sense.",
                           "reviewer": "rules", "reviews": [{"reviewer": "rules", "severity": "high"}], "disputed": False, "t": last["t"]})
     # pump: clearing price jump > 2 s_m with > 60% of buy volume from one account
-    m = store.get_market(mid)
+    m = market if market is not None else store.get_market(mid)
     s_m = m["belief"]["s_m"]
     for prev, b in zip(batches, batches[1:]):
         if not (prev["clearing_price"] and b["clearing_price"]):
@@ -81,7 +87,7 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
                                   "explanation": f"price moved {jump*100:+.1f}% in one round ({2*s_m*100:.1f}% is the 2 sigma threshold) with {q/vol:.0%} of buy volume from {top}.",
                                   "reviewer": "rules", "reviews": [{"reviewer": "rules", "severity": "medium"}], "disputed": False, "t": b["t"]})
     # concentration: one user holds > 40% of shares outstanding
-    for u in store.list_users():
+    for u in users:
         q = u["positions"].get(mid, {}).get("qty", 0)
         if q > 0.4 * m["shares_outstanding"]:
             flags.append({"id": f"fl_{uuid.uuid5(uuid.NAMESPACE_URL, f'conc:{mid}:{u['id']}').hex[:10]}", "market_id": mid, "batch_id": batches[-1]["id"],
@@ -90,10 +96,9 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
                           "reviewer": "rules", "reviews": [{"reviewer": "rules", "severity": "low"}], "disputed": False, "t": batches[-1]["t"]})
     # spoofing: >= 3 orders in this market cancelled unfilled by one user, and that user filled on the other side
     cancelled: dict[str, list[dict]] = {}
-    for o in (store.user_orders(u["id"], mid) for u in store.list_users()):
-        for x in o:
-            if x["status"] == "cancelled" and x["filled_qty"] == 0:
-                cancelled.setdefault(x["user_id"], []).append(x)
+    for x in store.market_orders(mid):
+        if x["status"] == "cancelled" and x["filled_qty"] == 0:
+            cancelled.setdefault(x["user_id"], []).append(x)
     for uid_, xs in cancelled.items():
         if len(xs) < 3:
             continue
@@ -116,23 +121,31 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
 
 
 def _all_flags(market_id: str | None = None) -> list[dict]:
-    mids = [market_id] if market_id else [m["id"] for m in store.list_markets()]
+    """Only markets with trades can have flags: load the recent tape once and group it."""
+    markets = {m["id"]: m for m in store.list_markets()}
+    by_mid: dict[str, list[dict]] = {}
+    for t in store.trades_recent(3000):
+        by_mid.setdefault(t["market_id"], []).append(t)
+    users = store.list_users()
+    mids = [market_id] if market_id else list(by_mid)
     out = []
     for mid in mids:
-        if store.get_market(mid):
-            out.extend(_rule_flags(mid))
+        if mid in markets:
+            out.extend(_rule_flags(mid, trades=by_mid.get(mid, []), users=users, market=markets[mid]))
     out.sort(key=lambda f: -f["t"])
     return out
 
 
 @router.get("/flags", response_model=list[Flag], response_model_by_alias=True)
-async def flags(market_id: str | None = None):
+async def flags(market_id: str | None = None, max_reviews: int = 6):
     """Rules flags, each reviewed by Grok and K2 when keys are set (cached per flag). Disagreement marks `disputed`."""
     out = _all_flags(market_id)
     from app.llm import is_configured
     if is_configured("xai") or is_configured("ifm"):
-        from app.services.agents.compliance import review_flags
-        out = await review_flags(out)
+        from app.services.agents.compliance import review_flags, _CACHE
+        fresh = [f for f in out if f["id"] not in _CACHE][:max_reviews]
+        reviewed = {f["id"]: f for f in await review_flags([f for f in out if f["id"] in _CACHE] + fresh)}
+        out = [reviewed.get(f["id"], f) for f in out]
     return [views.flag(f) for f in out]
 
 

@@ -25,12 +25,15 @@ class Store(Protocol):
     def put_order(self, o: dict) -> None: ...
     def get_order(self, oid: str) -> dict | None: ...
     def open_orders(self, mid: str) -> list[dict]: ...
+    def open_orders_all(self) -> list[dict]: ...                 # every open/partial order, one query
+    def market_orders(self, mid: str) -> list[dict]: ...         # every order in a market, any status
     def user_orders(self, uid: str, mid: str | None = None) -> list[dict]: ...
     # batches, trades
     def add_batch(self, b: dict) -> None: ...
     def batches(self, mid: str, limit: int = 50) -> list[dict]: ...
     def add_trade(self, t: dict) -> None: ...
     def trades(self, mid: str, limit: int = 50) -> list[dict]: ...
+    def trades_recent(self, limit: int = 2000) -> list[dict]: ...   # across markets, oldest first
     # users: {id, cash, positions: {mid: {qty, avg_cost}}, email?, display_name?}
     def get_user(self, uid: str) -> dict | None: ...
     def put_user(self, u: dict) -> None: ...
@@ -73,6 +76,10 @@ class MemoryStore:
     def get_order(self, oid): return self.orders.get(oid)
     def open_orders(self, mid):
         return [o for o in self.orders.values() if o["market_id"] == mid and o["status"] in ("open", "partial")]
+    def open_orders_all(self):
+        return [o for o in self.orders.values() if o["status"] in ("open", "partial")]
+    def market_orders(self, mid):
+        return [o for o in self.orders.values() if o["market_id"] == mid]
     def user_orders(self, uid, mid=None):
         return [o for o in self.orders.values() if o["user_id"] == uid and (mid is None or o["market_id"] == mid)]
     # batches, trades
@@ -80,6 +87,9 @@ class MemoryStore:
     def batches(self, mid, limit=50): return self._batches.get(mid, [])[-limit:]
     def add_trade(self, t): self._trades.setdefault(t["market_id"], []).append(t)
     def trades(self, mid, limit=50): return self._trades.get(mid, [])[-limit:]
+    def trades_recent(self, limit=2000):
+        allt = sorted((t for ts in self._trades.values() for t in ts), key=lambda t: t["t"])
+        return allt[-limit:]
     # users
     def get_user(self, uid): return self.users.get(uid)
     def put_user(self, u): self.users[u["id"]] = u

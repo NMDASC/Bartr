@@ -17,9 +17,10 @@ def summarize(store, flags: list[dict]) -> dict:
     by_action: dict[str, int] = {}
     for e in recent:
         by_action[e["action"]] = by_action.get(e["action"], 0) + 1
-    markets = store.list_markets()
+    markets = [m for m in store.list_markets() if m.get("listed", True)]
     halted = [m["id"] for m in markets if m["halted"]]
-    band_hits = sum(1 for m in markets for b in store.batches(m["id"], 30) if b.get("band_hit"))
+    active = {t["market_id"] for t in store.trades_recent(2000)}
+    band_hits = sum(1 for m in markets if m["id"] in active for b in store.batches(m["id"], 30) if b.get("band_hit"))
     proceeds = round(sum(m["treasury"]["proceeds"] for m in markets), 2)
     bought_back = round(sum(m["treasury"]["bought_back"] for m in markets), 2)
     return {"window_minutes": 60, "events": len(recent), "by_action": by_action, "markets": len(markets), "halted": halted,
