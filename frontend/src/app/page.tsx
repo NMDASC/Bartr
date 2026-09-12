@@ -6,7 +6,10 @@ import type { Company } from "@contracts/types";
 import exampleCompany from "@contracts/examples/company.json";
 import { LandingValuationJourney } from "@/components/search/landing-valuation-journey";
 import { Label } from "@/components/ui/label";
-import { getCompany } from "@/lib/api";
+import { LandingTrending, BatchClock } from "@/components/search/landing-trending";
+import { LandingClose } from "@/components/search/landing-close";
+import { getCompany, listCompanies } from "@/lib/api";
+import Link from "next/link";
 
 /**
  * Three, because a fourth wraps the hero column onto a second line. Each one
@@ -15,8 +18,16 @@ import { getCompany } from "@/lib/api";
  */
 const examples = ["laundromat in Pittsburgh", "car wash in Waco", "machine shop in McKees Rocks"];
 
+/**
+ * Curated, and deliberately not all one city. Five markets across four cities
+ * and five categories. Every id exists in both the fixtures and the API seeds.
+ */
+const TRENDING = ["co_squirrel_hill_wash", "co_sudsy_tulsa", "co_lonestar_wash", "co_mon_valley_auto", "co_three_rivers_hvac"];
+
 export default async function Home() {
-  const fetched = await getCompany("co_squirrel_hill_wash").catch(() => null);
+  const [fetched, all] = await Promise.all([getCompany("co_squirrel_hill_wash").catch(() => null), listCompanies().catch(() => [])]);
+  const picked = TRENDING.map((id) => all.find((c) => c._id === id)).filter((c) => c && c.status === "ready");
+  const rows = (picked.length >= 5 ? picked : all.filter((c) => c.status === "ready")).slice(0, 5) as typeof all;
   const hero = fetched?.valuation ? fetched : (exampleCompany as Company);
 
   return (
@@ -45,6 +56,30 @@ export default async function Home() {
       </section>
 
       <section className="border-t border-line">
+        <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-14 xl:border-l xl:border-r xl:border-line">
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <div>
+              <Label className="mb-3 block">Trending</Label>
+              {/* Display scale, one step above the other section headings. This is
+                  the page's proof moment, so it is the one heading that carries it. */}
+              <h2 className="text-[40px] md:text-[52px] 3xl:text-[64px] leading-[1.02] tracking-[-0.02em]">Markets clearing right now.</h2>
+            </div>
+            <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
+              <BatchClock />
+              <Link
+                href="/search?q=laundromat%20in%20Pittsburgh"
+                className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground transition-colors duration-150 ease-out hover:text-accent"
+              >
+                All markets
+              </Link>
+            </div>
+          </div>
+
+          <LandingTrending companies={rows} />
+        </div>
+      </section>
+
+      <section className="border-t border-line">
         <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 pt-14 md:pt-20 xl:border-l xl:border-r xl:border-line">
           <div className="max-w-2xl">
             <Label className="mb-2 block">Coverage</Label>
@@ -56,8 +91,21 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="border-t border-line">{hero?.valuation ? <LandingValuationJourney company={hero} /> : null}</section>
+
+      {/* the page used to fall straight from the last figure into the footer, so
+          the one action it wants from a reader was stranded back in the hero.
+          The three verbs are the three sections above it, in order. */}
       <section className="border-t border-line">
-        {hero?.valuation ? <LandingValuationJourney company={hero} /> : null}
+        <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-20 md:py-28 xl:border-l xl:border-r xl:border-line">
+          <div className="max-w-3xl">
+            <Label className="mb-3 block">Start</Label>
+            <h2 className="text-[40px] leading-[1.05] tracking-[-0.02em] md:text-[52px] 3xl:text-[64px]">Find one. Price it. Trade it.</h2>
+            <div className="mt-8">
+              <LandingClose />
+            </div>
+          </div>
+        </div>
       </section>
     </>
   );
