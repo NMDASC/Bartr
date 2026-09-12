@@ -109,6 +109,9 @@ class MongoStore:
     def find_user_by_email(self, email: str) -> dict | None:
         return _r(self.db.users.find_one({"email": email}))
 
+    def list_users(self) -> list[dict]:
+        return [_r(d) for d in self.db.users.find()]
+
     # audit. Append only: no natural id, and it is never updated.
     def audit(self, event: dict) -> None:
         self.db.audit_log.insert_one(dict(event))

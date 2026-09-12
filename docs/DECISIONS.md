@@ -61,3 +61,6 @@ Migration: `cd apps/api && uv sync`. Nothing to do if you are happy in memory. T
 
 ## 012  Sat 01:10  author: Aditya  affects: A
 Checked `a/web` against `main`: merges clean. Aligned the API with A's last two commits: no "play money" wording anywhere the API emits (LOI template now follows the fixture's section structure), and `GET /markets/{id}/batches` plus the WS `batch` frame only carry rounds with a price (trades, or limit up/down reference steps at the stepped price) because `price-chart.tsx` feeds `clearing_price` straight into lightweight-charts. Quiet rounds still push a `book` frame so the countdown stays live; `?all=true` returns every round.
+
+## 013  Sat 01:30  author: Aditya  affects: Vir
+Pulled 011 (Mongo store, identity, llm.py, agent stub, migrations). Verified: 37 tests pass, engine's read-mutate-put pattern is honored by MongoStore, live boot with seeds and bots is clean, `/agent/chat` answers. Added `list_users()` to the Store protocol, MemoryStore, and MongoStore (two lines) because the concentration detector in `/surveillance/flags` was reading `MemoryStore.users` directly and would have been silently empty under Mongo. Note for everyone: `apps/api/.venv` needs `openai` and `pymongo` now (`pip install -e .` or `uv sync`); `/readiness` 500s without `openai`.

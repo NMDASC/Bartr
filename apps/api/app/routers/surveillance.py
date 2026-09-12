@@ -79,7 +79,7 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
                                   "explanation": f"price moved {jump*100:+.1f}% in one round ({2*s_m*100:.1f}% is the 2 sigma threshold) with {q/vol:.0%} of buy volume from {top}.",
                                   "reviewer": "rules", "reviews": [{"reviewer": "rules", "severity": "medium"}], "disputed": False, "t": b["t"]})
     # concentration: one user holds > 40% of shares outstanding
-    for u in store.users.values() if hasattr(store, "users") else []:
+    for u in store.list_users():
         q = u["positions"].get(mid, {}).get("qty", 0)
         if q > 0.4 * m["shares_outstanding"]:
             flags.append({"id": f"fl_{uuid.uuid5(uuid.NAMESPACE_URL, f'conc:{mid}:{u['id']}').hex[:10]}", "market_id": mid, "batch_id": batches[-1]["id"],
