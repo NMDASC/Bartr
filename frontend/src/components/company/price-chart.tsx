@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { createChart, ColorType, LineSeries, LineType, type IChartApi, type ISeriesApi, type UTCTimestamp } from "lightweight-charts";
+import { createChart, createSeriesMarkers, ColorType, LineSeries, LineType, type IChartApi, type ISeriesApi, type ISeriesMarkersPluginApi, type Time, type UTCTimestamp } from "lightweight-charts";
 import type { Batch } from "@contracts/types";
 
 /** Step line: one price per batch, held until the next round clears. */
-export function PriceChart({ batches, refPrice, rangeKey = "all" }: { batches: Batch[]; refPrice: number | null; rangeKey?: string }) {
+export function PriceChart({ batches, refPrice, dir }: { batches: Batch[]; refPrice: number | null; dir?: "up" | "down" | null }) {
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
   const series = useRef<ISeriesApi<"Line"> | null>(null);
   const refLine = useRef<ReturnType<ISeriesApi<"Line">["createPriceLine"]> | null>(null);
-  const previous = useRef<{ rangeKey: string; times: number[] } | null>(null);
+  const markers = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
 
   useEffect(() => {
     if (!el.current) return;
@@ -35,7 +35,7 @@ export function PriceChart({ batches, refPrice, rangeKey = "all" }: { batches: B
     });
     const s = c.addSeries(LineSeries, {
       color: "#755cfe",
-      lineWidth: 2,
+      lineWidth: 1,
       lineType: LineType.WithSteps,
       priceLineColor: "#755cfe",
       priceLineStyle: 3,
@@ -45,50 +45,42 @@ export function PriceChart({ batches, refPrice, rangeKey = "all" }: { batches: B
     });
     chart.current = c;
     series.current = s;
+    try {
+      markers.current = createSeriesMarkers(s, []);
+    } catch {
+      markers.current = null;
+    }
     return () => {
       c.remove();
       chart.current = null;
       series.current = null;
       refLine.current = null;
-      previous.current = null;
+      markers.current = null;
     };
   }, []);
 
   useEffect(() => {
     const s = series.current;
-    const timeScale = chart.current?.timeScale();
-    if (!s || !timeScale) return;
-    const points = new Map<number, number>();
-    for (const batch of batches) {
-      const time = Math.floor(Date.parse(batch.t) / 1000);
-      if (Number.isFinite(time) && batch.clearing_price !== null && Number.isFinite(batch.clearing_price)) points.set(time, batch.clearing_price);
-    }
-    const data = [...points].sort((a, b) => a[0] - b[0]).map(([time, value]) => ({ time: time as UTCTimestamp, value }));
-    const currentTimes = data.map(point => Number(point.time));
-    const old = previous.current;
-    const visible = timeScale.getVisibleLogicalRange();
-    const resetRange = !old || old.rangeKey !== rangeKey || old.times.length === 0;
-    const followingLatest = !!visible && !!old?.times.length && visible.to >= old.times.length - 1;
+    if (!s) return;
+    s.setData(batches.map((b) => ({ time: Math.floor(Date.parse(b.t) / 1000) as UTCTimestamp, value: b.clearing_price })));
+    chart.current?.timeScale().fitContent();
 
-    s.setData(data);
-    if (data.length && (resetRange || !visible)) {
-      timeScale.fitContent();
-    } else if (data.length && visible && old) {
-      if (followingLatest) {
-        // Advance by new bars while retaining the trader's zoom and right margin.
-        const delta = data.length - old.times.length;
-        timeScale.setVisibleLogicalRange({ from: visible.from + delta, to: visible.to + delta });
-      } else {
-        // Rolling windows shift logical indices. Preserve the visible timestamp.
-        const oldIndex = Math.max(0, Math.min(old.times.length - 1, Math.floor(visible.from)));
-        const newIndex = currentTimes.indexOf(old.times[oldIndex]);
-        const overlap = old.times.findIndex(time => currentTimes.includes(time));
-        const delta = newIndex >= 0 ? newIndex - oldIndex : overlap >= 0 ? currentTimes.indexOf(old.times[overlap]) - overlap : 0;
-        timeScale.setVisibleLogicalRange({ from: visible.from + delta, to: visible.to + delta });
-      }
+    // one marker, always on the newest print, so the eye lands on what just happened
+    const latest = batches.at(-1);
+    if (markers.current && latest) {
+      const traded = latest.volume > 0;
+      markers.current.setMarkers([
+        {
+          time: Math.floor(Date.parse(latest.t) / 1000) as UTCTimestamp,
+          position: "inBar",
+          shape: "circle",
+          size: traded ? 2 : 1,
+          color: dir === "up" ? "#2bc392" : dir === "down" ? "#ee5557" : "#755cfe",
+          text: traded ? `${latest.volume}` : "",
+        },
+      ]);
     }
-    previous.current = { rangeKey, times: currentTimes };
-  }, [batches, rangeKey]);
+  }, [batches, dir]);
 
   useEffect(() => {
     const s = series.current;

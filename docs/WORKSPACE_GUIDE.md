@@ -1,41 +1,14 @@
-# Bartr workspace
+# Bartr security and integration notes
 
-The redesign gives each job a distinct home:
+These notes cover the additive API, persistence, and messaging work. The frontend follows
+the current upstream implementation; the discarded local workspace redesign is not part
+of this branch.
 
-| Area | Route | What works |
-| --- | --- | --- |
-| Overview | `/` | Personal account value, available cash, active/filled/all orders, cancellation, allocation, recent activity, messaging state |
-| Discovery | `/search` | Browse seeded businesses, category filters, city shortcuts, live discovery with partial results and retry |
-| Business market | `/company/[id]` | Simple order ticket and chart; Advanced exposes every book level, source filters, depth, trade tape and batches |
-| Portfolio | `/portfolio` | Holdings, actual returns, orders, adjustable suggested sizing and expandable valuation details |
-| Assistant | `/agent` | Shared web/iMessage conversation, search, order/portfolio status, placement and cancellation |
-| Acquisition | `/company/[id]/acquire` | Generate, edit, preview, download and save a personal LOI draft and diligence checklist |
-| Security | `/surveillance` | Persistent investigations, affected users/assets, independent opinions, full transcripts, searchable audit archive, evidence exports and case dispositions |
-
-## Run with the API
-
-Use the repository's existing API and frontend start commands. Set
-`NEXT_PUBLIC_API_URL=http://127.0.0.1:8000` in `frontend/.env.local`.
-Restart the appropriate service when changing environment variables. Follow
-`FRONTEND_LANES.md`: one dev server, and do not build into its `.next` directory.
-An isolated production build can use `NEXT_BUILD_DIR=.next-review npm run build`.
-
-The default browser-only simulator supports exploration and trading. The assistant,
-administrator console and saved acquisition drafts require the API. Simulator orders
-and balances are local to that browser runtime and reset on reload.
-
-Use the session selector in the top bar to select a name, email or phone. Personal data
-is fetched in the browser under that identity; pages no longer share a server account.
-This preserves the hackathon's demo identity model. It is **not verified authentication**.
-Anyone who knows a demo identity can choose it. Connect real identity verification before
-using this account model beyond the demo.
-
-## Administrator setup
+## Security API setup
 
 Generate a random token, for example with `python3 -c 'import secrets; print(secrets.token_urlsafe(32))'`.
-Put it in the root `.env` as `ADMIN_API_TOKEN`, restart the API, then enter that token
-on the security page. The browser holds it only in page memory. Lock clears the console;
-refreshing the page requires it again. Never put the token in a `NEXT_PUBLIC_` variable.
+Put it in the root `.env` as `ADMIN_API_TOKEN` and restart the API. Clients must send it
+in the `X-Admin-Token` header. Never put the token in a `NEXT_PUBLIC_` variable.
 
 Both the new `/api/v1/security/*` endpoints and the legacy `/api/v1/surveillance/*`
 endpoints enforce this token. An absent server token returns 503; an invalid/missing
@@ -43,8 +16,8 @@ caller token returns 403.
 
 The rules engine captures cases automatically every 15 seconds. Configured Grok and K2
 providers independently review new findings. Set `SECURITY_AUTO_REVIEW=0` for manual-only
-model review. The console's provider badges mean configured, not a guarantee that a
-provider call succeeds. Errors and timeouts appear in the transcript archive. Manual review handles up to three
+model review. Provider configuration does not guarantee that a call succeeds; errors and
+timeouts appear in the transcript archive. Manual review handles up to three
 findings per request and reports how many still need complete opinions. Missing provider
 opinions remain eligible for retry; each reviewer receives the rules evidence without
 the other reviewer’s conclusion.
@@ -65,9 +38,9 @@ Use `STATE_FILE` for durable MemoryStore snapshots or `MONGODB_URI` for MongoSto
 migration 007 when using Mongo. New case records, dispositions, agent transcripts,
 conversations and acquisition drafts survive restart when persistence is configured.
 Drafts use separate per-user documents so research cannot overwrite trading balances.
-Checklist research runs in the background; saved checklist edits are preserved. The
-workspace shows research progress and offers new research when local edits are pending.
-Existing records cannot reconstruct model output that occurred before logging was added.
+Checklist research runs in the background; saved checklist edits are preserved, and the
+API exposes research progress without overwriting buyer edits. Existing records cannot
+reconstruct model output that occurred before logging was added.
 
 ## iMessage setup
 

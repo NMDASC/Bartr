@@ -1,1 +1,45 @@
-export function Footer() { return <footer className="app-content"><div className="mx-auto flex max-w-[1440px] flex-wrap justify-between gap-2 border-t border-line px-9 py-5 text-[10px] text-muted-foreground"><span>bartr. <span className="ml-2">Own a piece of what’s next.</span></span><span>Discover. Invest. Acquire.</span></div></footer>; }
+"use client";
+
+import Link from "next/link";
+import { useAuth } from "@/components/auth/auth-provider";
+import { Label } from "@/components/ui/label";
+
+export function Footer() {
+  const { session } = useAuth();
+
+  return (
+    <footer className="border-t border-line bg-background">
+      <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-12 xl:border-l xl:border-r xl:border-line">
+        <div className="grid gap-10 md:grid-cols-[1fr_auto]">
+          <div className="max-w-md">
+            <div className="flex items-center gap-2.5 text-[16px]">
+              <span aria-hidden className="inline-block size-3 bg-primary" />
+              <span>Bartr</span>
+            </div>
+            <p className="mt-3 text-[14px] secondary">
+              A discovery engine and exchange for the businesses that will never be listed.
+            </p>
+          </div>
+          <div>
+            <Label as="h2" className="mb-3">
+              Product
+            </Label>
+            <ul className="space-y-2 text-[14px]">
+              {session ? (
+                <>
+                  <li><Link className="text-muted-foreground hover:text-foreground" href="/overview">Overview</Link></li>
+                  <li><Link className="text-muted-foreground hover:text-foreground" href="/search?q=laundromat%20in%20Pittsburgh">Discover</Link></li>
+                  <li><Link className="text-muted-foreground hover:text-foreground" href="/portfolio">Portfolio</Link></li>
+                  <li><Link className="text-muted-foreground hover:text-foreground" href="/agent">Agent</Link></li>
+                  {session.role === "admin" ? <li><Link className="text-muted-foreground hover:text-foreground" href="/admin">Admin</Link></li> : null}
+                </>
+              ) : (
+                <li><Link className="text-muted-foreground hover:text-foreground" href="/">Home</Link></li>
+              )}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}

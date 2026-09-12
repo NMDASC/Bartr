@@ -15,7 +15,7 @@ const ESTIMATOR_LABEL: Record<string, string> = {
   base_rate: "Category median",
 };
 
-export function Valuation({ company, last, advanced = false }: { company: Company; last: number | null; advanced?: boolean }) {
+export function Valuation({ company, last }: { company: Company; last: number | null }) {
   const v = company.valuation;
   const f = company.financials;
   if (!v) {
@@ -30,13 +30,13 @@ export function Valuation({ company, last, advanced = false }: { company: Compan
   const spans = v.estimates.flatMap((e) => [e.value * Math.exp(-e.sigma), e.value * Math.exp(e.sigma)]).concat([v.v0]);
   const sLo = Math.log(Math.min(...spans)) - 0.05;
   const sHi = Math.log(Math.max(...spans)) + 0.05;
-  const scale = (x: number) => Math.max(0, Math.min(100, ((Math.log(Math.max(x, 1)) - sLo) / Math.max(.01, sHi - sLo)) * 100));
+  const scale = (x: number) => ((Math.log(x) - sLo) / (sHi - sLo)) * 100;
   const shares = company.market?.shares_outstanding ?? 10000;
   const market = last !== null ? last * shares : null;
   // log scale between low and high, padded
   const lo = Math.log(v.low) - 0.08;
   const hi = Math.log(v.high) + 0.08;
-  const pos = (x: number) => `${Math.max(3, Math.min(97, ((Math.log(Math.max(x, 1)) - lo) / Math.max(.01, hi - lo)) * 100))}%`;
+  const pos = (x: number) => `${((Math.log(x) - lo) / (hi - lo)) * 100}%`;
 
   return (
     <div className="bg-card border border-line">
@@ -79,8 +79,10 @@ export function Valuation({ company, last, advanced = false }: { company: Compan
           <dt className="uppercase tracking-[0.08em] text-muted-foreground">Confidence</dt>
           <dd className="text-right">{pct(f?.confidence ?? null)} {f?.method === "proxy" ? <span className="text-tint-400">proxy</span> : null}</dd>
         </dl>
-        <details open={advanced} className="mt-3 border-t border-hairline pt-3">
-          <summary className="cursor-pointer mb-3 text-xs">Valuation methodology</summary>
+        <div className="mt-3 border-t border-hairline pt-3">
+          <div className="flex items-center justify-between mb-2">
+            <Label tracking="tight">Methods</Label>
+          </div>
           <ol className="flex flex-col gap-1.5">
             {v.estimates.map((e) => {
               const lo = e.value * Math.exp(-e.sigma);
@@ -101,7 +103,7 @@ export function Valuation({ company, last, advanced = false }: { company: Compan
               );
             })}
           </ol>
-        </details>
+        </div>
       </div>
     </div>
   );

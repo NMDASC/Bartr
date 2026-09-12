@@ -35,8 +35,6 @@ import acquireFixture from "@contracts/examples/acquire.json";
 
 const CARDS = cardsFixture as unknown as CompanyCard[];
 const COMPANY = companyFixture as unknown as Company;
-const ledger: Order[] = [];
-const localPortfolio = structuredClone(portfolioFixture) as unknown as Portfolio;
 const SHARES = 10000;
 const INTERVAL_S = 10;
 const FLOAT = 3000; // owner offers 30% at listing
@@ -251,7 +249,7 @@ function market(id: string): MarketState {
     subs: new Set(),
     r,
     n: 1000,
-    sumLnP: batches.reduce((a, b) => a + Math.log((b.clearing_price ?? p) * SHARES), 0),
+    sumLnP: batches.reduce((a, b) => a + Math.log(b.clearing_price * SHARES), 0),
     rounds: batches.length,
     unsold: Math.round(FLOAT * 0.62),
     proceeds: 0,
@@ -365,8 +363,7 @@ function runBatch(m: MarketState) {
   // new bot interest each round
   const n = 1 + Math.floor(m.r() * 4);
   for (let i = 0; i < n; i++) m.orders.push(botOrder(m));
-  const humans=m.orders.filter(o=>o.user==="you");
-  m.orders=[...m.orders.filter(o=>o.user!=="you").slice(-14),...humans];
+  if (m.orders.length > 14) m.orders.splice(0, m.orders.length - 14);
 
   const book = buildBook(m);
   const { p, vol, imb } = clear(book.bids, book.asks, m.last);
@@ -375,27 +372,8 @@ function runBatch(m: MarketState) {
   const hi = book.band.high;
   const px = Math.min(hi, Math.max(lo, p));
 
-  const filled = vol > 0 ? m.orders.filter((o) => (o.side === "buy" ? o.limit >= px : o.limit <= px)) : [];
-  for (const side of ["buy", "sell"] as Side[]) {
-    let remaining = vol;
-    const eligible = filled.filter(o=>o.side===side);
-    const total=eligible.reduce((sum,o)=>sum+o.qty,0);
-    for (const o of eligible) {
-      const record=ledger.find(x=>x._id===o.id);
-      const fill=Math.min(remaining, o.qty, total>vol ? Math.floor(o.qty/total*vol*100)/100 : o.qty);
-      remaining=Math.max(0,remaining-fill);
-      if (!record || fill<=0) continue;
-      record.filled_qty=round2(record.filled_qty+fill);
-      record.status=record.filled_qty>=record.qty-1e-8?"filled":"partial";
-      let pos=localPortfolio.positions.find(p=>p.market_id===m.id);
-      if (side==="buy") {
-        if(!pos){pos={market_id:m.id,name:CARDS.find(c=>c._id===m.id)?.name??m.id,qty:0,avg_cost:0,last:px,value:0,pnl:0};localPortfolio.positions.push(pos);}
-        pos.avg_cost=(pos.avg_cost*pos.qty+fill*px)/(pos.qty+fill);pos.qty+=fill;localPortfolio.cash-=fill*px;
-      } else if(pos){localPortfolio.pnl.realized+=fill*(px-pos.avg_cost);pos.qty-=fill;localPortfolio.cash+=fill*px;}
-      o.qty=round2(o.qty-fill);
-    }
-  }
-  m.orders = m.orders.filter((o) => !filled.includes(o) || (o.user==="you" && o.qty>0));
+  const filled = m.orders.filter((o) => (o.side === "buy" ? o.limit >= px : o.limit <= px));
+  m.orders = m.orders.filter((o) => !filled.includes(o));
   // owner side of the fills: ladder levels at or below px sell float, floor buys back if px <= floor
   const quotes = treasuryQuotes(m);
   const floor = quotes[0];
@@ -455,16 +433,11 @@ export async function getBatches(id: string, limit = 60): Promise<Batch[]> {
 
 export async function placeOrder(id: string, o: { side: Side; qty: number; limit_price: number }): Promise<Order> {
   const m = market(id);
-  if (!Number.isFinite(o.qty) || !Number.isFinite(o.limit_price) || o.qty < .01 || o.qty > 500 || o.limit_price <= 0) throw new Error("Enter 0.01 to 500 shares and a positive price.");
-  const reserved = ledger.filter(x=>x.side==="buy"&&(x.status==="open"||x.status==="partial")).reduce((sum,x)=>sum+(x.qty-x.filled_qty)*x.limit_price,0);
-  if (o.side==="buy" && o.qty*o.limit_price > localPortfolio.cash-reserved) throw new Error("Not enough available cash.");
-  const position=localPortfolio.positions.find(p=>p.market_id===id);
-  if (o.side==="sell" && o.qty>(position?.qty??0)) throw new Error("Not enough shares.");
   const order: UserOrder = { id: `o_${Math.random().toString(36).slice(2, 8)}`, user: "you", side: o.side, qty: o.qty, limit: round2(o.limit_price), t: Date.now() };
   m.orders.push(order);
   const book = buildBook(m);
   for (const fn of m.subs) fn({ type: "book", book });
-  const result:Order = {
+  return {
     _id: order.id,
     market_id: id,
     user_id: "you",
@@ -477,9 +450,6 @@ export async function placeOrder(id: string, o: { side: Side; qty: number; limit
     created_at: new Date(order.t).toISOString(),
     cancelled_at: null,
   };
-  ledger.push(result);
-  ensureRunning(m);
-  return result;
 }
 
 export function subscribeMarket(id: string, onFrame: (f: MarketFrame) => void): () => void {
@@ -496,11 +466,7 @@ export function subscribeMarket(id: string, onFrame: (f: MarketFrame) => void): 
 // ---------------------------------------------------------------- the rest, static fixtures
 
 export async function getPortfolio() {
-  for(const p of localPortfolio.positions){const m=MARKETS.get(p.market_id);p.last=m?.last??p.last;p.value=p.qty*(p.last??p.avg_cost);p.pnl=p.value-p.qty*p.avg_cost;}
-  localPortfolio.positions=localPortfolio.positions.filter(p=>p.qty>0);
-  localPortfolio.pnl.unrealized=localPortfolio.positions.reduce((sum,p)=>sum+p.pnl,0);
-  localPortfolio.pnl.total=localPortfolio.pnl.realized+localPortfolio.pnl.unrealized;
-  return structuredClone(localPortfolio);
+  return portfolioFixture as unknown as Portfolio;
 }
 export async function suggest() {
   return suggestFixture as unknown as Suggestion[];
@@ -511,9 +477,6 @@ export async function flags() {
 export async function acquire(companyId: string) {
   return { ...(acquireFixture as unknown as Acquisition), market_id: companyId };
 }
-
-export async function myOrders(id?:string):Promise<Order[]> { return ledger.filter(o=>!id||o.market_id===id).map(o=>({...o})).reverse(); }
-export async function cancelOrder(id:string):Promise<Order> {const o=ledger.find(o=>o._id===id);if(!o)throw new Error("Order not found");if(o.status==="open"||o.status==="partial"){o.status="cancelled";o.cancelled_at=new Date().toISOString();const m=market(o.market_id);m.orders=m.orders.filter(x=>x.id!==id);for(const fn of m.subs)fn({type:"book",book:buildBook(m)});}return {...o};}
 
 const offers = new Map<string, Offer>();
 export async function makeOffer(companyId: string, body: OfferIn): Promise<Offer> {

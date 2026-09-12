@@ -1,4 +1,5 @@
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 /** Minimal markdown: headings, bold, hr, paragraphs. Enough for an LOI, no dependency. */
 function render(md: string) {
@@ -8,7 +9,7 @@ function render(md: string) {
   const flush = () => {
     if (para.length) {
       out.push(
-        <p key={out.length} className="text-[13px] leading-[1.8] text-pretty">
+        <p key={out.length} className="text-[16px] leading-[1.6] text-pretty">
           {para.map((ln, k) => (
             <span key={k}>
               {inline(ln)}
@@ -21,8 +22,8 @@ function render(md: string) {
     }
   };
   lines.forEach((l) => {
-    if (l.startsWith("# ")) { flush(); out.push(<h2 key={out.length} className="text-[25px] leading-[1.15] tracking-[-0.01em] mt-2 mb-6">{l.slice(2)}</h2>); }
-    else if (l.startsWith("## ")) { flush(); out.push(<h3 key={out.length} className="text-[17px] leading-[1.15] tracking-[-0.01em] mt-8 mb-2">{l.slice(3)}</h3>); }
+    if (l.startsWith("# ")) { flush(); out.push(<h2 key={out.length} className="text-[30px] leading-[1.15] tracking-[-0.01em] mt-2 mb-6">{l.slice(2)}</h2>); }
+    else if (l.startsWith("## ")) { flush(); out.push(<h3 key={out.length} className="text-[20px] leading-[1.15] tracking-[-0.01em] mt-8 mb-2">{l.slice(3)}</h3>); }
     else if (l.trim() === "---") { flush(); out.push(<hr key={out.length} className="my-6 border-line" />); }
     else if (l.trim() === "") flush();
     else para.push(l);
@@ -42,10 +43,13 @@ function inline(s: string) {
 
 export function Loi({ md }: { md: string }) {
   return (
-    <article className="bg-card">
-      <div className="flex items-center justify-between border-b border-line px-6 py-4">
+    <article className="bg-card border border-line">
+      <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
         <Label>Letter of intent</Label>
-
+        <div className="flex gap-2">
+          <Button size="sm">Edit with agent</Button>
+          <Button size="sm" variant="primary">Download</Button>
+        </div>
       </div>
       <div className="p-6 md:p-8 max-w-[72ch]">{render(md)}</div>
     </article>

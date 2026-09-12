@@ -38,9 +38,7 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
-    "../packages/contracts/**/*.ts",
-    ".next-review/types/**/*.ts",
-    ".next-review/dev/types/**/*.ts"
+    "../packages/contracts/**/*.ts"
   ],
   "exclude": [
     "node_modules"

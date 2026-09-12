@@ -104,13 +104,18 @@ Product change from Aditya: discovered businesses are on the site without the ow
 Search: `DISCOVERY_LIVE` now defaults on when keys exist (the "one result" report was stored matches only, because live was off). The pipeline emits `status` events (stored, intent, sourcing, appraising, reading, extracting, ranking, financials, finished) and the results page shows the last four as an activity feed.
 Grok cost: `llm.record_usage` tallies tokens per model; `/readiness.usage` shows calls, tokens and estimated USD for this process. Seeds ship with Grok appraisals (`seeds/appraisals.json`, 12) and cited checklists (`seeds/checklists.json`).
 
-## 023  Sat  author: Nico  affects: all
-User-authorized product redesign spans the frontend, personal overview, messaging bridge, and security console. The UI evolves the original Lemma direction into a persistent navigation shell, accessible white panels, editorial hierarchy, and progressive disclosure of the order book. `/` is the personal overview; `/search` is discovery; `/surveillance` is the administrator workspace. Personal data loads in the browser under the active normalized identity, never a shared server identity.
+## 021  Sat 05:30  author: Aditya (with Claude)  affects: A
+Deck rewritten in plain English after a fresh editor pass: every formula now has a question before it and a Squirrel Hill reading after it; no slogans. New title (real Pittsburgh prices counting up), portfolio slide is an animated stake card (gap, Kelly stake, risk slider, gain and loss move together), fairness flow has hand drawn glyphs and one sentence per box, architecture diagram has three lanes with logos and every module, Grok slide leads with the two tier appraisal (company enters, Grok researches and appraises, K2 second number, clamp, blend). Live slide runs two slower rounds with no QR. Claims still to make true or cut before 4 PM: appraisal at listing time for every company (today: cached appraisals at boot plus POST /appraise), and owner self-listing (slide 3 says "an owner can also ask to list", no route yet).
 
-Additive APIs: `/portfolio/overview`, `/agent/messages`, `/agent/channel`, `/agent/heartbeat`, and `/security/*`. Security and legacy surveillance routes require `X-Admin-Token` matching server-only `ADMIN_API_TOKEN`; unset configuration fails closed. Bridge telemetry requires server-only `BRIDGE_API_TOKEN`. No credential is shipped through NEXT_PUBLIC variables. Agent call inputs/outputs and case transitions are logged through Store with secret redaction. Security cases persist with snapshots, evidence, reviewer opinions and human dispositions; MemoryStore snapshots now include audit and cases. New migration 007 contains security-case indexes. Existing discovery edits are preserved. Types remain hand-authored; OpenAPI is exported after verification. Deployment and sending real external messages are outside this local implementation run.
+## 023  Sat 04:00  author: A  affects: frontend, demo
+The public landing page now gates the application behind demo authentication. `Login` and `Start trading` open accessible login and signup dialogs. A signed HttpOnly cookie carries `{name, email, role}` for eight hours; this is demo state, not production identity. Normal demo credentials establish a user session. The server-only `admin@gmail.com` / `admin1234` pair establishes an admin session.
 
+Authenticated users land on `/overview` and see `Overview`, `Discover`, `Portfolio`, and `Agent`. `/admin` is role-gated and owns the surveillance UI; the old `/surveillance` URL redirects there. Protected application URLs redirect signed-out visitors to the landing page and reopen login. No FastAPI route, shared contract, or MongoDB collection changes.
 
-023 follow-up: acquisition drafts are saved as per-user acquisition documents; GET/PUT
+## 024  Sat  author: Nico  affects: API, bridge
+Additive APIs: `/portfolio/overview`, `/agent/messages`, `/agent/channel`, `/agent/heartbeat`, and `/security/*`. Security and legacy surveillance routes require `X-Admin-Token` matching server-only `ADMIN_API_TOKEN`; unset configuration fails closed. Bridge telemetry requires server-only `BRIDGE_API_TOKEN`. Agent call inputs/outputs and case transitions are logged through Store with secret redaction. Security cases persist with snapshots, evidence, reviewer opinions and human dispositions; MemoryStore snapshots now include audit and cases. New migration 007 contains security-case indexes. Existing discovery edits are preserved. Types remain hand-authored; OpenAPI is exported after verification. Deployment and sending real external messages are outside this local implementation run.
+
+Acquisition drafts are saved as per-user acquisition documents; GET/PUT
 `/acquire/{company_id}/draft` and the existing acquisition-id lookup are scoped to the
 current identity. Starting an existing draft preserves edits. The bridge forwards an
 optional chat `request_id`; replayed requests return the stored response, and conflicting
@@ -122,7 +127,7 @@ calls include the named feature and full redacted output; trade, cancellation, d
 and disposition records connect to the affected market and identities. Each detection
 archives its evidence packet in the audit trail before a later detection can supersede it.
 Memory snapshots retain audit history and serialize concurrent saves; use Mongo for a
-long-running exchange. UI drawers use a shared portal and keyboard focus containment.
+long-running exchange.
 
 The recurring security scan runs in a worker thread and reads cancelled orders in bulk,
 so Mongo surveillance does not block the API event loop or query every user per market.
@@ -130,14 +135,13 @@ Case writes and MemoryStore snapshots serialize concurrent updates. An unchanged
 concentration condition does not reopen a reviewed case just because another quiet
 batch elapsed.
 
-023 integration: incorporated the fast Grok tier and background checklist research from
+The integration incorporates the fast Grok tier and background checklist research from
 main. Draft storage is separate from balance documents, with compatibility reads for
 older user-embedded drafts. Duplicate starts serialize per buyer/business; researched
-checklists preserve buyer edits. The UI polls research progress and lets a buyer apply
-new research without overwriting an edited letter. Acquisition adds checklist source
-and research status fields. All active orders remain visible beyond the recent history
-limit; Advanced includes quiet rounds, spread and clearing band. Each chat mutation
-must match a complete, explicit instruction in the latest user message.
+checklists preserve buyer edits. Acquisition adds checklist source and research status
+fields. All active orders remain available beyond the recent-history limit, and market
+responses include quiet rounds, spread and clearing band. Each chat mutation must match
+a complete, explicit instruction in the latest user message.
 
 Agent audit adds optional redacted raw provider responses alongside normalized output.
 Case/user linked audit filtering happens before recent-preview limits, and user trade

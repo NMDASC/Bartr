@@ -3,15 +3,42 @@
 import { useCountdown } from "@/hooks/use-market";
 import { cn } from "@/lib/cn";
 
-export function Countdown({ nextBatchAt, interval = 10, className, hideLabel = false }: { nextBatchAt: string | null | undefined; interval?: number; className?: string; hideLabel?: boolean }) {
+/** The clock the whole page runs on, so it is sized like one. */
+export function Countdown({
+  nextBatchAt,
+  interval = 10,
+  className,
+}: {
+  nextBatchAt: string | null | undefined;
+  interval?: number;
+  className?: string;
+}) {
   const s = useCountdown(nextBatchAt);
-  const frac = Math.min(1, Math.max(0, s / interval));
+  const remaining = Math.min(1, Math.max(0, s / interval));
+  const imminent = s <= 3;
+
   return (
-    <div className={cn("flex items-center gap-3", className)} aria-live="off">
-      {!hideLabel&&<span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Next batch</span>}
-      <span className="font-mono text-[13px] tabular-nums text-foreground w-10">{s.toFixed(1)}s</span>
-      <span className="relative h-px w-16 bg-tint-300" aria-hidden>
-        <span className="absolute inset-y-0 left-0 bg-accent transition-[width] duration-100 ease-linear" style={{ width: `${(1 - frac) * 100}%`, height: 1 }} />
+    <div className={cn("flex items-center gap-4", className)}>
+      <div className="flex flex-col items-end gap-1">
+        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Next batch</span>
+        <span
+          className={cn(
+            "font-mono text-[28px] leading-none tabular-nums transition-colors duration-150 ease-out",
+            imminent ? "text-accent bartr-imminent" : "text-foreground",
+          )}
+        >
+          {s.toFixed(1)}
+          <span className="text-[15px] text-muted-foreground">s</span>
+        </span>
+      </div>
+      <span className="relative block h-10 w-1.5 overflow-hidden bg-tint-300/60" aria-hidden>
+        <span
+          className={cn("absolute inset-x-0 bottom-0 transition-[height] duration-100 ease-linear", imminent ? "bg-accent" : "bg-primary")}
+          style={{ height: `${remaining * 100}%` }}
+        />
+      </span>
+      <span className="sr-only" aria-live="off">
+        {s.toFixed(0)} seconds to the next batch
       </span>
     </div>
   );

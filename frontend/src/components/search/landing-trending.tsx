@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CompanyCard } from "@contracts/types";
 import { Label } from "@/components/ui/label";
 import { px, pct, usd } from "@/lib/format";

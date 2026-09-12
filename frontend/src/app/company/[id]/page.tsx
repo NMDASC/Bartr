@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { getCompany } from "@/lib/api";
 import { MarketPanel } from "@/components/company/market-panel";
 import { Label } from "@/components/ui/label";
-import { BusinessAvatar, categoryName } from "@/components/dashboard/shared";
 import { Chip } from "@/components/ui/chip";
 
 export default async function CompanyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -15,18 +14,18 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
 
   return (
     <>
-      <div className="page-wrap !pb-4">
-        <div className="pb-2">
+      <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
+        <div className="pt-8 pb-6">
           <BackLink fallback="/search?q=laundromat%20in%20Pittsburgh" />
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <Label>
-              {categoryName(company.category)}
+              {company.category}
               {place ? ` · ${place}` : ""}
             </Label>
-            {company.status === "ready" ? <Chip tone="up">Priced</Chip> : <Chip tone={company.status==="failed"?"down":"accent"}>{company.status==="failed"?"Pricing unavailable":"Reading"}</Chip>}
+            {company.status === "ready" ? <Chip tone="up">Priced</Chip> : <Chip tone="accent">Reading</Chip>}
           </div>
-          <div className="mt-4 flex items-center gap-4"><BusinessAvatar category={company.category} large/><h1 className="text-[26px] md:text-[34px] tracking-[-.04em]">{company.name}</h1></div>
-          {company.description ? <p className="mt-3 max-w-2xl text-[13px] secondary">{company.description}</p> : null}
+          <h1 className="mt-2 text-[30px] md:text-[40px] 3xl:text-[48px] leading-[1.1]">{company.name}</h1>
+          {company.description ? <p className="mt-subhead max-w-2xl text-[16px] secondary">{company.description}</p> : null}
           <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-1 font-mono text-[11px] text-muted-foreground">
             {company.rating !== null ? (
               <div className="flex gap-2">
