@@ -43,8 +43,6 @@ const HELP = [
   "",
   "/reset  start over",
   "/help   this",
-  "",
-  "Play money. Not investment advice.",
 ].join("\n");
 
 const providers: any[] = [];

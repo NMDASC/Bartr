@@ -26,9 +26,6 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <p className="mt-10 font-mono text-[10px] uppercase tracking-[0.1em] text-tint-400">
-          Play money. Not investment or legal advice.
-        </p>
       </div>
     </footer>
   );
