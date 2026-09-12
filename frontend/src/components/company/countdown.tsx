@@ -13,7 +13,7 @@ export function Countdown({
   interval?: number;
   className?: string;
 }) {
-  const s = useCountdown(nextBatchAt);
+  const s = useCountdown(nextBatchAt) ?? 0;
   const remaining = Math.min(1, Math.max(0, s / interval));
   const imminent = s <= 3;
 

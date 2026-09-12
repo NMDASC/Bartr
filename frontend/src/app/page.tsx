@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SearchBar } from "@/components/search/search-bar";
 import { CityShortcuts } from "@/components/search/city-shortcuts";
 import { LandingHeroArt } from "@/components/search/landing-hero-art";
@@ -58,12 +59,12 @@ export default async function Home() {
             <Label className="mb-2 block">Exchange</Label>
             <h2 className="text-[28px] leading-[1.15] md:text-[34px]">Bid after the number exists.</h2>
           </div>
-          <a
+          <Link
             href="/company/co_squirrel_hill_wash/bid"
             className="border border-primary bg-primary px-5 py-3 font-mono text-[12px] uppercase tracking-[0.08em] text-primary-foreground"
           >
             Open the book
-          </a>
+          </Link>
         </div>
       </section>
 
