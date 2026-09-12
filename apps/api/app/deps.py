@@ -6,9 +6,12 @@ import os
 from fastapi import Header, HTTPException
 
 from app import identity as ident
+from app.env import load_env
 from app.services.market.engine import Engine
 from app.services.market.hub import Hub
 from app.store import MemoryStore
+
+load_env()  # before any getenv below, so .env actually reaches the app
 
 STATE_FILE = os.getenv("STATE_FILE")  # e.g. data/state.json; unset = pure in-memory
 MONGODB_URI = os.getenv("MONGODB_URI", "").strip()

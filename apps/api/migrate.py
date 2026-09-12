@@ -18,7 +18,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import importlib.util
-import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -109,12 +108,7 @@ async def main() -> int:
 
 
 if __name__ == "__main__":
-    # Load .env without a hard dependency on python-dotenv being installed yet.
-    env = Path(__file__).resolve().parents[2] / ".env"
-    if env.exists():
-        for line in env.read_text().splitlines():
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                key, _, value = line.partition("=")
-                os.environ.setdefault(key.strip(), value.strip())
+    from app.env import load_env
+
+    load_env()  # same loader the API uses, so both see the same database
     sys.exit(asyncio.run(main()))

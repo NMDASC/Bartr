@@ -13,6 +13,9 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="$ROOT/packages/contracts/openapi.yaml"
 
 cd "$ROOT/apps/api"
+# Importing the app builds the store. Force the in-memory one so exporting the
+# contract works offline and never depends on a cluster being reachable.
+export MONGODB_URI="" STATE_FILE="" SEED=0 BOTS=0
 uv run python -c "
 import yaml
 from app.main import app
