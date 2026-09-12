@@ -21,9 +21,8 @@ export function LandingHeroArt() {
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setN(BIDS.length);
-      setCleared(true);
-      return;
+      const t = window.setTimeout(() => { setN(BIDS.length); setCleared(true); }, 0);
+      return () => window.clearTimeout(t);
     }
     let step = 0;
     const id = window.setInterval(() => {

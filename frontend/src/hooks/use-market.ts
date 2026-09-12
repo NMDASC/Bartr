@@ -213,17 +213,20 @@ export function useMarket(id: string, enabled = true, fresh = false): MarketView
 
 /** Seconds until an ISO time, ticking at 10 Hz. Null until a target exists. */
 export function useCountdown(iso: string | null | undefined) {
-  const [s, setS] = useState<number | null>(iso ? Math.max(0, (Date.parse(iso) - Date.now()) / 1000) : null);
+  const [s, setS] = useState<number | null>(null);
   useEffect(() => {
     if (!iso) {
-      setS(null);
-      return;
+      const t0 = window.setTimeout(() => setS(null), 0);
+      return () => window.clearTimeout(t0);
     }
     const target = Date.parse(iso);
     const tick = () => setS(Math.max(0, (target - Date.now()) / 1000));
-    tick();
+    const t0 = window.setTimeout(tick, 0);
     const t = window.setInterval(tick, 100);
-    return () => window.clearInterval(t);
+    return () => {
+      window.clearTimeout(t0);
+      window.clearInterval(t);
+    };
   }, [iso]);
   return s;
 }
