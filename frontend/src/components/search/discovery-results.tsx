@@ -69,7 +69,7 @@ export function DiscoveryResults({
   cached?: boolean;
 }) {
   const [search, dispatch] = useReducer(reduceDiscovery, undefined, initialSearchState);
-  const { phase, intent, cards, order, error, warnings, activity, hydrated, restored } = search;
+  const { phase, intent, cards, order, error, warnings, activity, hydrated, restored, jobId } = search;
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState("");
   const [band, setBand] = useState("");
@@ -85,14 +85,21 @@ export function DiscoveryResults({
 
   useEffect(() => {
     if (!q || !hydrated || restored) return;
-    const stop = streamSearch(q, dispatch, userId);
+    const stop = streamSearch(q, dispatch, userId, {
+      jobId,
+      onJob: (id) => dispatch({ type: "job", jobId: id }),
+    });
     return stop;
+    // jobId is read once when the stream starts; a later job event must not restart it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, attempt, userId, hydrated, restored]);
 
+  // Saved while running too, so Back mid-search reattaches to the same job with the
+  // cards it already had instead of posting a new search.
   useEffect(() => {
-    if (!q || restored || phase === "streaming" || phase === "error") return;
+    if (!q || restored || !hydrated || phase === "error") return;
     writeSavedSearch(q, userId, search);
-  }, [q, userId, phase, restored, search]);
+  }, [q, userId, phase, restored, hydrated, search]);
 
   const rows = useMemo(() => {
     const filtered = order

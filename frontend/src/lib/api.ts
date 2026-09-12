@@ -105,6 +105,7 @@ export function streamSearch(
   q: string,
   onEvent: (e: DiscoveryEvent) => void,
   userId?: string,
+  opts: { jobId?: string | null; onJob?: (jobId: string) => void } = {},
 ): () => void {
   if (isCachedPittsburghLaundrySearch(q, userId)) {
     return mock.streamSearch(q, onEvent, { cached: true });
@@ -130,15 +131,23 @@ export function streamSearch(
   timer = setTimeout(() => fail("Search timed out. Try again."), 60000);
   (async () => {
     try {
-      const { job_id, intent } = await j<SearchJobAccepted>(
-        "/discovery/search",
-        { method: "POST", body: JSON.stringify({ q, limit: 50 }), signal: controller.signal },
-        userId,
-      );
+      let job_id = opts.jobId ?? null;
+      if (!job_id) {
+        // A new search. Reattaching to a job the page already knows skips this and
+        // replays the job's events, which the reducer applies idempotently.
+        const accepted = await j<SearchJobAccepted>(
+          "/discovery/search",
+          { method: "POST", body: JSON.stringify({ q, limit: 50 }), signal: controller.signal },
+          userId,
+        );
+        if (stopped) return;
+        job_id = accepted.job_id;
+        onEvent({ type: "intent", intent: accepted.intent });
+      }
       if (stopped) return;
       clearTimeout(timer);
       timer = setTimeout(() => fail("Search timed out. Try again."), 210000);
-      onEvent({ type: "intent", intent });
+      opts.onJob?.(job_id);
       es = new EventSource(`${BASE}/discovery/jobs/${encodeURIComponent(job_id)}`);
       es.onmessage = (m) => {
         if (stopped) return;

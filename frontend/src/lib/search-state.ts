@@ -16,10 +16,12 @@ export interface SearchState {
   hydrated: boolean;
   /** results came back from the session cache, so this mount does not stream */
   restored: boolean;
+  /** the API job behind this search, so a remount can reattach instead of starting over */
+  jobId: string | null;
 }
 
 export function initialSearchState(): SearchState {
-  return { phase: "streaming", intent: null, cards: new Map(), order: [], error: null, warnings: [], revision: -1, activity: [], liveOff: false, hydrated: false, restored: false };
+  return { phase: "streaming", intent: null, cards: new Map(), order: [], error: null, warnings: [], revision: -1, activity: [], liveOff: false, hydrated: false, restored: false, jobId: null };
 }
 
 export type SavedSearch = Omit<SearchState, "cards" | "hydrated" | "restored"> & { cards: [string, CompanyCard][] };
@@ -34,7 +36,9 @@ export function readSavedSearch(q: string, userId?: string): SearchState | null 
     const raw = window.sessionStorage.getItem(savedKey(q, userId));
     if (!raw) return null;
     const saved = JSON.parse(raw) as SavedSearch;
-    return { ...saved, cards: new Map(saved.cards), hydrated: true, restored: true };
+    // A search still running when the page was left reattaches to its job; a finished one is final.
+    const running = saved.phase === "streaming";
+    return { ...saved, jobId: saved.jobId ?? null, cards: new Map(saved.cards), hydrated: true, restored: !running };
   } catch {
     return null;
   }
@@ -45,6 +49,7 @@ export function writeSavedSearch(q: string, userId: string | undefined, state: S
     const saved: SavedSearch = {
       phase: state.phase, intent: state.intent, order: state.order, error: state.error, warnings: state.warnings,
       revision: state.revision, activity: state.activity, liveOff: state.liveOff, cards: [...state.cards],
+      jobId: state.jobId,
     };
     window.sessionStorage.setItem(savedKey(q, userId), JSON.stringify(saved));
   } catch {
@@ -64,13 +69,14 @@ function finishCards(cards: Map<string, CompanyCard>) {
   return new Map([...cards].map(([id, company]) => [id, company.status === "stub" ? { ...company, status: "failed" as const } : company]));
 }
 
-export type LocalEvent = { type: "reset" } | { type: "restore"; state: SearchState } | { type: "nocache" };
+export type LocalEvent = { type: "reset" } | { type: "restore"; state: SearchState } | { type: "nocache" } | { type: "job"; jobId: string };
 
 export function reduceDiscovery(state: SearchState, event: DiscoveryEvent | LocalEvent): SearchState {
   switch (event.type) {
     case "reset": return { ...initialSearchState(), hydrated: true };
     case "restore": return event.state;
     case "nocache": return { ...state, hydrated: true };
+    case "job": return { ...state, jobId: event.jobId };
     case "intent": return { ...state, intent: event.intent };
     case "status": return { ...state, activity: [...state.activity.slice(-7), { phase: event.phase, message: event.message, t: event.t }] };
     case "ranking":
