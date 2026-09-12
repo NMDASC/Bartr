@@ -5,7 +5,7 @@ Read `Plan.md` once per session (sections 7 and 8 first), and `docs/DECISIONS.md
 Before starting work: `git pull --rebase`.
 
 Ownership (do not edit another owner's directory; append a request to `docs/DECISIONS.md` instead):
-- A: `apps/web` (frontend, demo)
+- A: `frontend` (web app, demo), `apps/imessage` (Photon Spectrum bridge)
 - B: `apps/api/app/services/discovery`, `apps/api/app/routers/{discovery,companies}.py`, `apps/api/seeds`
 - C: `apps/api/app/services/market`, `apps/api/app/routers/market.py`, websocket hub, `apps/api/tests`
 - D: `apps/api/app/llm.py`, `apps/api/app/services/agents`, `apps/api/app/routers/{portfolio,acquire,agent,surveillance}.py`, deploy, `docs/`

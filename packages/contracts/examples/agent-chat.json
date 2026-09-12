@@ -1,0 +1,21 @@
+{
+  "session_id": "+14124754173",
+  "messages": [
+    { "role": "user", "content": "find me a laundromat in oklahoma under 1.2m" },
+    {
+      "role": "assistant",
+      "content": "Three in range.\n\nSuds City Coin Laundry, Tulsa. $1.04M, last $104.18/share. Confidence 71%.\nThe Wash House, Bartlesville. $623K, last $61.00. Confidence 44%.\nSpin Zone, OKC. $1.73M, over your cap.\n\nSuds City is the cleanest read. Want the order book?",
+      "tool_calls": [
+        { "name": "search_companies", "args": { "q": "laundromat in Oklahoma", "max_value": 1200000 }, "result_count": 4 }
+      ]
+    },
+    { "role": "user", "content": "buy 50 shares of suds city at 104" },
+    {
+      "role": "assistant",
+      "content": "Placed. Buy 50 @ $104.00 limit on Suds City.\n\nCurrent bid $102.40, ask $106.10. Next batch clears in 6 seconds. You will fill if the uniform price lands at or below $104.00.",
+      "tool_calls": [
+        { "name": "place_order", "args": { "market_id": "c_tulsa_suds_01", "side": "buy", "qty": 50, "limit_price": 104.0 }, "result_count": 1 }
+      ]
+    }
+  ]
+}
