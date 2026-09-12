@@ -49,14 +49,12 @@ export default async function OverviewPage() {
 
   return (
     <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 pb-20 sm:px-6 xl:border-l xl:border-r xl:border-line">
-      <div className="flex items-baseline justify-between gap-6 pt-10 pb-8">
-        <div>
-          <Label className="mb-2 block">Account overview</Label>
-          <h1 className="text-[33px] leading-[1.1] tracking-[-0.01em] md:text-[40px] 3xl:text-[48px]">
-            {session?.name || "Investor"}
-          </h1>
-        </div>
-        {session?.email ? <span className="font-mono text-[11px] text-tint-500">{session.email}</span> : null}
+      {/* The signed-in email lives in the header and does not need repeating here. */}
+      <div className="pt-10 pb-8">
+        <Label className="mb-2 block">Account overview</Label>
+        <h1 className="text-[33px] leading-[1.1] tracking-[-0.01em] md:text-[40px] 3xl:text-[48px]">
+          {session?.name || "Investor"}
+        </h1>
       </div>
 
       {/* tier one: the only figure that gets display scale */}
