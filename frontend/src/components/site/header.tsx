@@ -21,17 +21,20 @@ export function Header() {
 
   return (
     <header className="bg-background">
-      <div className="mx-auto flex h-14 max-w-7xl 3xl:max-w-8xl items-center justify-between px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
+      {/* three columns, not justify-between: with the wordmark on one side and an
+          email plus a button on the other, space-between puts the nav wherever the
+          side blocks happen to end. Equal 1fr gutters centre it on the page. */}
+      <div className="mx-auto grid h-14 max-w-7xl 3xl:max-w-8xl grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
         <Link
           href={session ? (session.role === "admin" ? "/admin" : "/overview") : "/"}
-          className="flex items-center gap-2.5 text-[16px] text-foreground"
+          className="flex items-center gap-2.5 justify-self-start text-[16px] text-foreground"
         >
           <span aria-hidden className="inline-block size-3 bg-primary" />
           <span>Bartr</span>
         </Link>
         {session ? (
           <>
-            <nav aria-label="Primary" className="hidden md:flex items-center gap-7">
+            <nav aria-label="Primary" className="hidden items-center gap-7 justify-self-center md:flex">
               {appNav.map((n) => (
                 <Link
                   key={n.href}
@@ -45,7 +48,7 @@ export function Header() {
                 </Link>
               ))}
             </nav>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-self-end">
               <span className="hidden max-w-40 truncate font-mono text-[10px] text-muted-foreground sm:block">
                 {session.email}
               </span>
@@ -55,7 +58,7 @@ export function Header() {
             </div>
           </>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="col-start-3 flex items-center gap-2 justify-self-end">
             <Button variant="secondary" size="sm" onClick={() => openAuth("login")}>
               Login
             </Button>
@@ -68,7 +71,7 @@ export function Header() {
       {session ? (
         <nav
           aria-label="Primary mobile"
-          className="mx-auto flex max-w-7xl overflow-x-auto border-t border-line px-4 md:hidden"
+          className="mx-auto flex max-w-7xl 3xl:max-w-8xl overflow-x-auto border-t border-line px-4 sm:px-6 md:hidden xl:border-l xl:border-r xl:border-line"
         >
           {appNav.map((item) => (
             <Link
