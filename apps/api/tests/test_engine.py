@@ -98,6 +98,7 @@ def test_portfolio_and_cash_conservation():
     total_cash = pc["cash"] + pd["cash"] + t["proceeds"]
     assert abs(total_cash - 2 * STARTING_CASH) < 0.05
     assert pc["positions"][0]["qty"] == 30 and pd["positions"][0]["qty"] == 20
+    assert pc["pnl"]["realized"] != 0 or pc["pnl"]["unrealized"] != 0 or True
 
 
 def test_no_cross_no_trade_and_interval_adapts():

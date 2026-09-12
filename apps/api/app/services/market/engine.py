@@ -51,7 +51,7 @@ class Engine:
     def user(self, uid: str) -> dict:
         u = self.store.get_user(uid)
         if u is None:
-            u = {"id": uid, "cash": STARTING_CASH, "positions": {}, "created_at": _now()}
+            u = {"id": uid, "cash": STARTING_CASH, "positions": {}, "realized": 0.0, "created_at": _now()}
             self.store.put_user(u)
         return u
 
@@ -73,7 +73,8 @@ class Engine:
         company = {
             "id": cid, "name": c["name"], "category": obs.category, "state": obs.state,
             "city": c.get("city"), "address": c.get("address"), "description": c.get("description"),
-            "website": c.get("website"), "owners": c.get("owners", []),
+            "website": c.get("website"), "phone": c.get("phone"), "naics_guess": c.get("naics_guess"), "lat": c.get("lat"), "lng": c.get("lng"),
+            "owners": c.get("owners", []), "status": "ready",
             "observables": {k: getattr(obs, k) for k in obs_fields},
             "valuation": self._val_dict(val), "created_at": _now(),
         }
@@ -181,19 +182,17 @@ class Engine:
                 for o in self.store.open_orders(mid)]
 
     def book(self, mid: str) -> dict:
+        from app import views
         m = self.store.get_market(mid)
         orders = self._treasury_orders(m) + self._user_orders(mid)
-        bids: dict[float, float] = {}
-        asks: dict[float, float] = {}
+        agg: dict[tuple[str, float, str], float] = {}
         for o in orders:
-            d = bids if o.side == "buy" else asks
-            d[o.limit] = round(d.get(o.limit, 0.0) + o.qty, 2)
+            k = (o.side, o.limit, o.origin)
+            agg[k] = round(agg.get(k, 0.0) + o.qty, 2)
+        bids = sorted([{"price": p, "qty": q, "origin": og} for (sd, p, og), q in agg.items() if sd == "buy"], key=lambda l: -l["price"])
+        asks = sorted([{"price": p, "qty": q, "origin": og} for (sd, p, og), q in agg.items() if sd == "sell"], key=lambda l: l["price"])
         ind, _, _ = auction.clearing_price(auction.self_trade_filter(orders), m["last_price"], m["band_pct"], anchor=m["ref_price"])
-        return {"market_id": mid,
-                "bids": [{"price": p, "qty": q} for p, q in sorted(bids.items(), reverse=True)],
-                "asks": [{"price": p, "qty": q} for p, q in sorted(asks.items())],
-                "last_price": m["last_price"], "ref_price": m["ref_price"], "indicative_price": ind,
-                "next_batch_at": m["next_batch_at"], "band_pct": m["band_pct"], "n_open_orders": len(orders)}
+        return views.book(m, bids, asks, ind, len(orders))
 
     # ---------- batch ----------
     def run_batch(self, mid: str) -> dict:
@@ -236,8 +235,11 @@ class Engine:
         self.store.add_batch(batch)
         self.store.audit({"t": t0, "actor": "system", "action": "batch", "payload": {"market_id": mid, "price": batch["clearing_price"], "volume": res.volume, "band_hit": res.band_hit}})
         if self.hub:
-            self.hub.publish(mid, {"type": "batch", "batch": {k: v for k, v in batch.items() if k != "book_snapshot"}})
+            from app import views
+            self.hub.publish(mid, {"type": "batch", "batch": views.batch(batch)})
             self.hub.publish(mid, {"type": "book", "book": self.book(mid)})
+            if m["halted"]:
+                self.hub.publish(mid, {"type": "halt", "market_id": mid, "until_batch": 1, "reason": "two consecutive band hits"})
         if hasattr(self.store, "save"):
             self.store.save()
         return batch
@@ -272,6 +274,7 @@ class Engine:
                 pos["qty"] = round(new_qty, 2)
             else:
                 u["cash"] = round(u["cash"] + f.qty * p, 2)
+                u["realized"] = round(u.get("realized", 0.0) + (p - pos["avg_cost"]) * f.qty, 2)
                 pos["qty"] = round(pos["qty"] - f.qty, 2)
                 if pos["qty"] <= 0:
                     u["positions"].pop(mid, None)
@@ -310,42 +313,36 @@ class Engine:
         b["mu"] = num / (prec0 + precm)
         b["sigma"] = max(0.08, math.sqrt(1 / (prec0 + precm) + realized ** 2))
 
-    # ---------- views ----------
+    # ---------- views (contract shapes live in app/views.py) ----------
     def market_out(self, m: dict) -> dict:
-        b = m["belief"]
-        return {k: m[k] for k in ("id", "shares_outstanding", "float_shares", "retained", "last_price", "ref_price",
-                                  "batch_interval_s", "next_batch_at", "band_pct", "halted")} | {
-            "belief": {"mu": b["mu"], "sigma": b["sigma"], "model_value": math.exp(m["prior"]["mu"]),
-                       "market_value": math.exp(b["mu"]), "n_rounds": b["n_rounds"]},
-            "treasury": {k: m["treasury"][k] for k in ("unsold_float", "proceeds", "floor_price", "floor_qty", "bought_back", "ask_ladder")},
-        }
+        from app import views
+        return views.market_summary(m)
 
     def company_out(self, c: dict) -> dict:
-        m = self.store.get_market(c["id"])
-        return {**c, "market": self.market_out(m) if m else None}
+        from app import views
+        return views.company(c, self.store.get_market(c["id"]))
 
     def card(self, c: dict) -> dict:
-        m = self.store.get_market(c["id"])
-        bk = self.book(c["id"])
-        return {"id": c["id"], "name": c["name"], "category": c["category"], "state": c["state"], "city": c["city"],
-                "v0": c["valuation"]["v0"], "sigma": c["valuation"]["sigma"], "last_price": m["last_price"],
-                "best_bid": bk["bids"][0]["price"] if bk["bids"] else None,
-                "best_ask": bk["asks"][0]["price"] if bk["asks"] else None, "indicative_price": bk["indicative_price"],
-                "next_batch_at": m["next_batch_at"]}
+        from app import views
+        return views.card(c, self.store.get_market(c["id"]), self.book(c["id"]))
 
     def portfolio(self, uid: str) -> dict:
         u = self.user(uid)
-        positions, equity = [], u["cash"]
+        positions, equity, unreal = [], u["cash"], 0.0
         for mid, pos in u["positions"].items():
             m = self.store.get_market(mid)
             c = self.store.get_company(mid)
             px = m["last_price"] or m["ref_price"]
             mv = pos["qty"] * px
+            pnl = mv - pos["qty"] * pos["avg_cost"]
             equity += mv
+            unreal += pnl
             positions.append({"market_id": mid, "name": c["name"], "qty": pos["qty"], "avg_cost": round(pos["avg_cost"], 2),
-                              "last_price": m["last_price"], "market_value": round(mv, 2), "pnl": round(mv - pos["qty"] * pos["avg_cost"], 2)})
+                              "last": m["last_price"], "value": round(mv, 2), "pnl": round(pnl, 2)})
+        realized = round(u.get("realized", 0.0), 2)
         return {"user_id": uid, "cash": round(u["cash"], 2), "reserved_cash": round(self.reserved_cash(uid), 2),
-                "positions": positions, "equity": round(equity, 2), "pnl": round(equity - STARTING_CASH, 2)}
+                "equity": round(equity, 2), "pnl": {"realized": realized, "unrealized": round(unreal, 2), "total": round(realized + unreal, 2)},
+                "positions": positions}
 
     def tick(self) -> list[dict]:
         """Run every market whose round has ended. Called by the scheduler."""
