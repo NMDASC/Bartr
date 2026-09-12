@@ -70,3 +70,13 @@ def run_batch_now(mid: str):
     """Force a round to clear now. Demo and test convenience."""
     _market(mid)
     return views.batch(engine.run_batch(mid), True)
+
+
+@router.get("/{mid}/narrative")
+async def narrative(mid: str):
+    """Two lines of Grok tape commentary for this market, refreshed when a new round clears."""
+    from app.services.agents import narrator
+    m = _market(mid)
+    c = store.get_company(mid)
+    text = await narrator.narrate(c, m, store.batches(mid, 12), store.trades(mid, 60))
+    return {"market_id": mid, "narrative": text, "reviewer": "grok" if text else None}

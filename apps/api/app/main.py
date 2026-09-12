@@ -44,6 +44,8 @@ async def scheduler(stop: asyncio.Event):
             engine.tick()
             if bots and i % 3 == 0:
                 bots.step()
+            from app.services.agents import redteam
+            redteam.tick(engine)
         except Exception as e:  # keep the loop alive during the demo
             print("scheduler error:", repr(e))
         i += 1
@@ -93,4 +95,6 @@ def readiness():
         "querit": bool(os.getenv("QUERIT_API_KEY")),
         "google_places": bool(os.getenv("GOOGLE_PLACES_API_KEY")),
         "auth0": False,  # not wired, see docs/DECISIONS.md 011
+        "grok_features": ["appraise", "intent", "compliance_review", "narrative", "profile", "suggest_why", "ask_owner", "redteam", "loi", "checklist", "health_report", "chat_agent"],
+        "grok": __import__("app.services.agents.grok", fromlist=["status"]).status(),
     }

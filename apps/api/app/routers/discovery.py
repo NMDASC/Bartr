@@ -23,8 +23,9 @@ JOBS: dict[str, dict] = {}
 
 
 @router.post("/search", response_model=SearchJobAccepted, status_code=202)
-def search(body: SearchIn):
-    intent = parse_intent(body.q)
+async def search(body: SearchIn):
+    from app.services.agents import intent as intent_agent
+    intent = await intent_agent.parse(body.q) or parse_intent(body.q)
     job_id = f"job_{uuid.uuid4().hex[:8]}"
     JOBS[job_id] = {"q": body.q, "intent": intent}
     return {"job_id": job_id, "intent": intent}

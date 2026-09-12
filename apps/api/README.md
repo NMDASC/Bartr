@@ -47,6 +47,24 @@ cd apps/api && SEED=1 BOTS=1 .venv/bin/uvicorn app.main:app --port 8000
 cd frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 pnpm dev
 ```
 
+## Grok and K2 (all through `app/llm.py`, all with a fallback when no key is set)
+
+| Feature | Route | Grok does | Without a key |
+|---|---|---|---|
+| Appraiser | `POST /companies/{id}/appraise` | web_search research, structured value + sources; K2 second number; feeds the ensemble's `llm` estimator; re-anchors an untraded market | 503 |
+| Intent | `POST /discovery/search` | structured parse of the query | keyword parser |
+| Owner persona | `POST /companies/{id}/ask` | answers as the owner, grounded in the file, `grounded=false` when it strays | template answers |
+| Narrator | `GET /markets/{id}/narrative` | two lines of tape commentary per cleared round | null |
+| Profile | `POST /portfolio/profile/parse` | free text -> RiskProfile (drives filters and Kelly multiplier in `suggest`) | neutral profile |
+| Suggest why | `POST /portfolio/suggest` | one sentence per pick in the user's terms | formula sentence |
+| Compliance | `GET /surveillance/flags` | Grok and K2 grade each rules flag independently; `disputed` on disagreement | rules only |
+| Red team | `POST /surveillance/redteam` | Grok picks and parameterizes an attack (wash, spoof, pump), executed through bot accounts; rules must catch it | random attack |
+| Health memo | `GET /surveillance/report` | regulator style memo over the last hour | numeric summary |
+| Acquire | `POST /acquire/{id}/start` | LOI drafted from the profile; checklist researched with web_search and cited | templates |
+| Chat agent | `POST /agent/chat` | tool loop: search, company, book, place_order, suggest | first three companies |
+
+`/readiness` lists `grok_features` and the last ten model calls. `scripts/grok_smoke.py` runs every feature once against real keys.
+
 ## Layout
 
 ```
@@ -57,6 +75,8 @@ app/views.py                    engine dicts -> contract shapes (_id, ISO timest
 app/store.py                    Store protocol + MemoryStore (swap in the simulated DB / Atlas here)
 app/services/discovery/         valuation.py (ensemble), benchmarks.py
 app/services/market/            auction.py, treasury.py, kelly.py, engine.py, hub.py, bots.py
+app/services/agents/            grok.py (wrapper, cache, fallbacks), appraiser, intent, compliance, narrator,
+                                portfolio_agent, persona, redteam, acquire_agent, health, chat_agent
 app/routers/                    companies, discovery, market, ws, portfolio, acquire, surveillance
 seeds/companies.json            8 demo companies
 tests/                          auction, valuation, engine, API

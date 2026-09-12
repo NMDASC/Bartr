@@ -120,13 +120,19 @@ def checklist_for(c: dict) -> list[dict]:
 
 
 @router.post("/{cid}/start", response_model=Acquisition, status_code=201)
-def start(cid: str, uid: str = Depends(current_user)):
+async def start(cid: str, uid: str = Depends(current_user)):
+    from app.services.agents import acquire_agent
     c = store.get_company(cid)
     if not c:
         raise HTTPException(404, "no such company")
     m = store.get_market(cid)
-    acq = {"acquisition_id": f"acq_{uuid.uuid4().hex[:8]}", "market_id": cid, "loi_md": draft_loi(c, m, uid),
-           "checklist": checklist_for(c), "status": "draft"}
+    px = m["last_price"] or m["ref_price"]
+    seller = ", ".join(c.get("owners") or ["the owner"])
+    where = c.get("address") or ", ".join(x for x in (c.get("city"), c.get("state")) if x)
+    loi = await acquire_agent.loi(c, uid, seller, where, px, px * SHARES, date.today().strftime("%B %d, %Y")) or draft_loi(c, m, uid)
+    items = await acquire_agent.checklist(c) or checklist_for(c)
+    acq = {"acquisition_id": f"acq_{uuid.uuid4().hex[:8]}", "market_id": cid, "loi_md": loi,
+           "checklist": items, "status": "draft"}
     ACQS[acq["acquisition_id"]] = acq
     store.audit({"t": __import__("time").time(), "actor": uid, "action": "acquire_start", "payload": {"company": cid}})
     return acq

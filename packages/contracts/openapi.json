@@ -225,6 +225,132 @@
     }
    }
   },
+  "/api/v1/companies/{cid}/appraise": {
+   "post": {
+    "tags": [
+     "companies"
+    ],
+    "summary": "Appraise",
+    "description": "Grok researches the business on the web and gives a value with sources; K2 gives a second number.\nBoth feed the ensemble's `llm` estimator and the valuation is recomputed. The market prior is\nre-anchored only if nothing has traded yet; after that the belief already reflects the market.",
+    "operationId": "appraise_api_v1_companies__cid__appraise_post",
+    "parameters": [
+     {
+      "name": "cid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Cid"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Company"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/companies/{cid}/ask": {
+   "post": {
+    "tags": [
+     "companies"
+    ],
+    "summary": "Ask Owner",
+    "description": "Talk to the AI version of the owner, grounded in the file (profile, valuation, sources).",
+    "operationId": "ask_owner_api_v1_companies__cid__ask_post",
+    "parameters": [
+     {
+      "name": "cid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Cid"
+      }
+     },
+     {
+      "name": "x-demo-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Demo-User"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AskIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/discovery/search": {
    "post": {
     "tags": [
@@ -802,6 +928,47 @@
     }
    }
   },
+  "/api/v1/markets/{mid}/narrative": {
+   "get": {
+    "tags": [
+     "markets"
+    ],
+    "summary": "Narrative",
+    "description": "Two lines of Grok tape commentary for this market, refreshed when a new round clears.",
+    "operationId": "narrative_api_v1_markets__mid__narrative_get",
+    "parameters": [
+     {
+      "name": "mid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Mid"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/api/v1/portfolio": {
    "get": {
     "tags": [
@@ -851,6 +1018,143 @@
         "schema": {
          "$ref": "#/components/schemas/Portfolio"
         }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/portfolio/profile/parse": {
+   "post": {
+    "tags": [
+     "portfolio"
+    ],
+    "summary": "Parse Profile",
+    "description": "Free text about yourself and your goals -> RiskProfile (Grok structured). Stored for suggest().",
+    "operationId": "parse_profile_api_v1_portfolio_profile_parse_post",
+    "parameters": [
+     {
+      "name": "x-demo-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Demo-User"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProfileIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/portfolio/profile": {
+   "get": {
+    "tags": [
+     "portfolio"
+    ],
+    "summary": "Get Profile",
+    "operationId": "get_profile_api_v1_portfolio_profile_get",
+    "parameters": [
+     {
+      "name": "x-demo-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Demo-User"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
        }
       }
      },
@@ -1152,6 +1456,7 @@
      "surveillance"
     ],
     "summary": "Flags",
+    "description": "Rules flags, each reviewed by Grok and K2 when keys are set (cached per flag). Disagreement marks `disputed`.",
     "operationId": "flags_api_v1_surveillance_flags_get",
     "parameters": [
      {
@@ -1168,6 +1473,26 @@
         }
        ],
        "title": "Market Id"
+      }
+     },
+     {
+      "name": "review",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": true,
+       "title": "Review"
+      }
+     },
+     {
+      "name": "max_reviews",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "default": 4,
+       "title": "Max Reviews"
       }
      }
     ],
@@ -1199,10 +1524,220 @@
     }
    }
   },
+  "/api/v1/surveillance/redteam": {
+   "post": {
+    "tags": [
+     "surveillance"
+    ],
+    "summary": "Red Team",
+    "description": "Grok plays a manipulator against one market; the surveillance layer has to catch it.\nReturns the attack plan and the orders it placed. Flags appear over the next rounds.",
+    "operationId": "red_team_api_v1_surveillance_redteam_post",
+    "parameters": [
+     {
+      "name": "x-demo-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Demo-User"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/RedTeamIn"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "surveillance"
+    ],
+    "summary": "Red Team Log",
+    "operationId": "red_team_log_api_v1_surveillance_redteam_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/surveillance/report": {
+   "get": {
+    "tags": [
+     "surveillance"
+    ],
+    "summary": "Report",
+    "description": "Regulator style market health memo (Grok) over the last hour of the audit log.",
+    "operationId": "report_api_v1_surveillance_report_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/agent/chat": {
+   "post": {
+    "tags": [
+     "agent"
+    ],
+    "summary": "Chat",
+    "operationId": "chat_api_v1_agent_chat_post",
+    "parameters": [
+     {
+      "name": "x-demo-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Demo-User"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AgentChatRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AgentMessage"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
   "/health": {
    "get": {
     "summary": "Health",
     "operationId": "health_health_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/readiness": {
+   "get": {
+    "summary": "Readiness",
+    "description": "Which store is live and which keys are set. Useful while keys are still coming in.",
+    "operationId": "readiness_readiness_get",
     "responses": {
      "200": {
       "description": "Successful Response",
@@ -1258,6 +1793,82 @@
      "checklist"
     ],
     "title": "Acquisition"
+   },
+   "AgentChatRequest": {
+    "properties": {
+     "session_id": {
+      "type": "string",
+      "title": "Session Id"
+     },
+     "message": {
+      "type": "string",
+      "title": "Message"
+     }
+    },
+    "type": "object",
+    "required": [
+     "session_id",
+     "message"
+    ],
+    "title": "AgentChatRequest"
+   },
+   "AgentMessage": {
+    "properties": {
+     "role": {
+      "type": "string",
+      "enum": [
+       "user",
+       "assistant"
+      ],
+      "title": "Role"
+     },
+     "content": {
+      "type": "string",
+      "title": "Content"
+     },
+     "tool_calls": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/ToolCallCard"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tool Calls"
+     }
+    },
+    "type": "object",
+    "required": [
+     "role",
+     "content"
+    ],
+    "title": "AgentMessage"
+   },
+   "AskIn": {
+    "properties": {
+     "question": {
+      "type": "string",
+      "title": "Question"
+     },
+     "history": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "History",
+      "default": []
+     }
+    },
+    "type": "object",
+    "required": [
+     "question"
+    ],
+    "title": "AskIn"
    },
    "Band": {
     "properties": {
@@ -2746,6 +3357,36 @@
     ],
     "title": "Position"
    },
+   "ProfileIn": {
+    "properties": {
+     "text": {
+      "type": "string",
+      "title": "Text"
+     }
+    },
+    "type": "object",
+    "required": [
+     "text"
+    ],
+    "title": "ProfileIn"
+   },
+   "RedTeamIn": {
+    "properties": {
+     "market_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Market Id"
+     }
+    },
+    "type": "object",
+    "title": "RedTeamIn"
+   },
    "Review": {
     "properties": {
      "reviewer": {
@@ -3055,6 +3696,30 @@
      "category"
     ],
     "title": "SuggestionCompany"
+   },
+   "ToolCallCard": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "args": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Args",
+      "default": {}
+     },
+     "result_count": {
+      "type": "integer",
+      "title": "Result Count",
+      "default": 0
+     }
+    },
+    "type": "object",
+    "required": [
+     "name"
+    ],
+    "title": "ToolCallCard"
    },
    "Trade": {
     "properties": {

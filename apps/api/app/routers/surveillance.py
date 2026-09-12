@@ -4,11 +4,13 @@ Role D adds the Grok and K2 reviewers on top: each flag's `reviews[]` gets their
 import time
 import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 from app import views
-from app.deps import store
+from app.deps import current_user, engine, store
 from app.schemas import Flag
+from app.services.agents import health, redteam
 
 router = APIRouter(prefix="/surveillance", tags=["surveillance"])
 
@@ -86,6 +88,23 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
                           "rule": "concentration", "severity": "low", "subjects": [u["id"]],
                           "explanation": f"{u['id']} holds {q:.0f} shares, {q / m['shares_outstanding']:.0%} of the company.",
                           "reviewer": "rules", "reviews": [{"reviewer": "rules", "severity": "low"}], "disputed": False, "t": batches[-1]["t"]})
+    # spoofing: >= 3 orders in this market cancelled unfilled by one user, and that user filled on the other side
+    cancelled: dict[str, list[dict]] = {}
+    for o in (store.user_orders(u["id"], mid) for u in store.list_users()):
+        for x in o:
+            if x["status"] == "cancelled" and x["filled_qty"] == 0:
+                cancelled.setdefault(x["user_id"], []).append(x)
+    for uid_, xs in cancelled.items():
+        if len(xs) < 3:
+            continue
+        sides = {x["side"] for x in xs}
+        filled_other = [t for t in trades if (t["seller_id"] == uid_ and "buy" in sides) or (t["buyer_id"] == uid_ and "sell" in sides)]
+        if filled_other:
+            last = filled_other[-1]
+            flags.append({"id": f"fl_{uuid.uuid5(uuid.NAMESPACE_URL, f'spoof:{mid}:{uid_}:{len(xs)}').hex[:10]}", "market_id": mid, "batch_id": last["batch_id"],
+                          "rule": "spoofing", "severity": "high", "subjects": [uid_],
+                          "explanation": f"{uid_} placed and cancelled {len(xs)} unfilled {'/'.join(sorted(sides))} orders while trading the other side ({len(filled_other)} fills).",
+                          "reviewer": "rules", "reviews": [{"reviewer": "rules", "severity": "high"}], "disputed": False, "t": last["t"]})
     # band abuse / halt candidates
     hits = [b for b in batches if b.get("band_hit")]
     if len(hits) >= 2:
@@ -96,16 +115,52 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
     return flags
 
 
-@router.get("/flags", response_model=list[Flag], response_model_by_alias=True)
-async def flags(market_id: str | None = None):
+def _all_flags(market_id: str | None = None) -> list[dict]:
     mids = [market_id] if market_id else [m["id"] for m in store.list_markets()]
     out = []
     for mid in mids:
         if store.get_market(mid):
             out.extend(_rule_flags(mid))
     out.sort(key=lambda f: -f["t"])
+    return out
+
+
+@router.get("/flags", response_model=list[Flag], response_model_by_alias=True)
+async def flags(market_id: str | None = None):
+    """Rules flags, each reviewed by Grok and K2 when keys are set (cached per flag). Disagreement marks `disputed`."""
+    out = _all_flags(market_id)
     from app.llm import is_configured
     if is_configured("xai") or is_configured("ifm"):
         from app.services.agents.compliance import review_flags
         out = await review_flags(out)
     return [views.flag(f) for f in out]
+
+
+class RedTeamIn(BaseModel):
+    market_id: str | None = None
+
+
+@router.post("/redteam")
+async def red_team(body: RedTeamIn | None = None, uid: str = Depends(current_user)):
+    """Grok plays a manipulator against one market; the surveillance layer has to catch it.
+    Returns the attack plan and the orders it placed. Flags appear over the next rounds."""
+    body = body or RedTeamIn()
+    mid = body.market_id or (store.list_markets() or [{}])[0].get("id")
+    m = store.get_market(mid) if mid else None
+    if not m:
+        raise HTTPException(404, "no such market")
+    c = store.get_company(mid)
+    p = await redteam.plan(c, m)
+    rec = redteam.execute(engine, mid, p)
+    return {"plan": p.model_dump(), "planner": "grok" if not p.rationale.startswith("Random") else "fallback", "execution": rec}
+
+
+@router.get("/redteam")
+def red_team_log():
+    return redteam.log()
+
+
+@router.get("/report")
+async def report():
+    """Regulator style market health memo (Grok) over the last hour of the audit log."""
+    return await health.memo(store, _all_flags())
