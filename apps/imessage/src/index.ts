@@ -34,14 +34,14 @@ if (!terminalUi) {
 const jb = jbClient({ apiUrl: env.JB_API_URL, bridgeToken: terminalUi ? undefined : env.BRIDGE_API_TOKEN, log });
 
 const HELP = [
-  "I'm JB. I find small businesses and price them.",
+  "I'm Bartr. I find small businesses and price them.",
   "",
   "Try:",
   "  laundromat in pittsburgh",
   "  my orders",
   "  my portfolio",
   "  buy 50 shares of squirrel hill wash at 56",
-  "  what should i hold with 10k",
+  "  what should i hold",
   "",
   "  cancel order <order-id>",
   "/help   this",

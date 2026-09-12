@@ -127,7 +127,8 @@ export function Chat({
     }
   }
 
-  const starters = ["find me a laundromat in pittsburgh", "buy 50 shares of squirrel hill wash at 56", "what should i hold with 10k"];
+  // Sizing runs off the account's own cash, so an amount in the message does nothing.
+  const starters = ["find me a laundromat in pittsburgh", "buy 50 shares of squirrel hill wash at 56", "what should i hold"];
 
   return (
     <div className={cn("grid gap-6 lg:grid-cols-[1fr_280px]", embedded ? "" : "pb-20")}>

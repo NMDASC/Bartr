@@ -4,6 +4,9 @@ import { cookies } from "next/headers";
 import type { Portfolio, Suggestion } from "@contracts/types";
 import { Label } from "@/components/ui/label";
 import { Suggestions } from "@/components/portfolio/suggestions";
+import { Chat } from "@/components/agent/chat";
+import { ChannelStatusBar } from "@/components/agent/channel-status";
+import { AccountRefresh } from "@/components/agent/account-refresh";
 import { AUTH_COOKIE, readSessionToken } from "@/lib/auth/session";
 import { accountId } from "@/lib/auth/account";
 import { getPortfolio, suggestPortfolio } from "@/lib/api";
@@ -144,6 +147,18 @@ export default async function OverviewPage() {
         <Suggestions initial={suggestions} bankroll={portfolio.cash} />
       </section>
 
+      {/* The same account over a phone. The figures above are server rendered from
+          one identity, so an order texted to the line arrives through the refresh
+          rather than through a second, divergent client copy of the ledger. */}
+      <section id="agent" className="mt-12 border-t border-line pt-8">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <h2 className="text-[30px] leading-[1.2] md:text-[36px] 3xl:text-[44px]">Agent</h2>
+        </div>
+        <ChannelStatusBar className="mb-6" userId={uid} pairedPhone={session?.phone ?? null} />
+        <Chat embedded userId={uid} />
+      </section>
+
+      <AccountRefresh />
     </div>
   );
 }

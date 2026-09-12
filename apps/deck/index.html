@@ -539,19 +539,14 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
 <section class="slide" data-theme="dark" id="s14">
   <div style="position:absolute; left:140px; top:190px; width:1200px;">
     <h1 class="display xl fu">Bartr.</h1>
-    <p class="fu" style="font-size:44px; font-weight:500; letter-spacing:-0.02em; line-height:1.2; margin:18px 0 0; max-width:1100px;">The laundromat on Murray Avenue has a price. Scan, buy 20 shares, and watch the next round clear.</p>
-  </div>
-  <div class="qr fu" style="right:140px; top:200px;">
-    <!-- QR: live site URL, drop assets/qr.png -->
-    <img src="assets/qr.png" alt="" onerror="this.remove()">
-    <span>QR<br>live site</span>
+    <p class="fu" style="font-size:44px; font-weight:500; letter-spacing:-0.02em; line-height:1.2; margin:18px 0 0; max-width:1100px;">The laundromat on Murray Avenue has a price. Buy 20 shares and watch the next round clear.</p>
   </div>
   <div class="sponsors fu" style="position:absolute; left:140px; right:140px; bottom:150px;">
     <div class="sp"><span>Grok<small>xAI</small></span></div>
     <div class="sp"><span>IFM K2<small>Horizon</small></span></div>
     <div class="sp"><span>Querit<small>web search</small></span></div>
     <div class="sp"><img class="logo" src="assets/logos/mongodb.svg" alt=""><span>MongoDB Atlas<small>database</small></span></div>
-    <div class="sp"><img class="logo" src="assets/logos/auth0.svg" alt=""><span>Auth0<small>login, in progress</small></span></div>
+    <div class="sp"><img class="logo" src="assets/logos/auth0.svg" alt=""><span>Auth0<small>login</small></span></div>
     <div class="sp"><img class="logo" src="assets/logos/vultr.svg" alt=""><span>Vultr<small>API host</small></span></div>
     <div class="sp"><img class="logo" src="assets/logos/vercel.svg" alt=""><span>Vercel<small>web host</small></span></div>
     <div class="sp"><img class="logo" src="assets/logos/cursor.svg" alt=""><span>Cursor<small>editor</small></span></div>
@@ -678,7 +673,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   <div class="qa-head fu"><h2>What is real, and what was built for the demo?</h2></div>
   <div class="qa-list">
     <div class="qa-item fu"><div class="qq"><b>Q</b>What actually works end to end?</div><div class="aa"><strong>The FastAPI service runs discovery jobs, valuation, order books, batch clearing, belief updates, Kelly sizing, acquisition documents, rules, model reviews, WebSockets, and audit events.</strong> The Next.js app uses those routes when configured.</div></div>
-    <div class="qa-item fu"><div class="qq"><b>Q</b>What is simulated or preloaded?</div><div class="aa"><strong>The demo includes seeded companies, cached research, 20 bot traders, planted manipulation, $100,000 demo balances, and X-Demo-User identity.</strong> Auth0 is shown as in progress. No real money or legal securities settle.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What is simulated or preloaded?</div><div class="aa"><strong>The demo includes seeded companies, cached research, 20 bot traders, planted manipulation, $100,000 demo balances, and X-Demo-User identity.</strong> No real money or legal securities settle.</div></div>
     <div class="qa-item fu"><div class="qq"><b>Q</b>Can the current architecture scale?</div><div class="aa"><strong>Not as a production exchange.</strong> It deliberately runs one API worker with an in-process scheduler and WebSocket hub. Production needs durable jobs, atomic settlement, separate market workers, reconciliation, disaster recovery, and load testing.</div></div>
     <div class="qa-item fu"><div class="qq"><b>Q</b>What happens when Grok, K2, or Querit fails?</div><div class="aa"><strong>Interactive paths have deterministic fallbacks and cached outputs.</strong> Search preserves partial results. Research calls can return unavailable rather than invent evidence. The readiness endpoint exposes provider status and recent calls.</div></div>
   </div>

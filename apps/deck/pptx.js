@@ -19,7 +19,7 @@ const NOTES = [
   'Rules catch it, two models judge it separately, and Grok tries to beat it as red team.',
   'Every company is appraised twice: Grok researches and names a value, K2 names one blind, both go into the price.',
   'Next.js, FastAPI, Atlas, Places, Querit, Grok, K2, iMessage. 103 tests.',
-  'The laundromat on Murray Avenue has a price. Scan, buy 20 shares, watch the next round.',
+  'The laundromat on Murray Avenue has a price. Buy 20 shares, watch the next round.',
   'Internal Q&A appendix. Stop the public presentation on slide 16. Press Q from anywhere to jump here.',
   'Market: distinguish the 36.2 million business context from the initial reachable market. Lead with aging owners and demonstrated buyer demand.',
   'Users and consent: the first wedge is acquisition search. Unclaimed pages need clear attribution, correction, opt-out and no trading before owner acceptance.',
