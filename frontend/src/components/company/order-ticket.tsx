@@ -106,8 +106,8 @@ export function OrderTicket({ marketId, book, nextBatchAt, round }: { marketId: 
         <Button type="submit" variant="primary" size="lg" disabled={disabled} className="w-full">
           {busy ? "Submitting" : `Submit ${side} for round ${round ?? ""}`}
         </Button>
-        <p className="text-[12px] secondary leading-[1.45]">
-          Round {round ?? ""} clears in {nextBatchAt ? `${Math.ceil(secs)}s` : "—"}. You trade at the clearing price or not at all: never above your limit when buying, never below it when selling.
+        <p className="text-[12px] leading-[1.45] text-muted-foreground">
+          Round {round ?? ""} · {secs === null ? "—" : `${Math.ceil(secs)}s`}
         </p>
         {placed ? (
           <Callout tone={placed.side === "buy" ? "up" : "down"}>

@@ -22,6 +22,8 @@ def get_market(mid: str):
 @router.get("/{mid}/book", response_model=Book)
 def get_book(mid: str, x_demo_user: str | None = Header(default=None)):
     _market(mid)
+    from app.services.market.bots import activate
+    activate(engine, mid)
     b = engine.book(mid)
     if x_demo_user:
         from app import identity as ident

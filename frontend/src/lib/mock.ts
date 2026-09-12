@@ -290,16 +290,16 @@ export function streamSearch(
     status: "stub" as const,
   }));
 
-  at(120, () => onEvent({ type: "status", phase: "intent", message: "Reading business type and market", t: Date.now() }));
-  at(260, () => onEvent({ type: "intent", intent }));
-  at(420, () => onEvent({ type: "status", phase: "places", message: `Looking at places across ${city || state || "North America"}`, t: Date.now() }));
-  at(720, () => onEvent({ type: "status", phase: "category", message: `Finding options in ${category === "default" ? "local businesses" : category.replaceAll("_", " ")}`, t: Date.now() }));
-  at(820, () => onEvent({ type: "ranking", revision: 1, companies: rankedStubs }));
-  at(980, () => onEvent({ type: "status", phase: "records", message: options.cached ? "Loading saved company research" : "Checking financial and ownership records", t: Date.now() }));
+  at(400, () => onEvent({ type: "status", phase: "intent", message: "Reading business type and market", t: Date.now() }));
+  at(1600, () => onEvent({ type: "intent", intent }));
+  at(2800, () => onEvent({ type: "status", phase: "places", message: `Looking at places across ${city || state || "North America"}`, t: Date.now() }));
+  at(4200, () => onEvent({ type: "status", phase: "category", message: `Finding options in ${category === "default" ? "local businesses" : category.replaceAll("_", " ")}`, t: Date.now() }));
+  at(5000, () => onEvent({ type: "ranking", revision: 1, companies: rankedStubs }));
+  at(6400, () => onEvent({ type: "status", phase: "records", message: options.cached ? "Loading saved company research" : "Checking financial and ownership records", t: Date.now() }));
   matches.forEach((c, i) => {
-    if (c.status === "ready") at(1_300 + i * 650, () => onEvent({ type: "company_ready", company: c }));
+    if (c.status === "ready") at(8_200 + i * 1800, () => onEvent({ type: "company_ready", company: c }));
   });
-  const doneAt = 1_650 + matches.length * 650;
+  const doneAt = 9_000 + matches.length * 1800;
   at(doneAt - 200, () => onEvent({ type: "status", phase: "finished", message: `${matches.length} businesses ranked by research confidence`, t: Date.now() }));
   at(doneAt, () => onEvent({
     type: "done",
@@ -589,6 +589,26 @@ export async function placeOrder(id: string, o: { side: Side; qty: number; limit
     created_at: new Date(order.t).toISOString(),
     cancelled_at: null,
   };
+}
+
+export async function getMyOrders(id: string): Promise<Order[]> {
+  const m = MARKETS.get(id);
+  if (!m) return [];
+  return m.orders
+    .filter((o) => o.user === "you")
+    .map((order) => ({
+      _id: order.id,
+      market_id: id,
+      user_id: "you",
+      side: order.side,
+      qty: order.qty,
+      limit_price: order.limit,
+      status: "open" as const,
+      filled_qty: 0,
+      origin: "user" as const,
+      created_at: new Date(order.t).toISOString(),
+      cancelled_at: null,
+    }));
 }
 
 export function subscribeMarket(id: string, onFrame: (f: MarketFrame) => void): () => void {

@@ -3,86 +3,64 @@
 import { useState } from "react";
 import type { Company } from "@contracts/types";
 import { useMarket } from "@/hooks/use-market";
+import { bidderLabel, sideVerb } from "@/lib/bidder";
 import { px, signed, usd } from "@/lib/format";
 import { RoundClock } from "./round-clock";
 import { PricePath } from "./price-path";
 import { RoundFigure } from "./round-figure";
 import { OrderBook } from "./order-book";
 import { Participants } from "./participants";
-import { DepthPlate } from "./depth-plate";
 import { OrderTicket } from "./order-ticket";
 import { OfferPanel } from "./offer-panel";
-import { Valuation } from "./valuation";
-import { Sources } from "./sources";
-import { Evidence } from "./evidence";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
-/**
- * Reading order for a buyer: what it costs now and when that changes (strip), what to do about it
- * (ticket, right rail), how the price got here (path), how the last round was decided (figure),
- * what is waiting for the next round (book, depth), and why we think it is worth what we think
- * (valuation, sources, evidence).
- */
 export function MarketPanel({ company }: { company: Company }) {
   const listed = company.listed !== false;
   const live = company.status === "ready" && listed;
-  const m = useMarket(company._id, live);
+  const m = useMarket(company._id, live, true);
   const [selected, setSelected] = useState<string | null>(null);
 
   const shares = company.market?.shares_outstanding ?? 10000;
   const ref = company.valuation ? company.valuation.v0 / shares : null;
-  const marketValue = company.market?.belief?.market_value ?? null;
   const change = m.last !== null && m.prev !== null ? m.last - m.prev : null;
   const interval = company.market?.batch_interval_s ?? 10;
   const priced = m.batches.filter((b) => b.clearing_price !== null);
   const selectedBatch = (selected ? priced.find((b) => b._id === selected) : null) ?? priced.at(-1) ?? null;
-  // the owner's quotes move with the same clock as everything else: read them from the held book
-  const ownerAsks = m.book?.asks.filter((l) => l.origin === "treasury") ?? [];
-  const ownerBid = m.book?.bids.find((l) => l.origin === "treasury") ?? null;
-  const unsold = ownerAsks.length ? Math.round(ownerAsks.reduce((t, l) => t + l.qty, 0)) : company.market?.treasury ? Math.round(company.market.treasury.unsold_float) : null;
-  const floor = ownerBid?.price ?? company.market?.treasury?.floor_price ?? null;
+  const print = m.last ?? ref;
+  const companyValue = print !== null ? print * shares : company.valuation?.v0 ?? null;
+  const lastLabel = m.last !== null ? "Last clearing" : "Opening";
+  const arrival = m.arrivals[0] ?? null;
 
   return (
     <>
-      {/* price strip: the number, its change, and the clock that governs it */}
-      <div className="border-t border-b border-line">
-        <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
-          <div className="grid gap-x-10 gap-y-4 py-5 lg:grid-cols-[1fr_auto] lg:items-end">
-            <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+      <div className="border-y border-line bg-card">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 xl:border-x xl:border-line 3xl:max-w-8xl">
+          <div className="grid items-end gap-6 py-6 lg:grid-cols-[1fr_auto]">
+            <div className="flex flex-wrap items-end gap-x-12 gap-y-4">
               <div>
-                <Label tracking="tight" className="block mb-1">{listed ? "Last clearing price" : "Our estimate, per share"}</Label>
+                <Label tracking="tight" className="mb-1 block">{lastLabel}</Label>
                 <div
                   key={m.tick}
                   className={cn(
-                    "text-[56px] md:text-[64px] leading-[0.95] tabular-nums px-1 -mx-1 min-w-[4.2ch]",
+                    "min-w-[5ch] -mx-1 px-1 text-[56px] leading-[0.92] tabular-nums md:text-[72px]",
                     m.tick > 0 && "bartr-clear",
                     m.flash && (m.dir === "up" ? "text-up" : m.dir === "down" ? "text-down" : ""),
                   )}
                 >
-                  {listed ? px(m.last) : px(ref)}
+                  {usd(print)}
+                </div>
+                <div className={cn("mt-2 font-mono text-[13px] tabular-nums", change === null ? "text-muted-foreground" : change >= 0 ? "text-up" : "text-down")}>
+                  {change === null ? "No print yet" : `${signed(change)} last round`}
                 </div>
               </div>
-              <div className="pb-1 min-w-[132px]">
-                <Label tracking="tight" className="block mb-1">Since last round</Label>
-                <div className={cn("font-mono text-[16px] tabular-nums", change === null ? "text-muted-foreground" : change >= 0 ? "text-up" : "text-down")}>
-                  {change === null ? "—" : signed(change)}
-                  {priced.at(-1) ? <span className="text-muted-foreground"> on {priced.at(-1)!.volume} sh</span> : null}
+              <div>
+                <Label tracking="tight" className="mb-1 block">Company value</Label>
+                <div className="text-[40px] leading-[0.95] tabular-nums md:text-[56px]">
+                  {usd(companyValue, { cents: false })}
                 </div>
-              </div>
-              <div className="pb-1">
-                <Label tracking="tight" className="block mb-1">Model value</Label>
-                <div className="font-mono text-[16px] tabular-nums">{ref !== null ? px(ref) : "—"}<span className="text-muted-foreground"> · {company.valuation ? usd(company.valuation.v0, { compact: true }) : "—"}</span></div>
-              </div>
-              <div className="pb-1 hidden sm:block">
-                <Label tracking="tight" className="block mb-1">Implied market cap</Label>
-                <div className="font-mono text-[16px] tabular-nums">{m.last !== null ? usd(m.last * shares, { compact: true }) : marketValue ? usd(marketValue, { compact: true }) : "—"}</div>
-              </div>
-              <div className="pb-1 hidden lg:block min-w-[260px]">
-                <Label tracking="tight" className="block mb-1">Owner</Label>
-                <div className="font-mono text-[16px] tabular-nums">
-                  {unsold !== null ? `holds ${unsold.toLocaleString()} of 3,000 · buys back at ${px(floor)}` : "—"}
+                <div className="mt-2 font-mono text-[13px] tabular-nums text-muted-foreground">
+                  {shares.toLocaleString("en-US")} sh{ref !== null ? ` · model ${usd(ref)}` : ""}
                 </div>
               </div>
             </div>
@@ -95,37 +73,36 @@ export function MarketPanel({ company }: { company: Company }) {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-6 xl:border-l xl:border-r xl:border-line">
-        <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-          {/* right rail first on mobile so a judge can bid without scrolling */}
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 xl:border-x xl:border-line 3xl:max-w-8xl">
+        {arrival ? (
+          <p className="bartr-print mb-4 border border-up/30 bg-up/[0.08] px-3 py-2 font-mono text-[13px] tabular-nums text-up">
+            {bidderLabel(arrival, m.book?.you ?? null)} is {sideVerb(arrival.side)} {arrival.qty}
+            {arrival.price != null ? ` at ${px(arrival.price)}` : ""}
+          </p>
+        ) : null}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="flex flex-col gap-4 order-first lg:order-none lg:col-start-2 lg:sticky lg:top-4 lg:self-start">
             {live ? <OrderTicket marketId={company._id} book={m.book} nextBatchAt={m.book?.next_batch_at} round={m.round} /> : null}
             {!listed ? <OfferPanel company={company} /> : null}
-            <Valuation company={company} last={m.last} />
-            <div className="flex gap-2">
-              <Button variant="primary" size="lg" href={`/company/${company._id}/acquire`} className="flex-1">
+            <div className="flex gap-4 px-1 font-mono text-[11px] uppercase tracking-[0.08em]">
+              <a href={`/company/${company._id}/acquire`} className="text-muted-foreground hover:text-foreground">
                 Acquire
-              </Button>
-              <Button size="lg" href="/overview" className="flex-1">
+              </a>
+              <a href="/overview" className="text-muted-foreground hover:text-foreground">
                 Portfolio
-              </Button>
+              </a>
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 lg:col-start-1 lg:row-start-1">
+          <div className="flex flex-col gap-5 lg:col-start-1 lg:row-start-1">
             {live ? (
               <>
-                <Participants book={m.book} latest={priced.at(-1) ?? null} justCleared={m.justCleared} pending={m.pending} quietRound={m.quietRound} round={m.round} last={m.last} />
-                <PricePath batches={m.batches} refPrice={ref} selected={selected} onSelect={setSelected} />
-                <div className="grid gap-4 md:grid-cols-[1fr_1fr]">
-                  <RoundFigure batch={selectedBatch} modelPrice={ref} />
-                  <DepthPlate book={m.book} tick={m.tick} last={m.last} pending={m.pending} round={m.round} />
-                </div>
-                <OrderBook book={m.book} last={m.last} tick={m.tick} dir={m.dir} changed={m.changed} />
+                <Participants book={m.book} arrivals={m.arrivals} />
+                <OrderBook book={m.book} last={m.last ?? ref} tick={m.tick} dir={m.dir} changed={m.changed} mine={m.mine} />
+                <RoundFigure batch={selectedBatch} book={m.book} modelPrice={ref} justCleared={m.justCleared} />
+                <PricePath batches={m.batches} refPrice={ref} selected={selected} onSelect={setSelected} opening={ref} />
               </>
             ) : null}
-            <Sources sources={company.sources} />
-            <Evidence facts={company.evidence ?? []} />
           </div>
         </div>
       </div>

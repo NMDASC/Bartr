@@ -328,18 +328,27 @@ export function CompanyOverview({ company }: { company: DetailedCompany }) {
         </div>
       </section>
 
+      <section className="border-b border-line py-8" aria-labelledby="overview-heading">
+        <Label className="mb-2 block">Company</Label>
+        <h2 id="overview-heading" className="text-[28px] md:text-[32px]">
+          Overview
+        </h2>
+        <p className="mt-4 max-w-3xl text-[17px] leading-[1.65]">{overview}</p>
+      </section>
+
+      <AppraisalDetails
+        valuation={valuation}
+        evidence={company.evidence ?? []}
+        sources={company.sources}
+        risks={risks}
+      />
+
       <div className="grid gap-10 py-10 lg:grid-cols-[minmax(0,1fr)_320px]">
         <main className="min-w-0">
-          <section aria-labelledby="overview-heading">
-            <Label className="mb-2 block">Company</Label>
-            <h2 id="overview-heading" className="text-[30px] md:text-[34px]">
-              Overview
-            </h2>
-            <p className="mt-5 max-w-3xl text-[17px] leading-[1.65]">{overview}</p>
-
+          <section aria-labelledby="signals-heading">
             {strengths.length ? (
-              <div className="mt-8 border-t border-line pt-6">
-                <Label className="mb-3 block">Positive signals</Label>
+              <div>
+                <Label id="signals-heading" className="mb-3 block">Positive signals</Label>
                 <ul className="divide-y divide-hairline border-y border-line">
                   {strengths.map((strength) => (
                     <li
@@ -518,13 +527,6 @@ export function CompanyOverview({ company }: { company: DetailedCompany }) {
           </section>
         </aside>
       </div>
-
-      <AppraisalDetails
-        valuation={valuation}
-        evidence={company.evidence ?? []}
-        sources={company.sources}
-        risks={risks}
-      />
     </div>
   );
 }

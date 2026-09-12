@@ -408,7 +408,10 @@ class Engine:
         """Run every market whose round has ended. Called by the scheduler."""
         out = []
         now = _now()
+        from app.services.market.bots import held
         for m in self.store.list_markets():
+            if held(m["id"]):
+                continue
             if m.get("listed", True) and now >= m["next_batch_at"]:
                 out.append(self.run_batch(m["id"]))
         return out

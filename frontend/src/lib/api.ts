@@ -60,7 +60,11 @@ async function j<T>(path: string, init?: RequestInit, userId?: string): Promise<
     },
     cache: "no-store",
   });
-  if (!res.ok) throw new Error(`${init?.method ?? "GET"} ${path} -> ${res.status}`);
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { detail?: unknown } | null;
+    const detail = typeof body?.detail === "string" ? body.detail : `${init?.method ?? "GET"} ${path} -> ${res.status}`;
+    throw new Error(detail);
+  }
   return res.json() as Promise<T>;
 }
 
@@ -163,6 +167,11 @@ export async function getBatches(id: string, limit = 60) {
 export async function placeOrder(id: string, o: { side: Side; qty: number; limit_price: number }) {
   if (IS_MOCK) return mock.placeOrder(id, o);
   return j<Order>(`/markets/${id}/orders`, { method: "POST", body: JSON.stringify(o) });
+}
+
+export async function getMyOrders(id: string) {
+  if (IS_MOCK) return mock.getMyOrders(id);
+  return j<Order[]>(`/markets/${id}/orders/mine`);
 }
 
 export type MarketFrame =

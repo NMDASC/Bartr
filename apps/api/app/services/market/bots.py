@@ -5,10 +5,45 @@ from __future__ import annotations
 
 import math
 import random
+import time
 
 from app.services.market.engine import Engine
 from app.services.market.kelly import kelly_fraction
 from app.services.market.treasury import SHARES
+
+# Demo markets stay quiet until someone opens the book. That way Bid for
+# acquisition starts at round 1 instead of a tape the bots already ran.
+DEMO_MARKETS = frozenset({"co_squirrel_hill_wash"})
+_active: set[str] = set()
+
+
+def held(market_id: str) -> bool:
+    return market_id in DEMO_MARKETS and market_id not in _active
+
+
+def activate(engine: Engine, market_id: str) -> None:
+    if market_id not in DEMO_MARKETS:
+        return
+    first = market_id not in _active
+    _active.add(market_id)
+    if not first:
+        return
+    m = engine.store.get_market(market_id)
+    if not m:
+        return
+    m["next_batch_at"] = time.time() + m.get("batch_interval_s", 10)
+    engine.store.put_market(m)
+    for bot in [*self_names(), "wash_a", "wash_b"]:
+        for o in engine.store.user_orders(bot, market_id):
+            if o["status"] in ("open", "partial"):
+                try:
+                    engine.cancel_order(bot, o["id"])
+                except KeyError:
+                    pass
+
+
+def self_names(n: int = 20) -> list[str]:
+    return [f"bot{i:02d}" for i in range(n)]
 
 
 class Bots:
@@ -33,8 +68,10 @@ class Bots:
     def step(self, max_markets: int = 8) -> int:
         """Place a handful of orders across markets. Returns number placed."""
         placed = 0
-        markets = self.e.store.list_markets()
+        markets = [m for m in self.e.store.list_markets() if m["id"] in _active]
         self.rng.shuffle(markets)
+        if not markets:
+            return 0
         for m in markets[:max_markets]:
             ref = m["last_price"] or m["ref_price"]
             for bot in self.rng.sample(self.names, k=min(4, len(self.names))):

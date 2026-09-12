@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import type { Company, Estimate } from "@contracts/types";
 import { Label } from "@/components/ui/label";
 import { Plate } from "@/components/ui/plate";
@@ -10,9 +10,16 @@ import "./landing.css";
 const W = 720;
 const H = 360;
 const PL = 44;
-const PR = 18;
-const PT = 22;
-const PB = 42;
+const PR = 22;
+const PT = 28;
+const PB = 36;
+
+function sceneStyle(opacity: number): CSSProperties {
+  return {
+    opacity,
+    visibility: opacity < 0.03 ? "hidden" : "visible",
+  };
+}
 
 const LABEL: Record<string, string> = {
   income: "Income",
@@ -191,14 +198,20 @@ export function LandingValuationJourney({ company }: { company: Company }) {
   };
 
   const facts = gate(p, 0.0, 0.1, reduced);
-  const estT = gate(p, 0.1, 0.24, reduced);
-  const eqT = gate(p, 0.24, 0.4, reduced);
-  const curveT = gate(p, 0.4, 0.56, reduced);
-  const valueT = gate(p, 0.56, 0.7, reduced);
-  const shareT = gate(p, 0.7, 0.8, reduced);
-  const queue = gate(p, 0.78, 0.9, reduced);
-  const cross = gate(p, 0.88, 0.98, reduced);
-  const bookT = gate(p, 0.74, 0.86, reduced);
+  const estT = gate(p, 0.1, 0.22, reduced);
+  const eqT = gate(p, 0.22, 0.38, reduced);
+  const curveT = gate(p, 0.36, 0.52, reduced);
+  const valueT = gate(p, 0.5, 0.66, reduced);
+  const shareT = gate(p, 0.64, 0.76, reduced);
+  const bookT = gate(p, 0.8, 0.9, reduced);
+  const queue = gate(p, 0.86, 0.94, reduced);
+  const cross = gate(p, 0.92, 0.99, reduced);
+  const showFacts = facts * (1 - estT);
+  const showPosterior = estT * (1 - bookT);
+  const showEq = eqT * (1 - valueT);
+  const showShare = shareT;
+  const vLabelX = xVal(v0);
+  const vLabelAnchor = vLabelX > W - 90 ? "end" : vLabelX < PL + 50 ? "start" : "middle";
 
   const steps = [
     { id: "01", label: "Business", stat: company.city && company.state ? `${company.city}, ${company.state}` : company.category },
@@ -214,7 +227,7 @@ export function LandingValuationJourney({ company }: { company: Company }) {
     "Precision weighted into one μ.",
     "The distribution lands.",
     "One value, with a range.",
-    "Live price updates, every 10 seconds.",
+    "Then the book opens and one price prints.",
   ];
   const captions = ["PROFILE", "ESTIMATORS", "ENSEMBLE", "POSTERIOR", "LISTED", "ONE BATCH"];
   const segment = 1 / steps.length;
@@ -257,16 +270,16 @@ export function LandingValuationJourney({ company }: { company: Company }) {
             </div>
 
             <Plate id={company.name} caption={captions[step]}>
-              <div className="relative min-h-[320px] md:min-h-[400px]">
-                <div className="absolute inset-0 bl-journey-layer" style={{ opacity: facts * (1 - estT) }} aria-hidden={estT > 0.85}>
+              <div className="relative min-h-[320px] overflow-hidden bg-background md:min-h-[400px]">
+                <div className="absolute inset-0 bl-journey-layer bg-background" style={sceneStyle(showFacts)} aria-hidden={showFacts < 0.03}>
                   <BusinessPane company={company} reveal={facts} />
                 </div>
 
-                <div className="absolute inset-0 bl-journey-layer" style={{ opacity: clamp01(estT * (1 - bookT * 0.92)) }}>
+                <div className="absolute inset-0 bl-journey-layer bg-background" style={sceneStyle(showPosterior)}>
                   <svg viewBox={`0 0 ${W} ${H}`} className="h-full w-full" role="img" aria-label={`Valuation of ${company.name}`}>
                     <line x1={PL} x2={W - PR} y1={yBase} y2={yBase} stroke="#D4D4DD" strokeWidth="0.5" />
-                    {[{ k: "lo", v: low }, { k: "v0", v: v0 }, { k: "hi", v: high }].map((tick) => (
-                      <text key={tick.k} x={xVal(tick.v)} y={H - 14} textAnchor="middle" fontSize="8" fill="#A1A0B8" fontFamily="var(--font-mono)">
+                    {[{ k: "lo", v: low, anchor: "start" as const }, { k: "v0", v: v0, anchor: "middle" as const }, { k: "hi", v: high, anchor: "end" as const }].map((tick) => (
+                      <text key={tick.k} x={xVal(tick.v)} y={H - 12} textAnchor={tick.anchor} fontSize="8" fill="#A1A0B8" fontFamily="var(--font-mono)">
                         {usd(tick.v, { compact: true })}
                       </text>
                     ))}
@@ -290,19 +303,20 @@ export function LandingValuationJourney({ company }: { company: Company }) {
                       <line x1={xVal(low)} x2={xVal(high)} y1={yBase} y2={yBase} stroke="#755CFE" strokeWidth="2.2" opacity="0.35" />
                       <line x1={xVal(v0)} x2={xVal(v0)} y1={yTop} y2={yBase} stroke="#755CFE" strokeWidth="1.25" />
                       <circle cx={xVal(v0)} cy={yBase} r="4" fill="#755CFE" />
-                      <text x={xVal(v0) + 8} y={yTop + 10} fontSize="12" fill="#755CFE" fontFamily="var(--font-mono)">
+                      <text x={vLabelX} y={yTop - 2} textAnchor={vLabelAnchor} fontSize="12" fill="#755CFE" fontFamily="var(--font-mono)">
                         {usd(v0, { compact: true })}
                       </text>
                     </g>
 
                     {rows.map((e, i) => {
                       const appear = clamp01(estT * rows.length - i);
-                      const lift = 1 - curveT;
-                      const cy = yBase - 18 * lift - i * 16 * lift;
+                      const cy = yBase - 36 - i * 22;
                       const a = e.value * Math.exp(-0.8416 * e.sigma);
                       const b = e.value * Math.exp(0.8416 * e.sigma);
+                      const markX = Math.min(W - PR - 4, Math.max(PL + 4, xVal(e.value)));
+                      const labelX = Math.min(W - PR - 8, markX + 10);
                       return (
-                        <g key={e.name} opacity={appear}>
+                        <g key={e.name} opacity={appear * (1 - valueT)}>
                           <line
                             x1={Math.max(PL, xVal(a))}
                             x2={Math.min(W - PR, xVal(b))}
@@ -312,9 +326,12 @@ export function LandingValuationJourney({ company }: { company: Company }) {
                             strokeWidth="1"
                             opacity="0.28"
                           />
-                          <circle cx={xVal(e.value)} cy={cy} r="3" fill="#1D1956" />
-                          <text x={xVal(e.value) + 8} y={cy - 6} fontSize="9" fill="#6C6991" fontFamily="var(--font-mono)">
-                            {e.label} {usd(e.value, { compact: true })}
+                          <circle cx={markX} cy={cy} r="3" fill="#1D1956" />
+                          <text x={labelX} y={cy - 8} fontSize="9" fill="#6C6991" fontFamily="var(--font-mono)">
+                            {e.label}
+                          </text>
+                          <text x={labelX} y={cy + 12} fontSize="9" fill="#6C6991" fontFamily="var(--font-mono)">
+                            {usd(e.value, { compact: true })}
                           </text>
                         </g>
                       );
@@ -322,18 +339,11 @@ export function LandingValuationJourney({ company }: { company: Company }) {
                   </svg>
                 </div>
 
-                <div className="absolute inset-x-4 top-4 bl-journey-layer md:inset-x-6" style={{ opacity: eqT * (1 - valueT) }}>
+                <div className="absolute inset-x-4 top-4 z-10 bl-journey-layer md:inset-x-6" style={sceneStyle(showEq)}>
                   <EquationPane rows={rows} mu={mu} sigma={sigma} v0={v0} reveal={eqT} />
                 </div>
 
-                <div
-                  className="absolute inset-x-4 bottom-4 bl-journey-layer font-mono text-[12px] tabular-nums text-accent md:inset-x-6"
-                  style={{ opacity: shareT * (1 - queue) }}
-                >
-                  {usd(v0, { compact: true })} / {shares.toLocaleString()} = {px(ref)}
-                </div>
-
-                <div className="absolute inset-0 bl-journey-layer" style={{ opacity: bookT }}>
+                <div className="absolute inset-0 bl-journey-layer bg-background" style={sceneStyle(bookT)}>
                   <svg viewBox={`0 0 ${W} ${H}`} className="h-full w-full" role="img" aria-label="Bids and asks crossing at the clearing price">
                     {[0, 0.5, 1].map((f) => {
                       const price = pLo + (pHi - pLo) * (1 - f);
@@ -370,19 +380,21 @@ export function LandingValuationJourney({ company }: { company: Company }) {
                       opacity={0.1 * cross}
                     />
 
-                    {[...bids, ...asks].map((c, i) => {
-                      const restX = xQty(c.to);
-                      return (
-                        <circle
-                          key={i}
-                          cx={PL + (restX - PL) * queue}
-                          cy={yPx(c.o.price)}
-                          r={2.4}
-                          fill={c.o.side === "bid" ? "#2BC392" : "#EE5557"}
-                          opacity={0.75 - 0.45 * queue}
-                        />
-                      );
-                    })}
+                    {queue > 0.02
+                      ? [...bids, ...asks].map((c, i) => {
+                          const restX = xQty(c.to);
+                          return (
+                            <circle
+                              key={i}
+                              cx={PL + (restX - PL) * queue}
+                              cy={yPx(c.o.price)}
+                              r={2.4}
+                              fill={c.o.side === "bid" ? "#2BC392" : "#EE5557"}
+                              opacity={0.75 - 0.45 * queue}
+                            />
+                          );
+                        })
+                      : null}
 
                     <path d={stairs(bids, queue)} fill="none" stroke="#2BC392" strokeWidth="1.6" opacity={queue} />
                     <path d={stairs(asks, queue)} fill="none" stroke="#EE5557" strokeWidth="1.6" opacity={queue} />
@@ -400,6 +412,13 @@ export function LandingValuationJourney({ company }: { company: Company }) {
                     </g>
                   </svg>
                 </div>
+              </div>
+
+              <div
+                className="flex items-center overflow-hidden border-t border-hairline px-4 font-mono text-[12px] tabular-nums text-accent"
+                style={{ ...sceneStyle(showShare), height: showShare > 0.03 ? 32 : 0, borderTopWidth: showShare > 0.03 ? 1 : 0 }}
+              >
+                {usd(v0, { compact: true })} / {shares.toLocaleString()} = {px(ref)}
               </div>
 
               {f ? (

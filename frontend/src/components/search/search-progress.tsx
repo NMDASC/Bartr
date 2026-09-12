@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Check, Database, MapPinned, Radar, ScanSearch } from "lucide-react";
 
 import type { SearchIntent } from "@contracts/types";
@@ -27,7 +30,18 @@ export function SearchProgress({
 }) {
   const city = intent?.city || intent?.state || "target markets";
   const category = readable(intent?.category);
-  const progress = found > 0 ? 3 : intent ? 2 : activity.length ? 1 : 0;
+  const target = found > 0 ? 3 : intent ? 2 : activity.length ? 1 : 0;
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    setProgress(0);
+  }, [q]);
+
+  useEffect(() => {
+    if (progress >= target) return;
+    const wait = window.setTimeout(() => setProgress((n) => Math.min(target, n + 1)), 1400);
+    return () => window.clearTimeout(wait);
+  }, [progress, target]);
   const stages = [
     { label: "Reading your search", icon: ScanSearch },
     { label: `Looking across ${city}`, icon: MapPinned },

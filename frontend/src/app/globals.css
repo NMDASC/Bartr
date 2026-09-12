@@ -217,8 +217,34 @@
 }
 .bartr-imminent { animation: bartr-imminent 700ms var(--ease-in-out) infinite; }
 
+@keyframes bartr-bid-bubble {
+  0% { opacity: 0; transform: translate(-50%, 6px) scale(0.92); }
+  12% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  78% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -4px) scale(0.96); }
+}
+.bartr-bid-bubble { animation: bartr-bid-bubble 2.4s var(--ease-out) 1 both; }
+
+@keyframes bartr-bidder-hot {
+  0% { box-shadow: 0 0 0 0 rgb(43 195 146 / 0.35); }
+  100% { box-shadow: 0 0 0 8px rgb(43 195 146 / 0); }
+}
+.bartr-bidder-hot { animation: bartr-bidder-hot 900ms var(--ease-out) 1; }
+
+@keyframes bartr-area-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.bartr-area-in { animation: bartr-area-in 700ms var(--ease-out) both; }
+
+@keyframes bartr-pstar {
+  from { transform: scaleY(0.2); opacity: 0; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+.bartr-pstar { transform-box: fill-box; transform-origin: center bottom; animation: bartr-pstar 500ms var(--ease-out) both; }
+
 @media (prefers-reduced-motion: reduce) {
-  .bartr-draw, .bartr-clear, .bartr-pop, .fade-up, .bartr-up, .bartr-down, .bartr-print, .bartr-level-bid, .bartr-level-ask, .bartr-imminent { animation: none !important; }
+  .bartr-draw, .bartr-clear, .bartr-pop, .fade-up, .bartr-up, .bartr-down, .bartr-print, .bartr-level-bid, .bartr-level-ask, .bartr-imminent, .bartr-bid-bubble, .bartr-bidder-hot, .bartr-area-in, .bartr-pstar { animation: none !important; }
   .bartr-draw { stroke-dashoffset: 0; }
   * { transition: none !important; }
 }

@@ -12,6 +12,8 @@ async def ws_market(ws: WebSocket, mid: str):
         await ws.close(code=4004)
         return
     await ws.accept()
+    from app.services.market.bots import activate
+    activate(engine, mid)
     hub.subscribe(mid, ws)
     try:
         await ws.send_json({"type": "book", "book": engine.book(mid)})

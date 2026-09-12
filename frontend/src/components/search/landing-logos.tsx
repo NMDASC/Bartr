@@ -1,0 +1,123 @@
+import type { ReactNode } from "react";
+import "./landing.css";
+
+type Logo = { name: string; note?: string; mark: ReactNode };
+
+function Mark({ children, viewBox = "0 0 24 24", wide }: { children: React.ReactNode; viewBox?: string; wide?: boolean }) {
+  return (
+    <svg viewBox={viewBox} className={wide ? "h-5 w-[92px] shrink-0" : "h-6 w-6 shrink-0"} aria-hidden>
+      {children}
+    </svg>
+  );
+}
+
+const LOGOS: Logo[] = [
+  {
+    name: "SpaceX",
+    mark: (
+      <Mark viewBox="0 0 160 24" wide>
+        <text x="0" y="18" fill="currentColor" fontFamily="Arial, Helvetica, sans-serif" fontSize="20" fontWeight="700" letterSpacing="2.4">
+          SPACEX
+        </text>
+      </Mark>
+    ),
+  },
+  {
+    name: "Grok",
+    note: "xAI",
+    mark: (
+      <Mark viewBox="0 0 24 24">
+        <path fill="currentColor" d="M3 3.2h4.4L12 10.1 16.6 3.2H21L13.7 12 21 20.8h-4.4L12 13.9 7.4 20.8H3L10.3 12Z" />
+      </Mark>
+    ),
+  },
+  {
+    name: "K2",
+    note: "IFM Horizon",
+    mark: (
+      <Mark viewBox="0 0 32 24">
+        <path fill="currentColor" d="M3 3h4.2v7.1L14 3h4.8l-7.4 8.4L19.6 21h-4.9L7.2 12.4V21H3V3zm16.8 0H29v3.2h-5.6V21h-3.6V3z" />
+      </Mark>
+    ),
+  },
+  {
+    name: "Querit",
+    mark: (
+      <Mark viewBox="0 0 92 24" wide>
+        <text x="0" y="18" fill="currentColor" fontFamily="Arial, Helvetica, sans-serif" fontSize="18" fontWeight="650" letterSpacing="0.6">
+          Querit
+        </text>
+      </Mark>
+    ),
+  },
+  {
+    name: "MongoDB Atlas",
+    mark: (
+      <Mark>
+        <path
+          fill="currentColor"
+          d="M17.193 9.555c-1.264-5.58-4.252-7.414-4.573-8.115-.28-.394-.53-.954-.735-1.44-.036.495-.055.685-.523 1.184-.723.566-4.438 3.682-4.74 10.02-.282 5.912 4.27 9.435 4.888 9.884l.07.05A73.49 73.49 0 0111.91 24h.481c.114-1.032.284-2.056.51-3.07.417-.296.604-.463.85-.693a11.342 11.342 0 003.639-8.464c.01-.814-.103-1.662-.197-2.218zm-5.336 8.195s0-8.291.275-8.29c.213 0 .49 10.695.49 10.695-.381-.045-.765-1.76-.765-2.405z"
+        />
+      </Mark>
+    ),
+  },
+  {
+    name: "Cursor",
+    mark: (
+      <Mark>
+        <path
+          fill="currentColor"
+          d="M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23"
+        />
+      </Mark>
+    ),
+  },
+  {
+    name: "Vercel",
+    mark: (
+      <Mark>
+        <path fill="currentColor" d="M12 2 22 20H2Z" />
+      </Mark>
+    ),
+  },
+  {
+    name: "iMessage",
+    mark: (
+      <Mark>
+        <path
+          fill="currentColor"
+          d="M5.285 0A5.273 5.273 0 0 0 0 5.285v13.43A5.273 5.273 0 0 0 5.285 24h13.43A5.273 5.273 0 0 0 24 18.715V5.285A5.273 5.273 0 0 0 18.715 0ZM12 4.154a8.809 7.337 0 0 1 8.809 7.338A8.809 7.337 0 0 1 12 18.828a8.809 7.337 0 0 1-2.492-.303A8.656 7.337 0 0 1 5.93 19.93a9.929 7.337 0 0 0 1.54-2.155 8.809 7.337 0 0 1-4.279-6.283A8.809 7.337 0 0 1 12 4.154"
+        />
+      </Mark>
+    ),
+  },
+];
+
+function Track({ hidden = false }: { hidden?: boolean }) {
+  return (
+    <ul className="bl-logo-track flex items-center gap-14 pr-14" aria-hidden={hidden || undefined}>
+      {LOGOS.map((logo) => (
+        <li key={logo.name} className="flex shrink-0 items-center gap-2.5 text-primary">
+          {logo.mark}
+          <span className="flex flex-col leading-none">
+            <span className="whitespace-nowrap text-[15px] tracking-[-0.01em]">{logo.name}</span>
+            {logo.note ? <span className="mt-1 font-mono text-[9px] uppercase tracking-[0.08em] text-muted-foreground">{logo.note}</span> : null}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function LandingLogos() {
+  return (
+    <div className="bl-logo-marquee relative overflow-hidden py-6" aria-label="Built with">
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-background to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-background to-transparent" />
+      <div className="bl-logo-reel flex w-max">
+        <Track />
+        <Track hidden />
+      </div>
+    </div>
+  );
+}

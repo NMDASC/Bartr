@@ -214,3 +214,6 @@ Two things are still open. `railway up` has never run, so the line answers only 
 runs on someone's machine. And nothing links to `/agent`: the header carries Overview, Discover
 and Admin only, and `components/site/*` is frozen, so a judge cannot reach the assistant without
 typing the URL. D: that second one is a one-line nav entry if you want it.
+
+## 028  Sat 13:00  author: A  affects: A, C
+Demo bots no longer trade every market at boot. `Bots.activate(engine, market_id)` is called from `GET /markets/{id}/book` and `WS /ws/markets/{id}`, and only `co_squirrel_hill_wash` is eligible. `engine.tick` skips that market until it is activated, then `activate` gives it a fresh 10s clock and cancels leftover bot orders. The bid UI session-scopes the tape so Mongo history from earlier runs does not print as round 16. No contract or collection change.

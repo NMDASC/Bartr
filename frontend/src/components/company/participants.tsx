@@ -1,73 +1,69 @@
 "use client";
 
-import type { Batch, Book, Participant } from "@contracts/types";
-import { px } from "@/lib/format";
+import type { Book, Participant } from "@contracts/types";
+import type { MarketArrival } from "@/hooks/use-market";
+import { bidderInitials, bidderLabel } from "@/lib/bidder";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/cn";
 
-/**
- * Who is in the round. Anonymous by design: a stable word and number per account, never a name.
- * While the clock runs, the people with sealed orders. When it clears, who traded and at what.
- */
-function initials(alias: string) {
-  const [w, n] = alias.split(" ");
-  return alias === "Owner" ? "OW" : `${w[0]}${n ?? ""}`.slice(0, 3);
-}
-
-function Person({ p, you, filled, price }: { p: Participant; you: boolean; filled?: boolean; price?: number | null }) {
+function Person({
+  p,
+  you,
+  arrival,
+}: {
+  p: Participant;
+  you: boolean;
+  arrival?: MarketArrival;
+}) {
   const buy = p.side === "buy";
+  const label = you ? "You" : bidderLabel(p, null);
   return (
-    <li className="relative flex flex-col items-center gap-1 w-[76px] shrink-0 fade-up" title={`${p.alias}: ${p.side} ${p.qty}`}>
+    <li className="relative flex w-[92px] shrink-0 flex-col items-center gap-1.5 fade-up">
       <span
         className={cn(
-          "grid place-items-center h-11 w-11 border font-mono text-[11px] tabular-nums transition-colors duration-200",
-          filled ? (buy ? "border-up bg-up/[0.10] text-up" : "border-down bg-down/[0.10] text-down") : buy ? "border-up/60 text-up" : "border-down/60 text-down",
+          "grid size-16 place-items-center border font-mono text-[16px] tabular-nums",
+          buy ? "border-up/50 text-up" : "border-down/50 text-down",
           you && "outline outline-1 outline-offset-2 outline-accent",
+          Boolean(arrival) && (buy ? "bg-up/[0.12]" : "bg-down/[0.12]"),
         )}
         aria-hidden
       >
-        {initials(p.alias)}
+        {bidderInitials(label)}
       </span>
-      <span className="font-mono text-[10px] text-foreground leading-tight">{you ? "You" : p.alias}</span>
-      <span className={cn("font-mono text-[10px] tabular-nums leading-tight", buy ? "text-up" : "text-down")}>
-        {buy ? "buy" : "sell"} {p.qty}{filled && price ? ` @ ${px(price)}` : ""}
-      </span>
+      <span className="font-mono text-[12px] leading-tight text-foreground">{label}</span>
     </li>
   );
 }
 
-export function Participants({ book, latest, justCleared, pending, quietRound = false, round, last }: { book: Book | null; latest: Batch | null; justCleared: boolean; pending: number; quietRound?: boolean; round?: number; last?: number | null }) {
+export function Participants({
+  book,
+  arrivals = [],
+}: {
+  book: Book | null;
+  arrivals?: MarketArrival[];
+}) {
   const you = book?.you ?? null;
-  const sealed = book?.participants ?? [];
-  const fills = latest?.fills ?? [];
-  const showFills = justCleared && fills.length > 0;
-  const list = showFills ? fills : sealed;
-  const n = sealed.length;
+  const seated = book?.participants ?? [];
 
   return (
-    <section className="bg-card border border-line">
-      <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
-        <Label>{showFills ? `Round ${latest?.round ?? ""} traded` : "Who is in the round"}</Label>
-        <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
-          {showFills
-            ? `${fills.length} filled at ${px(latest?.clearing_price)}`
-            : `carried over ${n}${pending > 0 ? ` · new this round ${pending}` : ""}`}
-        </span>
+    <section>
+      <div className="mb-3 flex items-baseline justify-between">
+        <Label>In this round</Label>
+        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{seated.length}</span>
       </div>
-      {quietRound && !showFills ? (
-        <p className="px-3 pt-2.5 -mb-1 font-mono text-[11px] text-muted-foreground tabular-nums">
-          Round {round ? round - 1 : ""}: no bid met an ask, nothing traded, the price holds at {px(last)}.
-        </p>
-      ) : null}
-      {list.length ? (
-        <ul className="flex gap-2 overflow-x-auto px-3 py-3">
-          {list.slice(0, 14).map((p) => (
-            <Person key={`${p.uid_hash}-${p.side}`} p={p} you={you !== null && p.uid_hash === you} filled={showFills} price={showFills ? latest?.clearing_price : undefined} />
+      {seated.length ? (
+        <ul className="flex gap-3 overflow-x-auto pb-1">
+          {seated.slice(0, 9).map((p) => (
+            <Person
+              key={`${p.uid_hash}-${p.side}`}
+              p={p}
+              you={you !== null && p.uid_hash === you}
+              arrival={arrivals.find((a) => a.uid_hash === p.uid_hash && a.side === p.side)}
+            />
           ))}
-          {list.length > 14 ? <li className="self-center font-mono text-[10px] text-muted-foreground">+{list.length - 14}</li> : null}
         </ul>
       ) : (
-        <p className="px-3 py-4 text-[13px] secondary">No orders carried into this round. The owner&rsquo;s quotes are always in.</p>
+        <p className="py-2 font-mono text-[12px] text-muted-foreground">Owner quoting</p>
       )}
     </section>
   );
