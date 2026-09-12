@@ -20,6 +20,11 @@ export const dynamic = "force-dynamic";
  * three tiers and only three. One dominant figure (what the account is worth),
  * one ledger (what it holds), one action (what to do next). Sections separate
  * with a hairline and a mono label, the same way the landing page does.
+ *
+ * The dominant figure is cash plus holdings, not holdings alone. Holdings alone
+ * was 16% of the account here, and the stake sizing below runs off cash, so the
+ * page would have shown one number at display scale and sized its suggestions
+ * off a different one.
  */
 export default async function OverviewPage() {
   const cookieStore = await cookies();
@@ -31,14 +36,15 @@ export default async function OverviewPage() {
     suggestPortfolio(session?.email).catch((): Suggestion[] => []),
   ]);
 
-  const equity = portfolio.positions.reduce((sum, p) => sum + p.value, 0);
+  const holdings = portfolio.positions.reduce((sum, p) => sum + p.value, 0);
+  const accountValue = portfolio.cash + holdings;
   const up = portfolio.pnl.total >= 0;
 
   const secondary: [string, string, boolean | null][] = [
     ["Cash", usd(portfolio.cash), null],
+    ["Holdings", usd(holdings), null],
     ["Realized", signed(portfolio.pnl.realized), portfolio.pnl.realized >= 0],
     ["Unrealized", signed(portfolio.pnl.unrealized), portfolio.pnl.unrealized >= 0],
-    ["Positions", String(portfolio.positions.length), null],
   ];
 
   return (
@@ -56,11 +62,11 @@ export default async function OverviewPage() {
       {/* tier one: the only figure that gets display scale */}
       <div className="border-t border-line pt-6">
         <Label tracking="normal" className="mb-3 block">
-          Portfolio value
+          Account value
         </Label>
         <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
           <span className="text-[44px] leading-none tabular-nums tracking-[-0.02em] md:text-[56px] 3xl:text-[64px]">
-            {usd(equity)}
+            {usd(accountValue)}
           </span>
           <span className={cn("font-mono text-[16px] tabular-nums", up ? "text-up" : "text-down")}>
             {signed(portfolio.pnl.total)}
@@ -98,7 +104,7 @@ export default async function OverviewPage() {
           <Label className="text-right">Shares</Label>
           <Label className="text-right">Avg cost</Label>
           <Label className="text-right">Last</Label>
-          <Label className="text-right">Value</Label>
+          <Label className="text-right">Market value</Label>
           <Label className="text-right">P&amp;L</Label>
         </div>
 

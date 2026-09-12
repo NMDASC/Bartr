@@ -1,6 +1,6 @@
 {
   "cash": 71482.55,
-  "pnl": { "realized": 1204.10, "unrealized": -318.75, "total": 885.35 },
+  "pnl": { "realized": 1204.10, "unrealized": 106.80, "total": 1310.90 },
   "positions": [
     { "market_id": "co_squirrel_hill_wash", "name": "Squirrel Hill Wash and Fold", "qty": 180, "avg_cost": 55.20, "last": 56.40, "value": 10152.00, "pnl": 216.00 },
     { "market_id": "co_lawrenceville_laundry", "name": "Butler Street Laundromat", "qty": 52, "avg_cost": 66.10, "last": 64.00, "value": 3328.00, "pnl": -109.20 }

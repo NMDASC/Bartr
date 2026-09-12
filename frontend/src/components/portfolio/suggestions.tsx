@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { Suggestion } from "@contracts/types";
-import { usd, px, pct } from "@/lib/format";
+import { usd, px, pct, signed } from "@/lib/format";
 import { Label } from "@/components/ui/label";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
@@ -11,6 +11,13 @@ import { cn } from "@/lib/cn";
 /**
  * Half-Kelly sizing from Plan.md 8.6, re-scaled client-side by the risk slider.
  * The numbers come from the API; the slider only multiplies the Kelly fraction (0.25 .. 1.0).
+ *
+ * Form note: this section is deliberately NOT a column table. The positions ledger
+ * sits directly above it, and two stacked tables of company rows read as one repeated
+ * section no matter how they differ inside. So the section is carried by the allocation
+ * bar, and each candidate gets its own labelled metric cluster instead of a shared
+ * header row. The bar is also the only thing on the page that moves, and the slider
+ * beside it is the cause.
  */
 export function Suggestions({ initial, bankroll }: { initial: Suggestion[]; bankroll: number }) {
   const [mult, setMult] = useState(0.5);
@@ -22,6 +29,8 @@ export function Suggestions({ initial, bankroll }: { initial: Suggestion[]; bank
   const total = rows.reduce((a, r) => a + r.usd, 0);
   const cap = 0.8 * bankroll;
   const scale = total > cap ? cap / total : 1;
+  const deployed = total * scale;
+  const idle = Math.max(0, bankroll - deployed);
 
   return (
     <div>
@@ -34,40 +43,59 @@ export function Suggestions({ initial, bankroll }: { initial: Suggestion[]; bank
         </label>
       </div>
 
-      <div className="hidden md:grid grid-cols-[1fr_88px_88px_88px_96px_96px_110px] gap-4 px-3 pb-2 border-b border-line">
-        <Label>Company</Label>
-        <Label className="text-right">Price</Label>
-        <Label className="text-right">Value</Label>
-        <Label className="text-right">Edge</Label>
-        <Label className="text-right">Uncertainty</Label>
-        <Label className="text-right">Of bankroll</Label>
-        <Label className="text-right">Suggested</Label>
+      <div className="mb-9">
+        <div className="flex h-2.5 w-full gap-px">
+          {rows
+            .filter((r) => r.usd > 0)
+            .map((r) => (
+              <div
+                key={r.company._id}
+                className="bg-up transition-[width] duration-200 ease-out"
+                style={{ width: `${((r.usd * scale) / bankroll) * 100}%` }}
+              />
+            ))}
+          <div className="flex-1 bg-hairline" />
+        </div>
+        <div className="mt-2.5 flex items-baseline justify-between gap-4">
+          <Label tracking="tight">Deployed {usd(deployed, { cents: false })}</Label>
+          <Label tracking="tight">Unallocated {usd(idle, { cents: false })}</Label>
+        </div>
       </div>
+
       <ul>
-        {rows.map((r) => (
-          <li key={r.company._id} className="border-b border-hairline">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_88px_88px_88px_96px_96px_110px] items-start gap-x-4 gap-y-2 px-3 py-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Link href={`/company/${r.company._id}`} className="text-[16px] hover:text-accent-deep">{r.company.name}</Link>
-                  {r.edge < 0 ? <Chip tone="down">overpriced</Chip> : r.f === 0 ? <Chip tone="neutral">no edge</Chip> : <Chip tone="up">buy</Chip>}
+        {rows.map((r) => {
+          const cells: [string, string, string][] = [
+            ["Price", px(r.price), ""],
+            ["Fair value", px(r.model_value), ""],
+            ["Edge", `${signed(r.edge * 100)}%`, r.edge >= 0 ? "text-up" : "text-down"],
+            ["Uncertainty", r.sigma.toFixed(2), ""],
+            ["Of bankroll", pct(r.f, 1), ""],
+            ["Suggested", usd(r.usd * scale, { cents: false }), ""],
+          ];
+          return (
+            <li key={r.company._id} className="border-b border-hairline py-5">
+              <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between md:gap-10">
+                <div className="min-w-0 md:max-w-md">
+                  <div className="flex items-center gap-2">
+                    <Link href={`/company/${r.company._id}`} className="text-[16px] hover:text-accent-deep">{r.company.name}</Link>
+                    {r.edge < 0 ? <Chip tone="down">overpriced</Chip> : r.f === 0 ? <Chip tone="neutral">no edge</Chip> : <Chip tone="up">buy</Chip>}
+                  </div>
+                  <div className="text-[13px] secondary">{r.company.city}, {r.company.state} · {r.company.category.replace(/_/g, " ")}</div>
+                  <p className="mt-2 text-[14px] secondary">{r.why}</p>
                 </div>
-                <div className="text-[13px] secondary">{r.company.city}, {r.company.state} · {r.company.category.replace(/_/g, " ")}</div>
-                <p className="mt-2 text-[14px] secondary max-w-2xl">{r.why}</p>
+                <div className="grid grid-cols-3 gap-x-7 gap-y-3.5 sm:grid-cols-6 md:w-[600px] md:shrink-0">
+                  {cells.map(([label, value, tone]) => (
+                    <div key={label} className="sm:text-right">
+                      <Label tracking="tight">{label}</Label>
+                      <div className={cn("mt-1 font-mono text-[13px] tabular-nums", tone)}>{value}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="font-mono text-[13px] tabular-nums md:text-right">{px(r.price)}</div>
-              <div className="font-mono text-[13px] tabular-nums md:text-right">{px(r.model_value)}</div>
-              <div className={cn("font-mono text-[13px] tabular-nums md:text-right", r.edge >= 0 ? "text-up" : "text-down")}>{(r.edge * 100).toFixed(2)}%</div>
-              <div className="font-mono text-[13px] tabular-nums md:text-right">{r.sigma.toFixed(2)}</div>
-              <div className="font-mono text-[13px] tabular-nums md:text-right">{pct(r.f, 1)}</div>
-              <div className="font-mono text-[13px] tabular-nums md:text-right">{usd(r.usd * scale, { cents: false })}</div>
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
-      {scale < 1 ? (
-        <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">scaled ×{scale.toFixed(2)}</p>
-      ) : null}
     </div>
   );
 }
