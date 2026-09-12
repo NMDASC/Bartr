@@ -55,6 +55,7 @@ async def suggest(body: SuggestIn | None = None, uid: str = Depends(current_user
         body.kelly_multiplier = 0.25 + 0.75 * float(prof.get("tolerance", 0.33)) if body.kelly_multiplier == 0.5 else body.kelly_multiplier
     bankroll = body.bankroll or u["cash"]
     cands = []
+    markets = {m["id"]: m for m in store.list_markets()}
     for c in store.list_companies():
         if body.states and (c.get("state") or "").upper() not in [s.upper() for s in body.states]:
             continue
@@ -62,7 +63,9 @@ async def suggest(body: SuggestIn | None = None, uid: str = Depends(current_user
             continue
         if body.exclude_held and c["id"] in u["positions"]:
             continue
-        m = store.get_market(c["id"])
+        m = markets.get(c["id"])
+        if not m or not m.get("listed", True):
+            continue   # discovered businesses are not buyable; they take offers
         price = m["last_price"] or m["ref_price"]
         value = body.own_values.get(c["id"]) or (math.exp(m["prior"]["mu"]) / SHARES)
         cands.append({"id": c["id"], "c": c, "price": price, "value": value, "sigma": m["belief"]["sigma"]})

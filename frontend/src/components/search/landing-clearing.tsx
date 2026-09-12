@@ -100,7 +100,7 @@ export function LandingClearing() {
     };
   }, []);
 
-  const orders = useMemo(book, []);
+  const orders = useMemo(() => book(), []);
   const cleared = useMemo(() => clearAt(orders), [orders]);
 
   const bids = useMemo(() => curve(orders.filter((o) => o.side === "bid").sort((a, b) => b.price - a.price)), [orders]);

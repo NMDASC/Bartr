@@ -79,6 +79,11 @@ class MongoStore:
 
     def cancelled_orders(self, mid: str) -> list[dict]:
         return [_r(d) for d in self.db.orders.find({"market_id": mid, "status": "cancelled", "filled_qty": 0})]
+    def open_orders_all(self) -> list[dict]:
+        return [_r(d) for d in self.db.orders.find({"status": {"$in": ["open", "partial"]}})]
+
+    def market_orders(self, mid: str) -> list[dict]:
+        return [_r(d) for d in self.db.orders.find({"market_id": mid})]
 
     def user_orders(self, uid: str, mid: str | None = None) -> list[dict]:
         q: dict = {"user_id": uid}
@@ -116,6 +121,10 @@ class MongoStore:
         ])
         summary = next(iter(rows), {})
         return {"trades": summary.get("trades", 0), "traded_notional": round(summary.get("traded_notional", 0), 2)}
+
+    def trades_recent(self, limit: int = 2000) -> list[dict]:
+        cur = self.db.trades.find().sort("t", DESCENDING).limit(limit)
+        return [_r(d) for d in reversed(list(cur))]
 
     # users
     def get_user(self, uid: str) -> dict | None:

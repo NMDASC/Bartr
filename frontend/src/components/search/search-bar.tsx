@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/cn";
 import "./landing.css";
 
 const ROTATION = [
@@ -49,8 +48,8 @@ export function SearchBar({
   useEffect(() => {
     if (!idle) return;
     if (reducedMotion()) {
-      setGhost(ROTATION[0]);
-      return;
+      const t = setTimeout(() => setGhost(ROTATION[0]), 0);
+      return () => clearTimeout(t);
     }
     let cancelled = false;
     let phrase = 0;

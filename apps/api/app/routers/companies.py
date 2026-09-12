@@ -31,8 +31,7 @@ def list_companies(state: str | None = None, category: str | None = None, q: str
     if q:
         ql = q.lower()
         cs = [c for c in cs if ql in c["name"].lower() or ql in (c.get("description") or "").lower() or ql in c["category"] or ql in (c.get("city") or "").lower()]
-    markets = {m["id"]: m for m in store.list_markets()}
-    cards = [engine.card(c, market=markets.get(c["id"])) for c in cs]
+    cards = engine.cards(cs)
     key = {"v0": "v0_per_share", "confidence": "confidence", "last": "last", "name": "name"}[sort]
     cards.sort(key=lambda x: (x.get(key) is None, x.get(key) if x.get(key) is not None else 0), reverse=(sort != "name"))
     return cards

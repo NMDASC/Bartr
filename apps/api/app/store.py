@@ -28,6 +28,8 @@ class Store(Protocol):
     def get_order(self, oid: str) -> dict | None: ...
     def open_orders(self, mid: str) -> list[dict]: ...
     def cancelled_orders(self, mid: str) -> list[dict]: ...
+    def open_orders_all(self) -> list[dict]: ...                 # every open/partial order, one query
+    def market_orders(self, mid: str) -> list[dict]: ...         # every order in a market, any status
     def user_orders(self, uid: str, mid: str | None = None) -> list[dict]: ...
     # batches, trades
     def add_batch(self, b: dict) -> None: ...
@@ -36,6 +38,7 @@ class Store(Protocol):
     def trades(self, mid: str, limit: int = 50) -> list[dict]: ...
     def user_trades(self, uid: str, limit: int = 100) -> list[dict]: ...
     def user_trade_summary(self, uid: str) -> dict: ...
+    def trades_recent(self, limit: int = 2000) -> list[dict]: ...   # across markets, oldest first
     # users: {id, cash, positions: {mid: {qty, avg_cost}}, email?, display_name?}
     def get_user(self, uid: str) -> dict | None: ...
     def put_user(self, u: dict) -> None: ...
@@ -93,6 +96,10 @@ class MemoryStore:
         return [o for o in self.orders.values() if o["market_id"] == mid and o["status"] in ("open", "partial")]
     def cancelled_orders(self, mid):
         return [o for o in self.orders.values() if o["market_id"] == mid and o["status"] == "cancelled" and o["filled_qty"] == 0]
+    def open_orders_all(self):
+        return [o for o in self.orders.values() if o["status"] in ("open", "partial")]
+    def market_orders(self, mid):
+        return [o for o in self.orders.values() if o["market_id"] == mid]
     def user_orders(self, uid, mid=None):
         return [o for o in self.orders.values() if o["user_id"] == uid and (mid is None or o["market_id"] == mid)]
     # batches, trades
@@ -112,6 +119,9 @@ class MemoryStore:
                     count += 1
                     notional += trade["qty"] * trade["price"]
         return {"trades": count, "traded_notional": round(notional, 2)}
+    def trades_recent(self, limit=2000):
+        allt = sorted((t for ts in self._trades.values() for t in ts), key=lambda t: t["t"])
+        return allt[-limit:]
     # users
     def get_user(self, uid): return self.users.get(uid)
     def put_user(self, u): self.users[u["id"]] = u
