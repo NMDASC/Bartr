@@ -43,7 +43,7 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 | 0:08 | 2 36 million | "Who here is from CMU? Who's eaten at Grapow? Ever thought about putting money into it? There's no way to. Thirty-six million small businesses in this country." |
 | 0:16 | 3 80 percent | "And when the owner retires, four out of five that try to sell never find a buyer. They shut down. Most of them are profitable. They close because nobody can write a check for the whole thing, and nobody's allowed to buy part of it." |
 | 0:26 | 4 Half the workforce | "These places employ half the American workforce. This isn't a niche. It's the economy." |
-| 0:32 | 5 Who and what | "We connect buyers and sellers. Owners sell 30 percent and keep running the place. Investors buy 20 shares with a price and a way out. Acquirers get the owner's ear and a letter of intent. Six things, all built and running." |
+| 0:32 | 5 Who and what | "We connect buyers and sellers. Owners sell 30 percent and keep running the place. Investors buy 20 shares with a price and a way out. Acquirers get the owner's ear and a letter of intent." |
 | 0:40 | 6 Discover | "Type laundromat in Pittsburgh. Places, Querit, Grok. Every number keeps the sentence it came from. 53 real businesses priced." |
 | 0:47 | 7 How search works | "Nothing is typed in by hand. Grok reads the brief. Places lists every business in the city. Querit finds twelve pages and reads the best six. Grok turns pages into profiles where every figure keeps its sentence and its URL. Ranked by evidence, valued five ways, on the page as it happens." |
 | 0:58 | 8 One company | "Squirrel Hill Wash and Fold: $570,768, range 475 to 686 thousand." |
