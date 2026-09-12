@@ -42,7 +42,7 @@ def test_end_to_end():
         assert sum(1 for e in evs if '"company_ready"' in e) >= 2
         # acquire
         a = c.post(f"/api/v1/acquire/{cid}/start", headers=H).json()
-        assert a["loi_md"].startswith("# Letter of Intent") and any("Pittsburgh" in i["item"] for i in a["checklist"]) and any("Allegheny" in i["item"] for i in a["checklist"])
+        assert a["loi_md"].startswith("# Non-Binding Letter of Intent") and "Play money" not in a["loi_md"] and any("Pittsburgh" in i["item"] for i in a["checklist"]) and any("Allegheny" in i["item"] for i in a["checklist"])
         # flags endpoint exists and validates
         assert c.get("/api/v1/surveillance/flags").status_code == 200
         pv = c.post("/api/v1/companies/valuation/preview", json={"name": "x", "category": "car_wash", "employees": 9}).json()

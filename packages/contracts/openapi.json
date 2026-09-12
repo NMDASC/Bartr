@@ -632,6 +632,7 @@
      "markets"
     ],
     "summary": "Batches",
+    "description": "Price history. By default only rounds that carry a price (trades or limit up/down steps),\nwhich is what the chart wants; `all=true` includes quiet rounds with clearing_price null.",
     "operationId": "batches_api_v1_markets__mid__batches_get",
     "parameters": [
      {
@@ -661,6 +662,16 @@
        "type": "boolean",
        "default": false,
        "title": "Snapshot"
+      }
+     },
+     {
+      "name": "all",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": false,
+       "title": "All"
       }
      }
     ],

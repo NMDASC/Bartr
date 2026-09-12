@@ -218,6 +218,7 @@ class Engine:
             # edge with zero volume and the band walks toward the resting interest next round
             m["last_price"] = res.price
             batch["ref_moved"] = True
+            batch["clearing_price"] = res.price  # the stepped reference; contract wants a number on every batch the UI sees
         if res.volume > 0:
             self._apply_fills(m, batch, res)
             m["last_price"] = res.price
@@ -236,7 +237,8 @@ class Engine:
         self.store.audit({"t": t0, "actor": "system", "action": "batch", "payload": {"market_id": mid, "price": batch["clearing_price"], "volume": res.volume, "band_hit": res.band_hit}})
         if self.hub:
             from app import views
-            self.hub.publish(mid, {"type": "batch", "batch": views.batch(batch)})
+            if batch["clearing_price"] is not None:   # quiet rounds only refresh the book (countdown); the chart never sees a null price
+                self.hub.publish(mid, {"type": "batch", "batch": views.batch(batch)})
             self.hub.publish(mid, {"type": "book", "book": self.book(mid)})
             if m["halted"]:
                 self.hub.publish(mid, {"type": "halt", "market_id": mid, "until_batch": 1, "reason": "two consecutive band hits"})
