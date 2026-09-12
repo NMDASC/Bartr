@@ -40,6 +40,7 @@ def main():
         with urlopen(request, timeout=30) as response:
             job = json.load(response)
         companies, terminal = [], None
+        available = -1
         with urlopen(base + "/api/v1/discovery/jobs/" + job["job_id"], timeout=210) as response:
             for line in response:
                 if not line.startswith(b"data: "):
@@ -47,6 +48,9 @@ def main():
                 event = json.loads(line[6:])
                 if event["type"] == "ranking":
                     companies = event["companies"]
+                    if len(companies) != available:
+                        available = len(companies)
+                        print(json.dumps({"city": city, "matches_available": available}), flush=True)
                 if event["type"] == "done":
                     terminal = event
                     break

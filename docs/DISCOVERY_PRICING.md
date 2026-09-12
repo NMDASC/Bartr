@@ -18,6 +18,8 @@ Querit's full-page contents endpoint requires separate account access. A denied 
 
 Successful results remain available if a provider fails, with terminal warnings. Identical active/completed-successful jobs reuse work for five minutes. Failed/partial jobs can be retried. Jobs are bounded in-process state, expire after 15 minutes on subsequent activity, and do not survive restart. One API worker remains required. Company evidence and valuation history use the configured Store and therefore follow memory/Mongo persistence.
 
+Structured US Google Places results are saved before Grok enrichment when address components establish the city/state and the returned place types map to a supported business category. They pass the same strict filters and evidence validation. Ratings and review counts are sourced facts; financials remain absent until supported by evidence. Model timeouts therefore retain usable business results.
+
 ## Pricing
 
 Discovery enrichment and valuation previews use `pricing.py`: a precision-weighted log-space ensemble with disagreement inflation. The output includes whole-business USD value, P20/P80 interval, estimator breakdown, per-share opening reference (`v0 / SHARES`), timestamp, pricing version, calibration version and benchmark provenance. The interval is model uncertainty, not an empirically guaranteed coverage claim.

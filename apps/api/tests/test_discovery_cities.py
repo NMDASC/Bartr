@@ -141,6 +141,48 @@ async def test_contents_subscription_denial_is_not_retried(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_places_results_survive_model_timeout_without_relaxing_city(monkeypatch):
+    from app.services.discovery import jobs
+    engine = Engine(MemoryStore())
+    place = {"name": "NYC Test Laundry", "source_url": "https://maps.google.com/?cid=123",
+             "city": "New York", "state": "NY", "country": "US", "category": "laundromat",
+             "address": "123 Test Street, New York, NY", "rating": 4.5, "review_count": 20}
+
+    class Provider:
+        async def search(self, query, count):
+            return []
+        async def contents(self, pages):
+            return pages
+
+    async def places(query, count):
+        return [place, {**place, "name": "Wrong City Laundry", "city": "Boston", "state": "MA", "source_url": "https://maps.google.com/?cid=124"},
+                {**place, "name": "Unknown Location Laundry", "city": None, "source_url": "https://maps.google.com/?cid=125"}]
+
+    async def timeout(*args, **kwargs):
+        # Structured results must already be stored before the slow extraction.
+        assert len(engine.store.list_companies()) == 1
+        raise TimeoutError()
+
+    monkeypatch.setenv("QUERIT_API_KEY", "test-only")
+    monkeypatch.setattr(jobs.llm, "is_configured", lambda provider: True)
+    monkeypatch.setattr(jobs.llm, "complete", timeout)
+    monkeypatch.setattr(jobs, "text_search", places)
+    manager = DiscoveryJobs(engine, Provider())
+    query = "laundromat in NYC"
+    job = manager.start(DiscoveryRequest(q=query, live=True), intent=parse_intent(query))
+    await job.task
+    assert job.status == "partial" and len(job.results) == 1
+    assert len(engine.store.list_markets()) == 1
+    detail = engine.company_out(engine.store.list_companies()[0])
+    assert detail["city"] == "New York"
+    assert detail["rating"] == 4.5
+    assert detail["financials"]["revenue_est"] is None
+    assert detail["sources"][0]["url"] == place["source_url"]
+    assert any(event["type"] == "company_ready" for event in job.events)
+    await manager.close()
+
+
+@pytest.mark.asyncio
 async def test_provider_failure_keeps_matches_and_retry_starts_new_job(monkeypatch):
     from app.services.discovery import jobs
     engine = Engine(MemoryStore())

@@ -18,7 +18,7 @@ from .pricing import save_company, verified_company
 from .querit import Querit, ContentsUnavailable
 from .ranking import rank_companies
 from .locations import retrieval_query
-from .places import text_search
+from .places import text_search, sourced_company
 from .intent import _matches
 
 
@@ -113,6 +113,7 @@ class DiscoveryJobs:
         return pages
 
     def ingest(self, extracted: ExtractedCompanies, pages: list[dict], job: Job):
+        ready = set()
         for item in extracted.companies[:job.request.limit]:
             try:
                 data = verified_company(item, pages)
@@ -126,12 +127,14 @@ class DiscoveryJobs:
                     or item.name.casefold() in p["content"].casefold()]
                 company = save_company(self.engine, data)
                 if rank_companies(job.request.q, job.intent, [company]):
-                    self.rank(job)
-                    hit = next((h for h in job.results if h["company"]["_id"] == company["id"]), None)
-                    if hit:
-                        job.emit({"type": "company_ready", "company": {**hit["company"], "relevance": hit["relevance"]}})
+                    ready.add(company["id"])
             except (ValueError, TypeError, KeyError):
                 job.warnings.append("A company was omitted because its source evidence was incomplete or invalid")
+        # Mongo-backed ranking loads market cards; do it once per batch, not per row.
+        self.rank(job)
+        for hit in job.results:
+            if hit["company"]["_id"] in ready:
+                job.emit({"type": "company_ready", "company": {**hit["company"], "relevance": hit["relevance"]}})
 
     async def live(self, job: Job):
         async with self.live_slots:
@@ -146,11 +149,13 @@ class DiscoveryJobs:
                 job.warnings.append("Some location details were unavailable")
             if not pages and not places:
                 return
+            place_pages = [{"url": p["source_url"], "title": p["name"], "content": json.dumps(p)} for p in places]
+            structured_places = [company for p in places if (company := sourced_company(p)) is not None]
+            self.ingest(ExtractedCompanies(companies=structured_places), place_pages, job)
             pages = await self.source_pages(pages[:6], job)
-            pages.extend({"url": p["source_url"], "title": p["name"], "content": json.dumps(p)} for p in places)
+            pages.extend(place_pages)
             initial = await self.extract(pages)
             self.ingest(initial, pages, job)
-            self.rank(job)
             # Budgeted targeted enrichment, important for business financials.
             for item in initial.companies[:min(3, job.request.limit)]:
                 if not _matches(item.model_dump(), {**job.intent, "min_value": None, "max_value": None}):
@@ -163,7 +168,6 @@ class DiscoveryJobs:
                         # A targeted search cannot replace an unrelated business.
                         enriched.companies = [c for c in enriched.companies if c.name.casefold() == item.name.casefold()]
                         self.ingest(enriched, more, job)
-                        self.rank(job)
                 except Exception:
                     job.warnings.append("Financial enrichment was unavailable for one company")
 
