@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn";
 
 /**
  * Plate figure. Caption bar fused to the top edge, half-pixel strokes on the body.
- * Prefix is JB., never LEM. A plate must encode something real.
+ * Prefix is BTR., never LEM. A plate must encode something real.
  */
 export function Plate({
   id,

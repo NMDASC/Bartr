@@ -29,10 +29,10 @@ const BASE = `${API_URL}/api/v1`;
 /** Demo auth: judges trade from phones without logging in. Matches Plan.md section 7. */
 export function demoUser(): string {
   if (typeof window === "undefined") return "server";
-  let u = window.localStorage.getItem("jb:demo-user");
+  let u = window.localStorage.getItem("bartr:user");
   if (!u) {
     u = `guest-${Math.random().toString(36).slice(2, 6)}`;
-    window.localStorage.setItem("jb:demo-user", u);
+    window.localStorage.setItem("bartr:user", u);
   }
   return u;
 }

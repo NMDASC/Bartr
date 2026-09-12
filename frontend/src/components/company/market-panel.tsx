@@ -32,7 +32,7 @@ export function MarketPanel({ company }: { company: Company }) {
             <div className="flex items-end gap-6">
               <div>
                 <Label tracking="tight" className="block mb-1">Last clearing price</Label>
-                <div key={m.tick} className={cn("text-[40px] leading-none tabular-nums px-1 -mx-1", m.tick > 0 && "jb-clear")}>{px(m.last)}</div>
+                <div key={m.tick} className={cn("text-[40px] leading-none tabular-nums px-1 -mx-1", m.tick > 0 && "bartr-clear")}>{px(m.last)}</div>
               </div>
               <div className="pb-1">
                 <Label tracking="tight" className="block mb-1">Change</Label>

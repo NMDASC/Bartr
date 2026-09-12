@@ -5,7 +5,7 @@ import type { Book } from "@contracts/types";
 import { Plate } from "@/components/ui/plate";
 
 /**
- * JB. 1.1  The auction as a picture. demand(p) = buy qty with limit >= p, supply(p) = sell qty
+ * BTR. 1.1  The auction as a picture. demand(p) = buy qty with limit >= p, supply(p) = sell qty
  * with limit <= p. The clearing price is where min(demand, supply) is largest. Both curves are
  * computed from the live book, so this is evidence, not ornament.
  */
@@ -60,14 +60,14 @@ export function DepthPlate({ book, tick, last }: { book: Book | null; tick: numb
   const caption = geo ? (geo.star.v > 0 ? `p* ${geo.star.p.toFixed(2)}  vol ${geo.star.v}` : `no cross yet  ref ${geo.star.p.toFixed(2)}`) : "";
 
   return (
-    <Plate id="JB. 1.1" caption={caption} className="h-full">
+    <Plate id="BTR. 1.1" caption={caption} className="h-full">
       {geo ? (
         <svg key={tick} viewBox={`0 0 ${geo.W} ${geo.H}`} className="block w-full h-auto" role="img" aria-label={`Demand and supply curves; clearing price ${geo.star.p.toFixed(2)} at volume ${geo.star.v}`}>
           {/* axis */}
           <line x1={0} x2={geo.W} y1={geo.H - geo.mB} y2={geo.H - geo.mB} stroke="#d3d3e5" strokeWidth={0.5} />
           {/* supply dashed, demand solid, both accent */}
-          <path d={geo.supply} fill="none" stroke="#755cfe" strokeWidth={1} strokeDasharray="3 2" opacity={0.7} pathLength={1} className="jb-draw" />
-          <path d={geo.demand} fill="none" stroke="#755cfe" strokeWidth={1} opacity={0.7} pathLength={1} className="jb-draw" />
+          <path d={geo.supply} fill="none" stroke="#755cfe" strokeWidth={1} strokeDasharray="3 2" opacity={0.7} pathLength={1} className="bartr-draw" />
+          <path d={geo.demand} fill="none" stroke="#755cfe" strokeWidth={1} opacity={0.7} pathLength={1} className="bartr-draw" />
           {/* clearing marker */}
           <line x1={geo.x(geo.star.p)} x2={geo.x(geo.star.p)} y1={geo.y(geo.star.v)} y2={geo.H - geo.mB} stroke="#1d1956" strokeWidth={0.75} />
           <circle cx={geo.x(geo.star.p)} cy={geo.y(geo.star.v)} r={2.5} fill="#755cfe" />

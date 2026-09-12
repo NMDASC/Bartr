@@ -72,7 +72,7 @@ export function Chat() {
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
           {msgs.map((m, i) => (
             <div key={i} className={cn("max-w-[72ch]", m.role === "user" ? "self-end" : "self-start")}>
-              <Label tracking="tight" className="block mb-1">{m.role === "user" ? "you" : "jb"}</Label>
+              <Label tracking="tight" className="block mb-1">{m.role === "user" ? "you" : "bartr"}</Label>
               <div className={cn("px-3 py-2 text-[15px] whitespace-pre-wrap", m.role === "user" ? "bg-surface" : "border-l-2 border-accent bg-accent/[0.05]")}>{m.content}</div>
               {m.tool_calls?.length ? (
                 <ul className="mt-1.5 flex flex-wrap gap-1.5">

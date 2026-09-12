@@ -1,4 +1,4 @@
-# JB frontend
+# Bartr frontend
 
 Next.js 16 (App Router), Tailwind v4, TypeScript. Owner: A.
 
@@ -25,7 +25,7 @@ Everything goes through `src/lib/api.ts`. No screen imports fixtures or fetch di
 |---|---|---|
 | `/` | `app/page.tsx` | hero, search, trending rows |
 | `/search?q=` | `app/search/page.tsx` + `components/search/results.tsx` | streamed results, filter rail, `READING` chip on stubs |
-| `/company/[id]` | `app/company/[id]/page.tsx` + `components/company/*` | price strip, countdown, step chart, order book, depth plate `JB. 1.1`, order ticket, valuation estimators, sources |
+| `/company/[id]` | `app/company/[id]/page.tsx` + `components/company/*` | price strip, countdown, step chart, order book, depth plate `BTR. 1.1`, order ticket, valuation estimators, sources |
 | `/company/[id]/acquire` | `app/company/[id]/acquire/page.tsx` | LOI, diligence checklist with citations |
 | `/portfolio` | `app/portfolio/page.tsx` | cash, positions, half-Kelly suggestions with risk slider |
 | `/surveillance` | `app/surveillance/page.tsx` | flags feed, per-reviewer severities, disputed marker |
@@ -50,5 +50,5 @@ Britti Sans is licensed and not installed. The sans stack is `brittiSans, Geist,
 
 - Prices per share are `px()` (2 decimals, no symbol). Whole-company values are `usd(n, { compact: true })`.
 - `origin` on a book level is `user | treasury | bot | agent`. Treasury rows get the `OWNER` tag.
-- Plate figures use the `JB. x.y` prefix and must encode something real from live data.
+- Plate figures use the `BTR. x.y` prefix and must encode something real from live data.
 - Any new field the UI needs goes into `packages/contracts/types.ts` with a `docs/DECISIONS.md` entry, not into a component.

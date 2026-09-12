@@ -9,7 +9,7 @@ export function Footer() {
           <div className="max-w-md">
             <div className="flex items-center gap-2.5 text-[16px]">
               <span aria-hidden className="inline-block size-3 bg-primary" />
-              <span>JB</span>
+              <span>Bartr</span>
             </div>
             <p className="mt-3 text-[14px] secondary">
               A discovery engine and exchange for the businesses that will never be listed.

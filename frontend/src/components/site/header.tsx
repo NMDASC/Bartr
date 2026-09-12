@@ -19,7 +19,7 @@ export function Header() {
       <div className="mx-auto flex h-14 max-w-7xl 3xl:max-w-8xl items-center justify-between px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
         <Link href="/" className="flex items-center gap-2.5 text-[16px] text-foreground">
           <span aria-hidden className="inline-block size-3 bg-primary" />
-          <span>JB</span>
+          <span>Bartr</span>
         </Link>
         <nav aria-label="Primary" className="hidden md:flex items-center gap-7">
           {nav.map((n) => (

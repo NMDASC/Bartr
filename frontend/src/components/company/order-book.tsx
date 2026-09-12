@@ -72,7 +72,7 @@ export function OrderBook({ book, last, tick }: { book: Book | null; last: numbe
               </>
             )}
           </span>
-          <span key={tick} className={cn("px-1.5 -mx-1.5 text-accent", tick > 0 && "jb-clear")}>
+          <span key={tick} className={cn("px-1.5 -mx-1.5 text-accent", tick > 0 && "bartr-clear")}>
             last {px(last)}
           </span>
         </div>

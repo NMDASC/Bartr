@@ -17,7 +17,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JB",
+  title: "Bartr",
   description:
     "A discovery engine and exchange for the businesses that will never be listed. Search them, price them, buy a fraction, acquire the whole thing.",
 };

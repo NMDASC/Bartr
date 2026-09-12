@@ -2,7 +2,7 @@
 @import "../styles/lemma-tokens.css" layer(base);
 
 /*
-  JB web. Design system: Lemma kinship (see ~/.aside/u/0/skills/user/lemma-design).
+  Bartr web. Design system: Lemma kinship (see ~/.aside/u/0/skills/user/lemma-design).
   Light only. Zero radius. No shadows. Hairline rules. One accent, spent on state.
 
   Font note: Britti Sans is licensed and not installed. The sans stack keeps
@@ -149,36 +149,36 @@
 }
 
 /* entrance for streamed rows */
-@keyframes jb-fade-up {
+@keyframes bartr-fade-up {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @utility fade-up {
-  animation: jb-fade-up 400ms var(--ease-out) both;
+  animation: bartr-fade-up 400ms var(--ease-out) both;
 }
 
 /* plate stroke draw-in */
-@keyframes jb-draw {
+@keyframes bartr-draw {
   from { stroke-dashoffset: 1; }
   to { stroke-dashoffset: 0; }
 }
-.jb-draw {
+.bartr-draw {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  animation: jb-draw 900ms var(--ease-draw) forwards;
+  animation: bartr-draw 900ms var(--ease-draw) forwards;
 }
 
 /* the clearing pulse: one 300ms flash on the last price when a batch lands */
-@keyframes jb-clear {
+@keyframes bartr-clear {
   0% { background-color: rgb(117 92 254 / 0.18); }
   100% { background-color: transparent; }
 }
-.jb-clear {
-  animation: jb-clear 600ms var(--ease-out) 1;
+.bartr-clear {
+  animation: bartr-clear 600ms var(--ease-out) 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jb-draw, .jb-clear, .fade-up { animation: none !important; }
-  .jb-draw { stroke-dashoffset: 0; }
+  .bartr-draw, .bartr-clear, .fade-up { animation: none !important; }
+  .bartr-draw { stroke-dashoffset: 0; }
   * { transition: none !important; }
 }
