@@ -5,10 +5,11 @@
 ## Present
 
 1. `open apps/deck/index.html` in Chrome, press `F` for full screen.
-2. Keys: `→` `space` next (reveals the second beat on slide 2 first), `←` back, `Home` `End`, `P` presenter clock (starts when you leave slide 1, turns white at 2:50), `R` replays the two rounds on slide 9, `Esc` leaves full screen. Clicking the right two thirds of the screen also advances.
+2. Keys: `→` `space` next (reveals the second beat on slide 2 first), `←` back, `Home`, `End` returns to the public close, `Q` jumps to the internal Q&A appendix, `P` presenter clock (starts when you leave slide 1, turns white at 2:50), `R` replays the two rounds on slide 9, `Esc` leaves full screen. Clicking the right two thirds of the screen also advances.
 3. `#8` in the URL jumps to a slide. The deck scales to any window (tested 1920x1080 and 1440x900).
 4. Slide 9 plays on its own when you land on it: two rounds, about 30 seconds. Traders quote from their cards, each quote flies into the book, the countdown hits zero, demand and supply draw, the clearing price snaps in, fills flash, the price chart gets a point, the model value updates and the owner requotes the ladder and floor from it. In round 2 a holder sells. It runs the real clearing rule and the real belief update (same constants as `engine.py`) on the real opening book from `scripts/demo_pricing.py`.
-5. If Chrome dies, `Bartr.pdf` has the same 16 slides at their final state. `Bartr.pptx` is the same as images with the talk track in the notes.
+5. Stop the public presentation on slide 16. Slides 17 to 28 are an internal Q&A appendix covering market, owners, competition, valuation, liquidity, regulation, investor rights, business model, technical truth and security. Press `Q` from any slide to open it.
+6. If Chrome dies, `Bartr.pdf` has the 16 public slides followed by the 12-slide Q&A appendix. `Bartr.pptx` is the same as images with the talk track and Q&A prompts in the notes.
 
 Fonts: SF Pro on a Mac, Inter from Google Fonts otherwise. KaTeX loads from cdnjs. Both need network once; after that Chrome caches them. Open the deck once on the venue wifi before we go up.
 
@@ -35,7 +36,7 @@ Sponsor logos are in `assets/logos/` (simple-icons, CC0). No xAI, IFM or Querit 
 
 Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 
-## Talk track (3:00, 16 slides, keep moving)
+## Talk track (3:00, 16 public slides, keep moving)
 
 | Time | Slide | Say |
 |---|---|---|

@@ -218,6 +218,20 @@ svg.flow.light .lg { filter: none; }
 .sponsors .sp small { display: block; font-size: 15px; font-weight: 400; color: var(--paper-2); letter-spacing: 0; }
 .sponsors .logo { height: 34px; }
 
+/* internal Q&A appendix */
+.qa-slide .qa-head { position: absolute; left: 140px; right: 140px; top: 136px; }
+.qa-slide .qa-head h2 { font-size: 58px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; margin: 0; }
+.qa-list { position: absolute; left: 140px; right: 140px; top: 270px; }
+.qa-item { display: grid; grid-template-columns: 520px 1fr; column-gap: 56px; padding: 23px 0 25px; border-top: 1px solid rgba(255,255,255,0.18); }
+.qa-item .qq { font-size: 24px; font-weight: 600; line-height: 1.3; letter-spacing: -0.012em; color: var(--paper); }
+.qa-item .qq b { color: var(--green); font-size: 16px; letter-spacing: 0.08em; margin-right: 10px; vertical-align: 2px; }
+.qa-item .aa { font-size: 21px; line-height: 1.42; color: var(--paper-2); }
+.qa-item .aa strong { color: var(--paper); font-weight: 600; }
+.qa-source { position: absolute; left: 140px; right: 140px; bottom: 48px; margin: 0; font-size: 15px; line-height: 1.35; color: #707075; }
+.qa-rule { display: grid; grid-template-columns: 210px 1fr; gap: 40px; padding: 28px 0; border-top: 1px solid rgba(255,255,255,0.18); }
+.qa-rule b { color: var(--green); font-size: 26px; }
+.qa-rule span { color: var(--paper-2); font-size: 25px; line-height: 1.4; }
+
 #presenter { position: absolute; left: 40px; bottom: 32px; font-size: 28px; font-weight: 500; color: #8e8e93; display: none; z-index: 5; }
 #presenter.on { display: block; }
 #presenter b { font-weight: 600; }
@@ -264,7 +278,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
 <!-- 2 Problem -->
 <section class="slide" data-theme="light" id="s2">
   <div style="position:absolute; left:140px; top:200px; right:140px;">
-    <h1 class="display fu"><span class="count" data-to="33" data-from="0" data-dur="1200">33</span> million small businesses in the US.</h1>
+    <h1 class="display fu"><span class="count" data-to="36.2" data-from="0" data-decimals="1" data-dur="1200">36.2</span> million small businesses in the US.</h1>
     <h1 class="display fu">Almost none has a price.</h1>
     <p class="sub muted fu frag" style="margin-top:96px; max-width:1560px; font-size:40px; line-height:1.2;">Want to buy a laundromat in Squirrel Hill? There is no list of them, and the ones you can find have no number next to them.</p>
   </div>
@@ -530,7 +544,156 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   <p class="small muted fu" style="position:absolute; left:140px; bottom:70px; margin:0;">Nico &nbsp;&nbsp; Vir &nbsp;&nbsp; Aditya &nbsp;&nbsp; Zhiyuan &nbsp;&nbsp;·&nbsp;&nbsp; HackCMU 2026 &nbsp;&nbsp;·&nbsp;&nbsp; Discover, Exchange, Acquire</p>
 </section>
 
-<div id="presenter"><b>0:00</b> &nbsp; <span id="pn">1</span> / 16</div>
+<!-- 17 Q&A appendix cover -->
+<section class="slide qa-slide" data-theme="dark" id="qa-start">
+  <p class="kicker fu">Internal appendix</p>
+  <p class="kicker right muted fu">Press Q from anywhere</p>
+  <div style="position:absolute; left:140px; right:140px; top:150px;">
+    <h1 class="display fu" style="font-size:118px;">Q&amp;A preparation</h1>
+    <p class="fu" style="font-size:34px; color:var(--paper-2); margin:20px 0 50px;">Stop the public presentation on slide 16. Use this appendix only for questions.</p>
+    <div class="qa-rule fu"><b>Answer first</b><span>Give the conclusion in one sentence. Explain the mechanism only if the judge wants more.</span></div>
+    <div class="qa-rule fu"><b>Name the limit</b><span>Say what works today, what is simulated, and what requires a production partner.</span></div>
+    <div class="qa-rule fu"><b>Do not bluff</b><span>If you do not know, state the assumption and describe the test that would answer it.</span></div>
+    <div class="qa-rule fu"><b>Hand off cleanly</b><span>Nico: discovery and valuation. Vir: data and infrastructure. Aditya: auction, security, and regulation. Zhiyuan: product, frontend, and demo.</span></div>
+  </div>
+</section>
+
+<!-- 18 Market -->
+<section class="slide qa-slide" data-theme="dark" id="qa-market">
+  <p class="kicker fu">Q&amp;A · Market</p>
+  <div class="qa-head fu"><h2>Is there a real market behind the demo?</h2></div>
+  <div class="qa-list">
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Why does this need to exist now?</div><div class="aa"><strong>Ownership is about to move.</strong> The US has 36.2 million small businesses. Project Equity estimates 2.9 million businesses have owners aged 55 or older, supporting 32.1 million jobs and $6.5 trillion in annual revenue. Better web data and models now make the hidden supply searchable before an owner hires a broker.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Is 36.2 million really your TAM?</div><div class="aa"><strong>No.</strong> It is the scale of the information gap, not a revenue forecast. Our first reachable market is profitable employer businesses in repeatable local categories, beginning with Pittsburgh laundromats, car washes, service companies, and small manufacturers.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What proves buyer demand?</div><div class="aa"><strong>Existing marketplaces already attract buyers.</strong> BizBuySell reports more than 4 million visits each month, while only 2,117 transactions were reported in Q2 2026. Its own report says demand exceeds the supply of acquisition-ready businesses.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What is the narrow first wedge?</div><div class="aa"><strong>Acquisition search in one dense city.</strong> Help serious buyers find and compare businesses that are not advertised for sale. Owner-approved fractional trading comes later through a regulated partner.</div></div>
+  </div>
+  <p class="qa-source fu">Sources: SBA 2025 Small Business Profile. Project Equity, 2025. BizBuySell Q2 2026 Insight Report.</p>
+</section>
+
+<!-- 19 Users and consent -->
+<section class="slide qa-slide" data-theme="dark" id="qa-users">
+  <p class="kicker fu">Q&amp;A · Users and consent</p>
+  <div class="qa-head fu"><h2>Who wants this, and why would owners cooperate?</h2></div>
+  <div class="qa-list">
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Who is the first paying customer?</div><div class="aa"><strong>The first user is a serious buyer or acquirer.</strong> They pay for broader discovery, evidence-backed comparison, and a qualified path to contact. The owner becomes a customer only after real interest exists.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Why would an owner sell only 30%?</div><div class="aa"><strong>Partial liquidity lets an owner take cash out without giving up control.</strong> Thirty percent is a demo parameter, not a universal answer. The real percentage would depend on owner goals, governance rights, tax structure, and offering rules.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Can you publish a business without permission?</div><div class="aa"><strong>We can organize public facts, but we should not imply endorsement.</strong> An unclaimed page must say that Bartr produced the estimate, provide sources, accept corrections and opt-outs, and prohibit trading until the owner verifies and accepts the listing.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Are you impersonating the owner with the owner persona?</div><div class="aa"><strong>No production system should do that without authorization.</strong> The current persona is a demo simulation grounded in the company file. A real product would label it as a Bartr assistant until the owner claims the page and authorizes responses.</div></div>
+  </div>
+</section>
+
+<!-- 20 Competition -->
+<section class="slide qa-slide" data-theme="dark" id="qa-competition">
+  <p class="kicker fu">Q&amp;A · Competition</p>
+  <div class="qa-head fu"><h2>Why does an existing platform not already solve this?</h2></div>
+  <div class="qa-list">
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Why not just use Google Maps?</div><div class="aa"><strong>Maps finds storefronts, not investable businesses.</strong> It does not assemble ownership evidence, operating estimates, valuation ranges, comparable prices, an offer workflow, or diligence requirements.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Why not BizBuySell?</div><div class="aa"><strong>BizBuySell starts after an owner decides to sell.</strong> Bartr starts with the much larger set of businesses that are not listed, prices uncertainty, and lets qualified buyer interest begin the owner conversation.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Why not StartEngine or another crowdfunding portal?</div><div class="aa"><strong>Crowdfunding primarily helps an issuer raise money.</strong> Bartr begins with acquisition discovery and valuation. Reg CF securities also generally carry a one-year resale restriction, and a funding portal cannot give investment recommendations or operate a secondary exchange.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What stops an incumbent from copying this?</div><div class="aa"><strong>The code alone is not a moat.</strong> Defensibility would come from verified owner relationships, a growing record of valuation errors and completed transactions, category-specific evidence, and regulated distribution partnerships.</div></div>
+  </div>
+  <p class="qa-source fu">Source for crowdfunding restrictions: US Securities and Exchange Commission, Regulation Crowdfunding guides.</p>
+</section>
+
+<!-- 21 Valuation -->
+<section class="slide qa-slide" data-theme="dark" id="qa-valuation">
+  <p class="kicker fu">Q&amp;A · Valuation</p>
+  <div class="qa-head fu"><h2>How can you price a private business with incomplete data?</h2></div>
+  <div class="qa-list">
+    <div class="qa-item fu"><div class="qq"><b>Q</b>How can you value a business without its books?</div><div class="aa"><strong>We show an estimate and a wide range, not a certified valuation.</strong> Before owner verification, the model uses public evidence, category multiples, observable proxies, and independent model opinions. Missing evidence increases uncertainty. Trading stays closed until the owner accepts the listing.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Have you proven that the estimates are accurate?</div><div class="aa"><strong>Not yet at production scale.</strong> We built a holdout calibration path that hides known listing prices and measures each estimator's error, but we do not yet have enough completed observations to claim empirical calibration. That is an explicit next validation milestone.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What stops Grok from hallucinating revenue?</div><div class="aa"><strong>A number only enters verified evidence when the exact supporting sentence, source URL, unit, and date are present.</strong> Grok is one estimator, not the final answer. K2 gives a blind second opinion, deterministic methods remain in the blend, and disagreement widens the range.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Does market price create a circular valuation?</div><div class="aa"><strong>It can if thin trades receive too much weight.</strong> The model begins with an evidence-based prior and weights market updates by volume. Production should also cap the influence of concentrated or flagged volume and keep the model value separate from the traded price.</div></div>
+  </div>
+</section>
+
+<!-- 22 Market design -->
+<section class="slide qa-slide" data-theme="dark" id="qa-liquidity">
+  <p class="kicker fu">Q&amp;A · Market design</p>
+  <div class="qa-head fu"><h2>What happens when a tiny private market meets reality?</h2></div>
+  <div class="qa-list">
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Where does liquidity come from?</div><div class="aa"><strong>In the demo, the owner posts a finite ask ladder and a finite buyback bid.</strong> Bots make the demonstration active. Production cannot promise liquidity. It must show available size, funding, quote age, and transfer restrictions clearly.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What if the owner's buyback money runs out?</div><div class="aa"><strong>The bid disappears when its funded quantity is exhausted.</strong> A production bid should be limited by prefunded or verified capital. We should call it an owner repurchase order, never a guaranteed exit.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Why a batch auction instead of normal continuous trading?</div><div class="aa"><strong>A batch gives every participant in the round one clearing price.</strong> Speed does not decide priority, aggressive orders receive price improvement, and the engine chooses the price that executes the most volume. That fits a thin local market better than a race for the first quote.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Can a few users manipulate the price?</div><div class="aa"><strong>Yes, thin markets remain vulnerable.</strong> Bartr reduces the risk with identity controls, self-trade prevention, position limits, a 10% band, proportional fills, concentration rules, halts, and human review. Surveillance reduces risk. It does not eliminate it.</div></div>
+  </div>
+</section>
+
+<!-- 23 Regulation -->
+<section class="slide qa-slide" data-theme="dark" id="qa-regulation">
+  <p class="kicker fu">Q&amp;A · Regulation</p>
+  <div class="qa-head fu"><h2>Can Bartr legally sell and trade these shares?</h2></div>
+  <div class="qa-list">
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Are these shares securities?</div><div class="aa"><strong>Yes.</strong> A live-money product cannot treat 10,000 shares as a software abstraction. Every offer and sale needs registration or an exemption, and matching secondary orders generally requires regulated market infrastructure.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What is the realistic launch structure?</div><div class="aa"><strong>Bartr supplies discovery, valuation, auction technology, and surveillance.</strong> A registered intermediary conducts the offering. A broker-dealer-operated ATS executes eligible secondary trades. A transfer agent and custodian maintain ownership and assets, with KYC and AML controls.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Does Regulation Crowdfunding solve everything?</div><div class="aa"><strong>No.</strong> Reg CF can let an issuer raise up to $5 million through a registered intermediary, but the securities generally cannot be resold for one year. It does not automatically cover an owner's personal 30% cash-out. Reg A or another exemption may fit that structure better.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Can Bartr give Kelly-sized recommendations?</div><div class="aa"><strong>Personalized recommendations about specific securities may be investment advice.</strong> A funding portal is prohibited from making recommendations. Production would need a broker-dealer or adviser structure, or would limit Bartr to user-directed, non-personalized analytics.</div></div>
+  </div>
+  <p class="qa-source fu">Sources: SEC Regulation Crowdfunding guide. SEC Alternative Trading System list and guidance. SEC investment adviser interpretation. This slide is preparation, not legal advice.</p>
+</section>
+
+<!-- 24 Investor rights and acquisition -->
+<section class="slide qa-slide" data-theme="dark" id="qa-rights">
+  <p class="kicker fu">Q&amp;A · Investor rights</p>
+  <div class="qa-head fu"><h2>What does an investor actually own?</h2></div>
+  <div class="qa-list">
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What legal rights come with one share?</div><div class="aa"><strong>The demo models economic units, not a finished security.</strong> A real offering must define voting rights, distributions, information rights, transfer restrictions, dilution, repurchase terms, and priority relative to debt and the owner's retained shares.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>How does an investor receive returns?</div><div class="aa"><strong>That depends on the security design.</strong> Returns could come from declared distributions, a later repurchase, or a sale. Bartr should not imply automatic dividends or price appreciation before the operating agreement and disclosure documents define them.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Who maintains the cap table and tax records?</div><div class="aa"><strong>A production transfer agent should maintain the official holder record.</strong> A tax and fund-administration partner would handle statements and any K-1 or 1099 obligations. MongoDB is the app ledger today, not the final legal ownership system.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Does owning 20 shares make acquisition easier?</div><div class="aa"><strong>It creates information and a relationship, not a right to buy the company.</strong> The owner still chooses whether to negotiate. The LOI is nonbinding, the final price comes from diligence and negotiation, and a licensed M&amp;A process may be required.</div></div>
+  </div>
+</section>
+
+<!-- 25 Business model -->
+<section class="slide qa-slide" data-theme="dark" id="qa-business">
+  <p class="kicker fu">Q&amp;A · Business model</p>
+  <div class="qa-head fu"><h2>How would Bartr become a business?</h2></div>
+  <div class="qa-list">
+    <div class="qa-item fu"><div class="qq"><b>Q</b>How do you make money?</div><div class="aa"><strong>The first hypothesis is paid acquisition intelligence for serious buyers.</strong> Later revenue could include owner verification and valuation services plus regulated transaction fees shared with licensed partners. Bartr should not earn a trading spread because it does not trade against users.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>How do you solve the marketplace cold start?</div><div class="aa"><strong>Discovery creates useful inventory before owners join, but trading stays closed.</strong> Qualified buyer interest generates a specific owner outreach. Accepted owners create the first verified supply. Density in one city and a few categories matters more than national coverage.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>How expensive will owner acquisition be?</div><div class="aa"><strong>We do not know yet.</strong> The key experiment is the funnel from qualified buyer interest to owner response, verified financials, and accepted listing. Generic cold outreach would be expensive and damage trust.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What metrics would prove the business?</div><div class="aa"><strong>Owner response and verification rates come first.</strong> Then measure valuation error, time to first qualified offer, cost per verified business, repeat buyer usage, and real liquidity without simulated traders.</div></div>
+  </div>
+</section>
+
+<!-- 26 Technical truth -->
+<section class="slide qa-slide" data-theme="dark" id="qa-technical">
+  <p class="kicker fu">Q&amp;A · Technical truth</p>
+  <div class="qa-head fu"><h2>What is real, and what was built for the demo?</h2></div>
+  <div class="qa-list">
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What actually works end to end?</div><div class="aa"><strong>The FastAPI service runs discovery jobs, valuation, order books, batch clearing, belief updates, Kelly sizing, acquisition documents, rules, model reviews, WebSockets, and audit events.</strong> The Next.js app uses those routes when configured.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What is simulated or preloaded?</div><div class="aa"><strong>The demo includes seeded companies, cached research, 20 bot traders, planted manipulation, $100,000 demo balances, and X-Demo-User identity.</strong> Auth0 is shown as in progress. No real money or legal securities settle.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Can the current architecture scale?</div><div class="aa"><strong>Not as a production exchange.</strong> It deliberately runs one API worker with an in-process scheduler and WebSocket hub. Production needs durable jobs, atomic settlement, separate market workers, reconciliation, disaster recovery, and load testing.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What happens when Grok, K2, or Querit fails?</div><div class="aa"><strong>Interactive paths have deterministic fallbacks and cached outputs.</strong> Search preserves partial results. Research calls can return unavailable rather than invent evidence. The readiness endpoint exposes provider status and recent calls.</div></div>
+  </div>
+</section>
+
+<!-- 27 Security -->
+<section class="slide qa-slide" data-theme="dark" id="qa-security">
+  <p class="kicker fu">Q&amp;A · Security and reliability</p>
+  <div class="qa-head fu"><h2>How much protection is real today?</h2></div>
+  <div class="qa-list">
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Can someone create many accounts and manipulate a market?</div><div class="aa"><strong>Yes in the demo because identity is intentionally lightweight.</strong> Production requires broker-level customer identification, beneficial-owner checks, sanctions screening, linked-account detection, funding controls, and device or network signals.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Why trust AI to police manipulation?</div><div class="aa"><strong>AI does not enforce trades.</strong> Deterministic rules create the flags. Grok and K2 independently explain and grade the evidence. Disagreement is shown to a human rather than averaged away.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Is the audit log truly immutable?</div><div class="aa"><strong>It is append-only through the application today, not cryptographically immutable.</strong> Production needs restricted write roles, retention controls, tamper-evident hashes or WORM storage, independent backups, and reconciliation with broker and transfer-agent records.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>How do you protect private financial data?</div><div class="aa"><strong>The current demo mostly uses public and seeded data.</strong> Production needs field-level access control, encryption, consent records, redaction, retention limits, vendor review, incident response, and strict separation between public estimates and owner-provided documents.</div></div>
+  </div>
+</section>
+
+<!-- 28 Hard questions -->
+<section class="slide qa-slide" data-theme="dark" id="qa-hard">
+  <p class="kicker fu">Q&amp;A · Hardest questions</p>
+  <div class="qa-head fu"><h2>What could make the entire thesis wrong?</h2></div>
+  <div class="qa-list">
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What is the biggest unproven assumption?</div><div class="aa"><strong>That owners will exchange verified financial data and partial equity for qualified demand.</strong> Search and valuation are technically feasible. Owner trust and conversion determine whether a marketplace exists.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What results would make you stop?</div><div class="aa"><strong>We would reconsider the exchange model if owners reject partial liquidity, verified valuations remain too wide to support decisions, buyers do not return, or regulatory cost overwhelms the economics of a typical $350,000 transaction.</strong></div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Could a public estimate harm a local business?</div><div class="aa"><strong>Yes.</strong> That is why estimates need ranges, evidence, clear Bartr attribution, correction and opt-out paths, and no trading before owner consent. Sensitive inferred financials may need to remain private until verification.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>What are the next concrete proofs?</div><div class="aa"><strong>Interview owners and acquisition buyers. Validate estimates on held-out real transactions. Secure a broker, ATS, and securities-counsel design. Run a clearly labeled paper market. Convert the first five owner-verified Pittsburgh businesses.</strong></div></div>
+  </div>
+</section>
+
+<div id="presenter"><b>0:00</b> &nbsp; <span id="pn">1</span> / <span id="pt">28</span></div>
 </div>
 
 <script>
@@ -544,6 +707,9 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   const slides = Array.from(document.querySelectorAll('.slide'));
   const stage = document.getElementById('stage');
   const presenter = document.getElementById('presenter');
+  const MAIN_END = 15;
+  const QA_START = 16;
+  document.getElementById('pt').textContent = slides.length;
   let cur = -1, clockStart = null, clockOn = false;
   slides.forEach(s => s.querySelectorAll('.fu').forEach((el, i) => el.style.setProperty('--i', i)));
 
@@ -595,7 +761,8 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
       case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown': case 'Enter': e.preventDefault(); next(); break;
       case 'ArrowLeft': case 'ArrowUp': case 'PageUp': case 'Backspace': e.preventDefault(); prev(); break;
       case 'Home': go(0, -1); break;
-      case 'End': go(slides.length - 1, 1); break;
+      case 'End': go(MAIN_END, 1); break;
+      case 'q': case 'Q': go(QA_START, 1); break;
       case 'p': case 'P': clockOn = !clockOn; presenter.classList.toggle('on', clockOn); if (clockOn && !clockStart) clockStart = performance.now(); break;
       case 'f': case 'F': document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); break;
       case 'r': case 'R': if (slides[cur].id === 'live') runAuction(); break;
