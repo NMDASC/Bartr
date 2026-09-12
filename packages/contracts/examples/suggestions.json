@@ -12,10 +12,11 @@
       "valuation": {
         "v0": 624000,
         "sigma": 0.38,
-        "low": 426000,
-        "high": 913000,
-        "multiple_used": 4.0,
-        "as_of": "2026-09-12T01:00:00Z"
+        "low": 453000.0,
+        "high": 859000.0,
+        "as_of": "2026-09-12T01:00:00Z",
+        "method": "ensemble",
+        "disagreement": 0.39
       },
       "market": {
         "market_id": "cmp_okc_suds",
@@ -45,10 +46,11 @@
       "valuation": {
         "v0": 241000,
         "sigma": 0.72,
-        "low": 117000,
-        "high": 496000,
-        "multiple_used": 3.0,
-        "as_of": "2026-09-12T01:00:00Z"
+        "low": 131000.0,
+        "high": 442000.0,
+        "as_of": "2026-09-12T01:00:00Z",
+        "method": "ensemble",
+        "disagreement": 0.61
       },
       "market": {
         "market_id": "cmp_norman_bubble",

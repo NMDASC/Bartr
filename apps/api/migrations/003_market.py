@@ -2,7 +2,7 @@
 
     markets   { _id: company_id, shares_outstanding, tick, last_price, ref_price,
                 batch_interval_s, next_batch_at, band_pct,
-                mm: { inventory, cash, gamma, k, sigma, max_depth }, halted }
+                treasury: { floor_price, floor_qty, ask_ladder[] }, halted }
     orders    { _id, market_id, user_id, side, qty, limit_price, status,
                 filled_qty, created_at, cancelled_at, origin }
     batches   { _id, market_id, t, clearing_price, volume, imbalance,

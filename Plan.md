@@ -166,27 +166,35 @@ Repo layout:
 
 ```
 JB/
-  CLAUDE.md                  # loaded by every Claude Code session; points to docs/
-  .cursor/rules/steering.mdc # same content for Cursor
+  CLAUDE.md                  # loaded by every Claude Code session
+  .cursor/rules/steering.mdc # same rules for Cursor
+  .claude/settings.json      # hooks: pull + tail DECISIONS on session start
+  roles.md
   docs/
-    STEERING.md              # this plan, kept current
+    STEERING.md              # index into this plan
     DECISIONS.md             # append only decision log (who, when, what changed, who is affected)
-    API.md                   # generated from FastAPI /openapi.json
   packages/contracts/
-    openapi.yaml             # frozen at 11:30 PM Friday; changes need a DECISIONS entry
+    openapi.yaml             # exported from /openapi.json; changes need a DECISIONS entry
     types.ts                 # generated with openapi-typescript
+    examples/                # the bodies the stub routes return, and the frontend's mocks
   apps/api/
-    app/main.py
+    app/main.py              # all 21 routes of section 7, stubbed then filled in
+    app/schemas.py           # the contract
     app/llm.py               # provider switch: xai | ifm
+    app/db.py                # connection only; schema lives in migrations/
+    app/identity.py          # demo auth now, Auth0 later, same user document
+    app/ws.py                # websocket hub, one process
     app/routers/{discovery,companies,market,portfolio,acquire,agent,surveillance}.py
     app/services/discovery/  # querit.py places.py extract.py valuation.py benchmarks.py
     app/services/market/     # auction.py treasury.py kelly.py book.py (persistence)
     app/services/agents/     # compliance.py portfolio_agent.py chat_agent.py
-    app/db.py
+    migrate.py               # forward only runner: status | up | reset
+    migrations/              # indexes, the Atlas search index, seed documents
     seeds/                   # cached discovery results so the demo never waits on the network
-    tests/                   # auction and Kelly unit tests (cheap, and judges like seeing them)
+    tests/                   # auction, valuation, contract stubs, identity
   apps/web/                  # Next.js
   scripts/
+    gen_contract.sh          # openapi.yaml + types.ts
     demo_pricing.py          # runs the valuation ensemble + a 6 round auction sim, no keys needed
     imessage_bridge.py       # future: Mac chat.db poller + osascript sender
 ```
@@ -554,19 +562,9 @@ Stagger **across** pairs, not within them, so both the exchange and the pipeline
 
 Every one of us runs Claude Code and Cursor on our own laptop. The coordination layer is the repo itself, which is the only thing all four agents can see. Three pieces:
 
-**1. `CLAUDE.md` at the repo root (auto loaded by every Claude Code session).** Contents:
+**1. `CLAUDE.md` at the repo root (auto loaded by every Claude Code session).** It is committed, so read the file rather than this summary of it. It carries: read this plan (sections 7 and 8 first) and `docs/DECISIONS.md` before touching a schema, route, shared type or collection; `git pull --rebase` before starting; the pair ownership map from section 10; the three step ritual for contract changes; the branch and merge rules; where keys live; that Grok and K2 are called from the app and never used to write code; and the API conventions (stubs return `packages/contracts/examples/`, all model calls go through `llm.py`, indexes live in `migrations/` and never in startup, people are referenced by `users._id`, one uvicorn worker).
 
-```
-# JB (HackCMU 2026)
-Read docs/STEERING.md once per session, and docs/DECISIONS.md every time before you change a schema, route, or shared type.
-Before starting work: git pull --rebase.
-Ownership: services/market + routers/market.py + compliance.py + portfolio_agent.py = Nico & Aditya (market pair). apps/web + packages/contracts + services/discovery + db.py + llm.py + deploy = Vir & Zhiyuan (platform pair). Do not edit the other pair's directory; instead append a request to docs/DECISIONS.md. Inside a pair, see Plan.md section 10 for the file level split.
-Any change to packages/contracts, app/schemas.py, or db collections requires: (1) an entry in docs/DECISIONS.md with id, time, author, what changed, who must react; (2) regenerate openapi.yaml and types.ts; (3) commit with prefix "contract:".
-Commit small and often to your own branch (nico/, aditya/, vir/, zhiyuan/ prefixes); merge to main only when tests pass. Never force push main.
-Keys live in .env (never committed). .env.example lists every variable.
-```
-
-`.cursor/rules/steering.mdc` carries the same text (`alwaysApply: true`) so Cursor sessions get it too.
+`.cursor/rules/steering.mdc` mirrors it with `alwaysApply: true` so Cursor sessions get the same rules.
 
 **2. `docs/DECISIONS.md`, append only.** Format:
 

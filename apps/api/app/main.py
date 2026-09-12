@@ -26,9 +26,11 @@ API_PREFIX = "/api/v1"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    await database.connect()
+    # Connectivity check only. Indexes and seed documents belong to
+    # migrations/ (docs/DECISIONS.md 006), so startup never touches schema.
+    await database.ping()
     yield
-    await database.disconnect()
+    await database.close_client()
 
 
 settings = get_settings()
@@ -60,7 +62,7 @@ async def health() -> Health:
     return Health(
         status="ok",
         env=settings.env,
-        database=database.db_or_none() is not None,
+        database=database.is_reachable(),
         demo_auth=settings.demo_auth,
     )
 
@@ -70,7 +72,7 @@ async def readiness() -> dict[str, Any]:
     """What is actually wired up. Useful during key collection."""
     s = get_settings()
     return {
-        "database": database.db_or_none() is not None,
+        "database": await database.ping(),
         "llm_xai": is_configured("xai"),
         "llm_ifm": is_configured("ifm"),
         "querit": bool(s.querit_api_key),
@@ -83,7 +85,7 @@ async def readiness() -> dict[str, Any]:
 async def me(user: dict[str, Any] = Depends(get_current_user)) -> UserOut:
     return UserOut(
         id=str(user["_id"]),
-        name=user.get("name", ""),
+        name=user.get("display_name") or user.get("name", ""),
         email=user.get("email"),
         cash=user.get("cash", 0.0),
         auth_provider=user.get("auth_provider", "demo"),

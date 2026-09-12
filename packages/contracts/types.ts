@@ -548,6 +548,23 @@ export interface components {
          * @enum {string}
          */
         CompanyStatus: "stub" | "ready" | "failed";
+        /**
+         * Estimate
+         * @description One estimator's opinion from the ensemble in valuation.py.
+         */
+        Estimate: {
+            /** Name */
+            name: string;
+            /** Value */
+            value: number;
+            /** Sigma */
+            sigma: number;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
         /** Financials */
         Financials: {
             /** Revenue Est */
@@ -842,7 +859,14 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
-        /** Valuation */
+        /**
+         * Valuation
+         * @description Mirrors the `Valuation` dataclass in services/discovery/valuation.py.
+         *
+         *     Keep the two in step: `low` and `high` are the 20th and 80th posterior
+         *     percentiles, not a multiple range, and `disagreement` is the sample spread
+         *     across estimators, which the UI shows as the confidence signal.
+         */
         Valuation: {
             /** V0 */
             v0: number;
@@ -852,8 +876,21 @@ export interface components {
             low: number;
             /** High */
             high: number;
-            /** Multiple Used */
-            multiple_used?: number | null;
+            /**
+             * Estimates
+             * @default []
+             */
+            estimates: components["schemas"]["Estimate"][];
+            /**
+             * Disagreement
+             * @default 0
+             */
+            disagreement: number;
+            /**
+             * Method
+             * @default ensemble
+             */
+            method: string;
             /** As Of */
             as_of?: string | null;
         };

@@ -24,9 +24,36 @@
   "valuation": {
     "v0": 624000,
     "sigma": 0.38,
-    "low": 426000,
-    "high": 913000,
-    "multiple_used": 4.0,
+    "low": 453000,
+    "high": 859000,
+    "method": "ensemble",
+    "disagreement": 0.39,
+    "estimates": [
+      {
+        "name": "income",
+        "value": 624000,
+        "sigma": 0.25,
+        "note": "4.0x SDE of $156k, within the 3x to 5x single store laundromat range"
+      },
+      {
+        "name": "base_rate",
+        "value": 520000,
+        "sigma": 0.45,
+        "note": "category median asking price, haircut to observed sold prices"
+      },
+      {
+        "name": "proxy",
+        "value": 288000,
+        "sigma": 0.55,
+        "note": "0.7x revenue of $412k; low because revenue itself is inferred from 42 machines"
+      },
+      {
+        "name": "llm",
+        "value": 680000,
+        "sigma": 0.35,
+        "note": "Grok with web_search, self reported confidence 0.6, cites the Yelp listing and machine count"
+      }
+    ],
     "as_of": "2026-09-12T01:00:00Z"
   },
   "market": {

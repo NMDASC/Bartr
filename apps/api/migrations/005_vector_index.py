@@ -8,7 +8,7 @@ Two things to know. Atlas builds this asynchronously, so the migration returns
 before the index is queryable; give it a minute. And the free tier allows only
 three search indexes per cluster, so this is the one we spend on companies.
 
-If MONGO_URI points at a plain MongoDB rather than Atlas, the command does not
+If MONGODB_URI points at a plain MongoDB rather than Atlas, the command does not
 exist. That is not fatal: the fallback in the plan is a cosine similarity in
 numpy over the ~60 seeded embeddings, which is fine at this scale.
 """
@@ -38,7 +38,10 @@ MODEL = SearchIndexModel(
 
 async def up(db):
     try:
-        existing = [idx["name"] async for idx in await db.companies.list_search_indexes()]
+        # list_search_indexes returns a cursor, it is not awaitable. On a plain
+        # mongod the failure surfaces on first iteration, which is why the
+        # comprehension has to be inside the try.
+        existing = [idx["name"] async for idx in db.companies.list_search_indexes()]
         if INDEX_NAME in existing:
             print(f"  {INDEX_NAME} already exists, skipping")
             return

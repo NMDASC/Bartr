@@ -75,21 +75,21 @@ def test_email_is_normalized():
 
 
 def test_email_demo_user_is_linkable():
-    identity = demo_identity("Vir@Example.com")
-    assert identity == Identity(
-        subject="demo|vir@example.com",
-        provider="demo",
+    assert demo_identity("Vir@Example.com") == Identity(
+        name="vir@example.com",
+        display_name="vir",
         email="vir@example.com",
-        name="vir",
+        auth0_sub=None,
+        provider="demo",
     )
 
 
 def test_bare_name_demo_user_has_no_email():
     identity = demo_identity("judge 3")
-    assert identity.subject == "demo|judge-3"
+    assert identity.name == "judge-3"
+    assert identity.display_name == "judge 3"
     assert identity.email is None
-    assert identity.name == "judge 3"
 
 
-def test_same_email_different_case_is_one_subject():
-    assert demo_identity("A@b.com").subject == demo_identity("a@B.COM ").subject
+def test_same_email_different_case_is_one_identity():
+    assert demo_identity("A@b.com").name == demo_identity("a@B.COM ").name

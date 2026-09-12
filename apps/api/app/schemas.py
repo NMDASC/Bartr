@@ -1,16 +1,21 @@
 """Shared API types. This file is the contract.
 
-OWNERSHIP (Plan.md section 10) -- add fields freely, but renaming or removing
-one needs a docs/DECISIONS.md entry plus regenerated
+OWNERSHIP (Plan.md section 10). Add fields freely, but renaming or removing one
+needs a docs/DECISIONS.md entry plus regenerated
 packages/contracts/{openapi.yaml,types.ts}:
 
-    Company, CompanyProfile, Financials, Valuation, Source, Intent  -> Zhiyuan
-    OrderRequest, Order, Book, BookLevel, Batch, Trade              -> Nico
-    Belief, Suggestion, Flag                                        -> Aditya
-    UserOut, Health, job/session envelopes                          -> Vir
+    Company, Financials, Valuation, Estimate, Source, Intent  -> Zhiyuan
+    OrderRequest, Order, Book, BookLevel, Batch, Trade        -> Nico
+    Suggestion, Flag                                          -> Aditya
+    UserOut, Health, job and session envelopes                -> Vir
 
-Prices are floats in the contract so JSON stays numeric for the frontend.
-Use Decimal inside the matching engine and convert at the boundary.
+Prices are floats here so JSON stays numeric for the frontend. The engine
+dataclasses in services/market/auction.py use `limit` and `seq` instead of
+`limit_price` and `created_at`; routers/market.py maps between the two.
+
+No options types, per docs/DECISIONS.md 002. Liquidity is the owner Treasury
+(003), whose ladder and floor reach the client as ordinary book levels rather
+than a separate contract type.
 """
 
 from datetime import datetime
@@ -80,12 +85,30 @@ class Financials(BaseModel):
     method: str = "proxy"
 
 
-class Valuation(BaseModel):
-    v0: float
+class Estimate(BaseModel):
+    """One estimator's opinion from the ensemble in valuation.py."""
+
+    name: str
+    value: float
     sigma: float
-    low: float
-    high: float
-    multiple_used: float | None = None
+    note: str = ""
+
+
+class Valuation(BaseModel):
+    """Mirrors the `Valuation` dataclass in services/discovery/valuation.py.
+
+    Keep the two in step: `low` and `high` are the 20th and 80th posterior
+    percentiles, not a multiple range, and `disagreement` is the sample spread
+    across estimators, which the UI shows as the confidence signal.
+    """
+
+    v0: float  # posterior median, USD
+    sigma: float  # posterior log sigma
+    low: float  # 20th percentile
+    high: float  # 80th percentile
+    estimates: list[Estimate] = []
+    disagreement: float = 0
+    method: str = "ensemble"
     as_of: datetime | None = None
 
 

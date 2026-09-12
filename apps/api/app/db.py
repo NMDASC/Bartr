@@ -1,68 +1,71 @@
-"""Mongo connection and index setup. Owner: Vir.
+"""Mongo connection. Owner: Vir.
 
-The app boots even when Mongo is unreachable; `get_db` then raises 503 and the
-stub endpoints that serve contract examples keep working. This keeps the
-frontend and the market pair unblocked before Atlas exists.
+Two consumers with different needs, so there are two accessors:
+
+  get_db()      synchronous, lazy, always returns a handle. This is what
+                `migrate.py` and any script uses.
+  require_db()  FastAPI dependency; raises 503 when the server is unreachable
+                so a stub endpoint can still answer while mongo is down.
+
+No index or collection creation happens here. That belongs to `migrations/`,
+which is the single source of truth for schema (see docs/DECISIONS.md 006).
+The app boots with mongo down; only endpoints that touch data fail.
 """
 
 import logging
 
 from fastapi import HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from pymongo import ASCENDING, DESCENDING, TEXT
 
 from .config import get_settings
 
 log = logging.getLogger(__name__)
 
 _client: AsyncIOMotorClient | None = None
-_db: AsyncIOMotorDatabase | None = None
+_reachable = False
 
 
-async def connect() -> None:
-    global _client, _db
-    settings = get_settings()
-    _client = AsyncIOMotorClient(settings.mongodb_uri, serverSelectionTimeoutMS=3000)
-    try:
-        await _client.admin.command("ping")
-    except Exception as exc:  # noqa: BLE001 - degraded mode is intentional
-        log.warning("mongo unreachable (%s); running without a database", exc)
-        _db = None
-        return
-    _db = _client[settings.mongodb_db]
-    await ensure_indexes(_db)
-    log.info("mongo connected: db=%s", settings.mongodb_db)
+def get_client() -> AsyncIOMotorClient:
+    global _client
+    if _client is None:
+        settings = get_settings()
+        _client = AsyncIOMotorClient(settings.mongodb_uri, serverSelectionTimeoutMS=3000)
+    return _client
 
 
-async def disconnect() -> None:
-    global _client, _db
+def get_db() -> AsyncIOMotorDatabase:
+    """The database handle. Synchronous and lazy, so scripts can call it at import time."""
+    return get_client()[get_settings().mongodb_db]
+
+
+async def close_client() -> None:
+    global _client, _reachable
     if _client is not None:
         _client.close()
-    _client, _db = None, None
+    _client, _reachable = None, False
 
 
-async def ensure_indexes(db: AsyncIOMotorDatabase) -> None:
-    """Indexes from Plan.md section 6, plus the identity indexes from DECISIONS 001."""
-    await db.users.create_index([("auth_subs", ASCENDING)], unique=True, sparse=True)
-    await db.users.create_index([("email", ASCENDING)], unique=True, sparse=True)
-    await db.companies.create_index([("name", TEXT), ("description", TEXT), ("category", TEXT)])
-    await db.companies.create_index([("state", ASCENDING), ("category", ASCENDING)])
-    await db.orders.create_index([("market_id", ASCENDING), ("status", ASCENDING)])
-    await db.trades.create_index([("market_id", ASCENDING), ("t", DESCENDING)])
-    await db.batches.create_index([("market_id", ASCENDING), ("t", DESCENDING)])
-    await db.positions.create_index([("user_id", ASCENDING), ("market_id", ASCENDING)], unique=True)
-    await db.flags.create_index([("t", DESCENDING)])
-    await db.audit_log.create_index([("t", DESCENDING)])
+async def ping() -> bool:
+    """Check connectivity and cache the result for /health and /readiness."""
+    global _reachable
+    try:
+        await get_client().admin.command("ping")
+        _reachable = True
+    except Exception as exc:  # noqa: BLE001 - degraded mode is intentional
+        log.warning("mongo unreachable (%s); stub endpoints still serve", exc)
+        _reachable = False
+    return _reachable
 
 
-def db_or_none() -> AsyncIOMotorDatabase | None:
-    return _db
+def is_reachable() -> bool:
+    return _reachable
 
 
-async def get_db() -> AsyncIOMotorDatabase:
-    if _db is None:
+async def require_db() -> AsyncIOMotorDatabase:
+    """FastAPI dependency for endpoints that actually read or write data."""
+    if not _reachable and not await ping():
         raise HTTPException(
             status_code=503,
-            detail="database unavailable; start mongo (docker compose up mongo) or set MONGODB_URI",
+            detail="database unavailable; run 'docker compose up -d mongo' or set MONGODB_URI",
         )
-    return _db
+    return get_db()

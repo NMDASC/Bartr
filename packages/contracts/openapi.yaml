@@ -976,6 +976,28 @@ components:
       - ready
       - failed
       title: CompanyStatus
+    Estimate:
+      properties:
+        name:
+          type: string
+          title: Name
+        value:
+          type: number
+          title: Value
+        sigma:
+          type: number
+          title: Sigma
+        note:
+          type: string
+          title: Note
+          default: ''
+      type: object
+      required:
+      - name
+      - value
+      - sigma
+      title: Estimate
+      description: One estimator's opinion from the ensemble in valuation.py.
     Financials:
       properties:
         revenue_est:
@@ -1492,11 +1514,20 @@ components:
         high:
           type: number
           title: High
-        multiple_used:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Multiple Used
+        estimates:
+          items:
+            $ref: '#/components/schemas/Estimate'
+          type: array
+          title: Estimates
+          default: []
+        disagreement:
+          type: number
+          title: Disagreement
+          default: 0
+        method:
+          type: string
+          title: Method
+          default: ensemble
         as_of:
           anyOf:
           - type: string
@@ -1510,3 +1541,11 @@ components:
       - low
       - high
       title: Valuation
+      description: 'Mirrors the `Valuation` dataclass in services/discovery/valuation.py.
+
+
+        Keep the two in step: `low` and `high` are the 20th and 80th posterior
+
+        percentiles, not a multiple range, and `disagreement` is the sample spread
+
+        across estimators, which the UI shows as the confidence signal.'
