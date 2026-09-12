@@ -205,7 +205,7 @@ flowchart LR
     R[REST routers]
     WS[WebSocket hub<br/>/ws/company/:id]
     D[Discovery pipeline]
-    X[Exchange engine<br/>batch auction + house MM]
+    X[Exchange engine<br/>batch auction + owner quotes]
     P[Portfolio matcher<br/>Kelly]
     C[Compliance agents]
     A[Chat agent<br/>tool calling]
@@ -511,7 +511,7 @@ Interfaces between owners (the only cross team dependencies):
 | 1:00 AM | Vertical slice on mocks: search page renders seeds, company page shows a book, order ticket posts, auction clears in a test |
 | 3:00 AM | Real discovery end to end for one query. Real auction with WebSocket updates. Compliance rules run on the tape |
 | 3:00 to 6:00 AM | Sleep in two shifts (A+B, then C+D) or everyone 2 hours. Decide at 2 AM |
-| 8:00 AM | Integration: seeds loaded, house MM live, portfolio suggest returns numbers, acquire returns an LOI |
+| 8:00 AM | Integration: seeds loaded, owner ladder and floor live, portfolio suggest returns numbers, acquire returns an LOI |
 | 10:00 AM to 1:00 PM | Mentor OH open. Fix the ugliest thing. Bot traders running so markets look alive |
 | 1:00 PM | **Feature freeze.** Only bugs and polish after this |
 | 1:30 PM | Demo rehearsal 1 (timed). Devpost draft: title, 50 word track text, screenshots, repo link, sponsor tech list |
