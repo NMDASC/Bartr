@@ -43,8 +43,8 @@ function Side({ levels, side, max, changed, tickSeed }: { levels: Book["bids"]; 
           const priceCell = <span className={cn("font-mono text-[12px] tabular-nums", isBid ? "text-up" : "text-down")}>{px(l.price)}</span>;
           return (
             <tr key={`${l.price}-${i}-${moved ? tickSeed : 0}`} className="border-b border-hairline-soft" style={{ background: bar }}>
-              <td className={cn("py-1 px-2 text-left", moved && "bartr-level")}>{isBid ? qtyCell : priceCell}</td>
-              <td className={cn("py-1 px-2 text-right", moved && "bartr-level")}>{isBid ? priceCell : qtyCell}</td>
+              <td className={cn("py-1 px-2 text-left", moved && (isBid ? "bartr-level-bid" : "bartr-level-ask"))}>{isBid ? qtyCell : priceCell}</td>
+              <td className={cn("py-1 px-2 text-right", moved && (isBid ? "bartr-level-bid" : "bartr-level-ask"))}>{isBid ? priceCell : qtyCell}</td>
             </tr>
           );
         })}

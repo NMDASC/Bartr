@@ -198,12 +198,10 @@
 }
 .bartr-print { animation: bartr-print 1800ms var(--ease-out) 1 both; }
 
-/* an order book level whose size changed in this round */
-@keyframes bartr-level {
-  0% { background-color: rgb(117 92 254 / 0.20); }
-  100% { background-color: transparent; }
-}
-.bartr-level { animation: bartr-level 700ms var(--ease-out) 1; }
+/* an order book level whose size changed in this round: the flash keeps the side's own colour,
+   because the accent marks state and the healthy path, never emphasis */
+.bartr-level-bid { animation: bartr-flash-up 700ms var(--ease-out) 1; }
+.bartr-level-ask { animation: bartr-flash-down 700ms var(--ease-out) 1; }
 
 /* the last seconds before a clear */
 @keyframes bartr-imminent {
@@ -213,7 +211,7 @@
 .bartr-imminent { animation: bartr-imminent 700ms var(--ease-in-out) infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bartr-draw, .bartr-clear, .fade-up, .bartr-up, .bartr-down, .bartr-print, .bartr-level, .bartr-imminent { animation: none !important; }
+  .bartr-draw, .bartr-clear, .fade-up, .bartr-up, .bartr-down, .bartr-print, .bartr-level-bid, .bartr-level-ask, .bartr-imminent { animation: none !important; }
   .bartr-draw { stroke-dashoffset: 0; }
   * { transition: none !important; }
 }
