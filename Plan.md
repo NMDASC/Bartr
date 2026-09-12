@@ -20,7 +20,7 @@ This document is the steering doc. Every decision that changes an interface goes
 7. API contract (the thing all four of us build against)
 8. Pricing and market design (batch auction, house market maker, Kelly, Black-Scholes, anti arbitrage)
 9. Agents, Grok integration, compliance surveillance
-10. Splitting the work four ways
+10. Splitting the work: two pairs (Nico + Aditya on the exchange, Vir + Zhiyuan on platform and discovery)
 11. Hour by hour timeline
 12. Agent to agent coordination across our four machines
 13. Demo script (3 minutes)
@@ -462,27 +462,54 @@ Because the agent endpoint is transport agnostic, the bridge is under 100 lines 
 
 ---
 
-## 10. Splitting the work four ways
+## 10. Splitting the work: two pairs
 
-Roles, not names; assign at 9 PM based on who wants what. Each owner has a directory, a router, and a section of the contract. Nobody edits another owner's directory without a DECISIONS entry.
+Assigned at 9 PM by strength. Nico and Aditya are the finance people, so they own everything that prices or clears. Vir and Zhiyuan own everything that finds, stores, and serves. The old role D (agents and platform) is dissolved and its pieces are folded into whichever pair already owns the data those agents read.
 
-**A. Frontend and demo (owns `apps/web`, Best Design, the 3 minute story).**
-Hours 0 to 2: Next.js scaffold, Auth0, design tokens, mocked data from `packages/contracts` examples. Hours 2 to 8: search page with streaming results, company page with live order book (WebSocket), order ticket, chart. Hours 8 to 14: portfolio, acquire, surveillance pages. Hours 14 to 19: polish, mobile layout (judges bid from phones), demo rehearsal, Devpost page and screenshots.
+Ownership is at the **file** level inside a pair and at the **directory** level between pairs. Nobody edits the other pair's directory without a DECISIONS entry. Inside a pair, the two owners must not edit each other's files either; that is what the hour 1 interface freeze below is for.
 
-**B. Discovery pipeline (owns `services/discovery`, `routers/discovery.py`, `routers/companies.py`, seeds).**
-Hours 0 to 2: Querit + Places clients, intent parser, `CompanyProfile` schema. Hours 2 to 6: extractor with structured output and citations, `valuation.py`, embeddings, Mongo upsert, SSE job endpoint. Hours 6 to 10: run 8 seed queries (laundromats OK, car washes TX, restaurants Pittsburgh, machine shops OH, and so on) and cache 60 companies in `seeds/`. Hours 10 to 19: quality passes on extraction, grok web_search fallback, refresh endpoint, help A with copy.
+### The market pair — Nico + Aditya
 
-**C. Exchange engine (owns `services/market`, `routers/market.py`, WebSocket hub, tests).**
-Hours 0 to 3: `book.py`, `auction.py` with unit tests (pure functions first, no DB). Hours 3 to 6: Mongo persistence, batch scheduler (asyncio task per market), WebSocket hub, order endpoints, demo auth. Hours 6 to 10: market maker (`mm.py`), band and halt rules, belief update. Hours 10 to 14: `kelly.py`, belief update tuning; `options.py` only if everything else is green. Hours 14 to 19: load test with a bot script that places random orders as 50 fake users (this is also the demo's "other bidders"), tune `gamma`, `k`, `T`.
+Owns `app/services/market/`, `app/routers/market.py`, the WebSocket hub, `app/services/agents/compliance.py`, `app/services/agents/portfolio_agent.py`, and `tests/`.
 
-**D. Agents and platform (owns `llm.py`, `services/agents`, `routers/{portfolio,acquire,agent,surveillance}.py`, deploy, coordination).**
-Hours 0 to 1: attend IFM workshop, get keys (xAI, IFM, Querit, Places, Atlas, Auth0, Vultr), write `.env.example`, `docker-compose.yml`, deploy skeleton API to Vultr, `CLAUDE.md` and `docs/`. Hours 1 to 4: `llm.py` with both providers, chat agent with tools (against C's endpoints, mocked until ready). Hours 4 to 9: compliance rules + Grok + K2 reviewers, flags feed. Hours 9 to 13: portfolio matcher (vector search + Kelly from C + narrative), acquisition flow. Hours 13 to 19: Cursor prize checklist, Devpost text, Vultr deploy of final API, iMessage bridge stub if time.
+**Nico — the engine. Deterministic, no LLM, no network.**
+Hours 0 to 3: `book.py` and `auction.py` as pure functions with unit tests, including the 8.5 anti arbitrage and fairness rules. Hours 3 to 7: Mongo persistence for orders, fills, and the tape; the asyncio batch scheduler (one task per market); the WebSocket hub that broadcasts the batch event. Hours 7 to 11: order endpoints in `routers/market.py`, `create_market(company)` for the platform pair to call, halt and band enforcement. Hours 11 to 16: correctness pass under load, idempotent replay, reconciliation of positions and cash. Hours 16 to 19: freeze, then help rehearse the market half of the demo.
 
-Interfaces between owners (the only cross team dependencies):
-- A depends on the contract (frozen 11:30 PM) and on mock JSON in `packages/contracts/examples/` that B and C write in the first hour.
-- D's chat agent and portfolio matcher call C's functions in process (`services/market`), not over HTTP.
-- D's compliance reads C's tape via a Mongo query, no coupling in code.
-- B writes `markets` docs on company creation using a single function from C: `create_market(company)`.
+**Aditya — pricing, strategy, and surveillance. Consumes Nico's engine, never edits it.**
+Hours 0 to 3: `mm.py` against a fake in memory book, so this starts before the engine exists: reservation price from the belief, inventory skew, spread from `gamma` and `k`. Hours 3 to 7: belief update from clearing prices, seeded by `V0` and `sigma` from Zhiyuan's `valuation.py`. Hours 7 to 11: `kelly.py` plus `portfolio_agent.py` (vector search candidates in, sized stakes and one sentence of narrative out). Hours 11 to 15: `compliance.py`, the wash trade and layering rules over the tape, then Grok and K2 as the two independent reviewers. Hours 15 to 19: bot traders (50 fake users on a random walk around `V0`, which is also the demo's other bidders), then tune `gamma`, `k`, `T`. `options.py` only if the 1 PM checklist is green.
+
+**Interface frozen in hour 1, before either of them is blocked on the other:**
+
+```python
+clear_batch(orders: list[Order], prev_price: Decimal) -> BatchResult   # Nico owns, pure
+quote(belief: Belief, inventory: int, params: MMParams) -> list[Order] # Aditya owns, pure
+```
+
+Both are pure functions over `packages/contracts` types, so Aditya develops against a fake book and Nico develops against random order flow. They meet only at the scheduler, which is Nico's.
+
+### The platform pair — Vir + Zhiyuan
+
+Owns `apps/web/`, `packages/contracts/`, `app/services/discovery/`, `app/routers/{discovery,companies,agent,acquire}.py`, `app/db.py`, `app/llm.py`, `seeds/`, and deploy.
+
+**Vir — platform, then product surface.**
+Hours 0 to 3, and this is the whole team's critical path, so nothing else starts until it lands: monorepo scaffold, `packages/contracts` with `openapi.yaml` and `types.ts`, `.env.example` and every key collected (xAI, IFM, Querit, Places, Atlas, Auth0, Vultr), `docker-compose.yml`, skeleton API deployed to Vultr with `GET /health` green, demo auth header, `llm.py` with the xai and ifm switch, and the coordination layer from section 12 (`CLAUDE.md`, `.cursor/rules/steering.mdc`, `docs/DECISIONS.md`, the Claude Code hooks). Hours 3 to 5: Next.js scaffold, design tokens, shadcn/ui component library, and the mock JSON in `packages/contracts/examples/` so the UI is never blocked on a real backend. Hours 5 to 14: `/`, `/search` with the streaming result list, and the profile half of `/company/[id]` (header, valuation range bar, sources). Hours 14 to 19: mobile layout (judges bid from their phones), Devpost page, deploy, rehearsal.
+
+**Zhiyuan — discovery and the database.**
+Hours 0 to 2: `querit.py` and `places.py` clients, the Grok intent parser, and the `CompanyProfile` schema, which is the single most contended type in the repo and must be in the contract by 11:30 PM. Hours 2 to 7: `extract.py` with Grok structured output and a source URL on every numeric field, `valuation.py` producing `V0` and `sigma`, embeddings, Mongo collections and indexes, Atlas Vector Search index, the SSE job endpoint. Hours 7 to 11: run the 8 seed queries and cache 60 companies in `seeds/`, so the demo never waits on the network. Hours 11 to 16: extraction quality passes, the Grok `web_search` fallback for thin companies, refresh endpoint. Hours 16 to 19: `chat_agent.py` and the acquire LOI if the schedule is green, both of which are cut candidates.
+
+**The trading UI belongs to Aditya, not to Vir.** `OrderBook`, `OrderTicket`, `PriceChart`, and the depth view are thin React over a WebSocket feed, and the person who designed the microstructure is the one who knows what they should show. Vir owns the design tokens and the component library; Aditya composes from them and writes no raw CSS. This is the one deliberate exception to directory ownership, and it exists so that `apps/web` does not become a single person bottleneck at hour 12.
+
+### The only cross pair dependencies
+
+1. `create_market(company)` — Nico writes it, Zhiyuan calls it on company upsert. Stub returning a fixed id by hour 1.
+2. `V0` and `sigma` — Zhiyuan's `valuation.py` produces them, Aditya's `mm.py` consumes them as the belief prior. Freeze the shape in hour 1; Aditya uses a constant until they are real.
+3. `packages/contracts/examples/*.json` — both pairs commit mocks in hour 1, and the frontend builds against those until the contract freeze at 11:30 PM.
+
+Everything else is in process Python inside one FastAPI app, and compliance reads the tape through Mongo rather than through Nico's code, so there is no coupling there.
+
+### Sleep
+
+Stagger **across** pairs, not within them, so both the exchange and the pipeline always have one awake owner: Nico and Zhiyuan sleep 3 to 6 AM, Aditya and Vir sleep 5:30 to 8:30 AM. Everyone is up for the 8 AM integration.
 
 ---
 
@@ -495,7 +522,7 @@ Interfaces between owners (the only cross team dependencies):
 | 11:30 PM | **Contract freeze.** `openapi.yaml`, `types.ts`, example JSON committed. DECISIONS.md entry 001 |
 | 1:00 AM | Vertical slice on mocks: search page renders seeds, company page shows a book, order ticket posts, auction clears in a test |
 | 3:00 AM | Real discovery end to end for one query. Real auction with WebSocket updates. Compliance rules run on the tape |
-| 3:00 to 6:00 AM | Sleep in two shifts (A+B, then C+D) or everyone 2 hours. Decide at 2 AM |
+| 3:00 to 8:30 AM | Sleep staggered across pairs: Nico + Zhiyuan 3 to 6, Aditya + Vir 5:30 to 8:30. Both services always have one awake owner |
 | 8:00 AM | Integration: seeds loaded, house MM live, portfolio suggest returns numbers, acquire returns an LOI |
 | 10:00 AM to 1:00 PM | Mentor OH open. Fix the ugliest thing. Bot traders running so markets look alive |
 | 1:00 PM | **Feature freeze.** Only bugs and polish after this |
@@ -516,9 +543,9 @@ Every one of us runs Claude Code and Cursor on our own laptop. The coordination 
 # JB (HackCMU 2026)
 Read docs/STEERING.md once per session, and docs/DECISIONS.md every time before you change a schema, route, or shared type.
 Before starting work: git pull --rebase.
-Ownership: apps/web = A, services/discovery = B, services/market = C, services/agents + deploy = D. Do not edit another owner's directory; instead append a request to docs/DECISIONS.md.
+Ownership: services/market + routers/market.py + compliance.py + portfolio_agent.py = Nico & Aditya (market pair). apps/web + packages/contracts + services/discovery + db.py + llm.py + deploy = Vir & Zhiyuan (platform pair). Do not edit the other pair's directory; instead append a request to docs/DECISIONS.md. Inside a pair, see Plan.md section 10 for the file level split.
 Any change to packages/contracts, app/schemas.py, or db collections requires: (1) an entry in docs/DECISIONS.md with id, time, author, what changed, who must react; (2) regenerate openapi.yaml and types.ts; (3) commit with prefix "contract:".
-Commit small and often to your own branch (a/, b/, c/, d/ prefixes); merge to main only when tests pass. Never force push main.
+Commit small and often to your own branch (nico/, aditya/, vir/, zhiyuan/ prefixes); merge to main only when tests pass. Never force push main.
 Keys live in .env (never committed). .env.example lists every variable.
 ```
 
@@ -527,7 +554,7 @@ Keys live in .env (never committed). .env.example lists every variable.
 **2. `docs/DECISIONS.md`, append only.** Format:
 
 ```
-## 007  Sat 02:10  author: C  affects: A, D
+## 007  Sat 02:10  author: Nico  affects: Vir, Aditya
 Batch event now includes `imbalance` and `book_snapshot`. Frontend can draw the depth chart from it; compliance can drop its own snapshot query.
 Migration: none, additive.
 ```
