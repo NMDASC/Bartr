@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 import {
   AUTH_COOKIE,
   adminCredentialsMatch,
   createSessionToken,
   isAdminIdentifier,
+  readSessionToken,
   sessionCookie,
 } from "@/lib/auth/session";
 import type { AuthSession } from "@/lib/auth/types";
@@ -35,10 +37,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
-  const phone = normalizePhone(body.phone);
-  if ((body.phone ?? "").trim() && !phone) {
-    return NextResponse.json({ error: "Enter a valid mobile number." }, { status: 400 });
-  }
+  // Optional and incidental: the dialog does not ask for it, so anything arriving
+  // here is an autofill. Unparseable means unpaired, never a failed login.
+  //
+  // Logging in issues a new cookie, and the pairing lives in that cookie, so a
+  // plain re-login would silently unpair the same person and their texts would
+  // start landing on a second account. Carry it over when the email matches.
+  const jar = await cookies();
+  const prior = readSessionToken(jar.get(AUTH_COOKIE)?.value);
+  const phone =
+    normalizePhone(body.phone) ?? (prior && prior.email === email ? prior.phone ?? null : null);
 
   const session: AuthSession = isAdmin
     ? { name: "Admin", email, role: "admin", phone }

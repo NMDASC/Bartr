@@ -36,12 +36,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Use login for this account." }, { status: 409 });
   }
 
-  // Optional, and only rejected when something was actually typed. An account
-  // without a number still works on the web; it just has no iMessage half.
+  // Optional and incidental: the dialog does not ask for it, so anything arriving
+  // here is an autofill. Unparseable means unpaired, never a failed signup. An
+  // account pairs its iMessage number later, in the Agent section.
   const phone = normalizePhone(body.phone);
-  if ((body.phone ?? "").trim() && !phone) {
-    return NextResponse.json({ error: "Enter a valid mobile number." }, { status: 400 });
-  }
 
   const session: AuthSession = { name, email, role: "user", phone };
   const response = NextResponse.json({ user: session });

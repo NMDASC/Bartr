@@ -133,24 +133,9 @@ export function AuthDialog({
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="auth-phone"
-              className="mb-1.5 flex items-baseline justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground"
-            >
-              <span>iMessage number</span>
-              <span className="text-tint-500">optional</span>
-            </label>
-            <Input
-              id="auth-phone"
-              name="phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="+1 (412) 475-4173"
-            />
-          </div>
-
+          {/* No number here. Getting in is email and password; pairing an iMessage
+              number is a separate, later decision and lives in the Agent section.
+              An autofilled `tel` field also had no business failing a login. */}
           <div>
             <label
               htmlFor="auth-password"
