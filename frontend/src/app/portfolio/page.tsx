@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getPortfolio, suggestPortfolio } from "@/lib/api";
 import { usd, px, signed } from "@/lib/format";
+import { AUTH_COOKIE, readSessionToken } from "@/lib/auth/session";
 import { Label } from "@/components/ui/label";
 import { Suggestions } from "@/components/portfolio/suggestions";
 import { cn } from "@/lib/cn";
@@ -8,7 +10,12 @@ import { cn } from "@/lib/cn";
 export const dynamic = "force-dynamic";
 
 export default async function PortfolioPage() {
-  const [pf, sug] = await Promise.all([getPortfolio(), suggestPortfolio()]);
+  const cookieStore = await cookies();
+  const session = readSessionToken(cookieStore.get(AUTH_COOKIE)?.value);
+  const [pf, sug] = await Promise.all([
+    getPortfolio(session?.email),
+    suggestPortfolio(session?.email),
+  ]);
   const equity = pf.positions.reduce((s, p) => s + p.value, 0);
   return (
     <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">

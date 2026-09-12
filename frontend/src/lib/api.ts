@@ -40,12 +40,12 @@ export function demoUser(): string {
   return u;
 }
 
-async function j<T>(path: string, init?: RequestInit): Promise<T> {
+async function j<T>(path: string, init?: RequestInit, userId?: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: {
       "content-type": "application/json",
-      "x-demo-user": demoUser(),
+      "x-demo-user": userId || demoUser(),
       ...(init?.headers ?? {}),
     },
     cache: "no-store",
@@ -162,14 +162,14 @@ export function subscribeMarket(id: string, onFrame: (f: MarketFrame) => void): 
 
 // ---------------------------------------------------------------- portfolio / acquire / surveillance
 
-export async function getPortfolio() {
+export async function getPortfolio(userId?: string) {
   if (IS_MOCK) return mock.getPortfolio();
-  return j<Portfolio>("/portfolio");
+  return j<Portfolio>("/portfolio", undefined, userId);
 }
 
-export async function suggestPortfolio() {
+export async function suggestPortfolio(userId?: string) {
   if (IS_MOCK) return mock.suggest();
-  return j<Suggestion[]>("/portfolio/suggest", { method: "POST", body: "{}" });
+  return j<Suggestion[]>("/portfolio/suggest", { method: "POST", body: "{}" }, userId);
 }
 
 export async function startAcquisition(companyId: string) {
