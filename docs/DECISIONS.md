@@ -270,3 +270,15 @@ Winning a round now closes the deal on the web. The order ticket has a "Fill thi
 
 ## 031  Sat 16:05  author: A for C  affects: C, A
 The one-market whitelist in `services/market/bots.py` (decision 028) is gone. Any market activates the first time its book is fetched or its websocket opens, gets a fresh round clock and a clean bot book, and the bots trade it from then on. All twelve seeded companies are demo markets. Committed from the working tree at the owner's request; `pytest apps/api/tests` passes 176 with this in place.
+
+## 032  Sat 17:35  author: A for C and D  affects: A, B, C, D
+Why searches stalled and Back replayed them. On Atlas, `MongoStore.list_companies` took 4.9s (91 large documents) and `list_markets` 0.8s, and the store is synchronous. `engine.tick` ran every second on the event loop, `bots.step` queried each of 22 bots one by one, and discovery called `list_companies` once per discovered company, all on the loop. Health took 30s, the search stream and websocket handshakes waited behind it, and a search that never finished was never cached, so Back streamed it again.
+
+Fixes, no contract or collection change:
+* `store_mongo.py`: companies and markets are mirrored in memory after the first read and kept current by `put_*` (write-through; Mongo stays the source of truth). Reads hand out copies. Valid because one uvicorn worker is the only writer; a second process on the same database would not see this one's writes in its cache.
+* `main.py`: the scheduler runs `engine.tick`, `bots.step` and `redteam.tick` in `asyncio.to_thread`, sequentially, so a tick never sits on the loop.
+* `hub.py`: `publish` from a worker thread schedules sends on the server loop (`hub.bind` in lifespan). Before this, a publish from any sync route was silently dropped.
+* `bots.py`: activation and stale-order cleanup read the open book once instead of once per bot. First book fetch on a market went from 9s to 0.4s.
+* Web: a running search is saved with its job id, and Back reattaches to that job (the API replays its events) instead of posting a new search.
+
+Measured on 8001 with bots active: health 6 to 20ms during a search (was 30s), map results on the page at 10s, activation 0.4s, websocket batch and book frames arriving from the threaded tick. `pytest` 176 passed; web tests 19 passed.

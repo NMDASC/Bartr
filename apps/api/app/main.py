@@ -14,7 +14,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.deps import STORE_KIND, engine, store
+from app.deps import STORE_KIND, engine, hub, store
 from app.routers import acquire, agent, companies, discovery, market, offers, portfolio, surveillance, ws
 from app.routers.graphql import router as graphql_router
 from app.routers import dashboard, security_console
@@ -56,13 +56,16 @@ async def scheduler(stop: asyncio.Event):
         from app.services.market.bots import Bots
         bots = Bots(engine)
     i = 0
+    from app.services.agents import redteam
     while not stop.is_set():
         try:
-            engine.tick()
+            # The store is synchronous and, on Atlas, each call is a network round trip.
+            # A tick over every market must not sit on the event loop, or health checks,
+            # search streams and websocket frames all wait behind it.
+            await asyncio.to_thread(engine.tick)
             if bots and i % 3 == 0:
-                bots.step()
-            from app.services.agents import redteam
-            redteam.tick(engine)
+                await asyncio.to_thread(bots.step)
+            await asyncio.to_thread(redteam.tick, engine)
         except Exception as e:  # keep the loop alive during the demo
             print("scheduler error:", repr(e))
         i += 1
@@ -74,6 +77,7 @@ async def lifespan(app: FastAPI):
     n = load_seeds() if SEED else 0
     print(f"seeded {n} companies; markets: {len(store.list_markets())}; bots: {BOTS}")
     stop = asyncio.Event()
+    hub.bind(asyncio.get_running_loop())
     task = asyncio.create_task(scheduler(stop))
     security_task = asyncio.create_task(security_console.monitor())
     yield

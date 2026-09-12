@@ -17,6 +17,9 @@ back is identical to the one written.
 
 from __future__ import annotations
 
+import copy
+import threading
+
 from pymongo import ASCENDING, DESCENDING, MongoClient
 
 
@@ -38,6 +41,27 @@ class MongoStore:
         self.client = MongoClient(uri, serverSelectionTimeoutMS=timeout_ms)
         self.db = self.client[db_name]
         self.name = db_name
+        # Companies and markets are read whole on every search, every tick and every
+        # health check, and a full scan of the companies collection over Atlas costs
+        # seconds. This process is the only writer (one uvicorn worker), so both
+        # collections are mirrored in memory after the first read and kept current by
+        # put_*. Mongo stays the source of truth; reads just stop crossing the network.
+        # Callers mutate what they read, so every read hands out a copy.
+        self._lock = threading.RLock()
+        self._companies: dict[str, dict] | None = None
+        self._markets: dict[str, dict] | None = None
+
+    def _company_cache(self) -> dict[str, dict]:
+        with self._lock:
+            if self._companies is None:
+                self._companies = {d["_id"]: _r(d) for d in self.db.companies.find()}
+            return self._companies
+
+    def _market_cache(self) -> dict[str, dict]:
+        with self._lock:
+            if self._markets is None:
+                self._markets = {d["_id"]: _r(d) for d in self.db.markets.find()}
+            return self._markets
 
     def ping(self) -> bool:
         try:
@@ -49,22 +73,32 @@ class MongoStore:
     # companies
     def put_company(self, c: dict) -> None:
         self.db.companies.replace_one({"_id": c["id"]}, _w(c), upsert=True)
+        with self._lock:
+            if self._companies is not None:
+                self._companies[c["id"]] = copy.deepcopy(c)
 
     def get_company(self, cid: str) -> dict | None:
-        return _r(self.db.companies.find_one({"_id": cid}))
+        with self._lock:
+            return copy.deepcopy(self._company_cache().get(cid))
 
     def list_companies(self) -> list[dict]:
-        return [_r(d) for d in self.db.companies.find()]
+        with self._lock:
+            return [copy.deepcopy(c) for c in self._company_cache().values()]
 
     # markets
     def put_market(self, m: dict) -> None:
         self.db.markets.replace_one({"_id": m["id"]}, _w(m), upsert=True)
+        with self._lock:
+            if self._markets is not None:
+                self._markets[m["id"]] = copy.deepcopy(m)
 
     def get_market(self, mid: str) -> dict | None:
-        return _r(self.db.markets.find_one({"_id": mid}))
+        with self._lock:
+            return copy.deepcopy(self._market_cache().get(mid))
 
     def list_markets(self) -> list[dict]:
-        return [_r(d) for d in self.db.markets.find()]
+        with self._lock:
+            return [copy.deepcopy(m) for m in self._market_cache().values()]
 
     # orders
     def put_order(self, o: dict) -> None:

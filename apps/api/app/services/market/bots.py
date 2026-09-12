@@ -31,13 +31,14 @@ def activate(engine: Engine, market_id: str) -> None:
         return
     m["next_batch_at"] = time.time() + m.get("batch_interval_s", 10)
     engine.store.put_market(m)
-    for bot in [*self_names(), "wash_a", "wash_b"]:
-        for o in engine.store.user_orders(bot, market_id):
-            if o["status"] in ("open", "partial"):
-                try:
-                    engine.cancel_order(bot, o["id"])
-                except KeyError:
-                    pass
+    # One query for the whole book, not one per bot: on Atlas each call is a round trip.
+    bots = {*self_names(), "wash_a", "wash_b"}
+    for o in engine.store.open_orders(market_id):
+        if o["user_id"] in bots:
+            try:
+                engine.cancel_order(o["user_id"], o["id"])
+            except KeyError:
+                pass
 
 
 def self_names(n: int = 20) -> list[str]:
@@ -96,11 +97,11 @@ class Bots:
                     limit = min(hi, max(lo, pv * self.rng.uniform(0.99, 1.0)))
                     o = self.e.place_order(bot, m["id"], "sell", max(1, round(held * 0.5)), round(limit, 2), origin="bot")
                     placed += o["status"] != "rejected"
-            # cancel stale bot orders (older than 3 rounds)
-            for bot in self.names:
-                for o in self.e.store.user_orders(bot, m["id"]):
-                    if o["status"] in ("open", "partial") and o["created_at"] < m["next_batch_at"] - 3 * m["batch_interval_s"]:
-                        self.e.cancel_order(bot, o["id"])
+            # cancel stale bot orders (older than 3 rounds), from one read of the open book
+            mine = set(self.names)
+            for o in self.e.store.open_orders(m["id"]):
+                if o["user_id"] in mine and o["created_at"] < m["next_batch_at"] - 3 * m["batch_interval_s"]:
+                    self.e.cancel_order(o["user_id"], o["id"])
         if self.wash and markets:
             m = markets[0]
             ref = m["last_price"] or m["ref_price"]
