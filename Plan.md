@@ -18,7 +18,7 @@ This document is the steering doc. Every decision that changes an interface goes
 5. Architecture and network diagram
 6. Data model (MongoDB)
 7. API contract (the thing all four of us build against)
-8. Pricing and market design (batch auction, house market maker, Kelly, Black-Scholes, anti arbitrage)
+8. Pricing and market design (batch auction, house market maker, Kelly, anti arbitrage)
 9. Agents, Grok integration, compliance surveillance
 10. Splitting the work four ways
 11. Hour by hour timeline
@@ -86,7 +86,6 @@ Note on the rule "not permitted to start building or designing until the event":
 - Market making with inventory risk: Avellaneda and Stoikov (2008), "High-frequency trading in a limit order book". Gives reservation price and spread as functions of volatility and inventory.
 - Logarithmic market scoring rule: Hanson (2003). We borrow the idea of a house liquidity provider with bounded loss.
 - Kelly (1956), and fractional Kelly for position sizing. Continuous form f* = mu / sigma^2.
-- Black and Scholes (1973) for the acquisition option (right to buy 100% at a strike).
 
 ### 1.4 Not yet verified (check at the venue, first hour)
 - Whether xAI gives hackathon credits (ask at the SpaceXAI table). Otherwise one of us puts $10 on a key; the whole hackathon costs under $5 at grok-4.6 prices.
@@ -126,7 +125,7 @@ Note on the rule "not permitted to start building or designing until the event":
 
 **Phase 1, Discover.** "I want a laundromat in Oklahoma." The pipeline finds real businesses (Places + Querit), reads about them (Querit contents + Grok web_search), extracts a structured profile (Grok structured output), estimates value with a distribution (section 8.2), and lists them with a bid, an ask, and a confidence. Each company page shows: what it does, founders/owners, location, estimated revenue and SDE with sources, valuation range, the live order book, price history, and an "Acquire" button.
 
-**Phase 2, Trade and Acquire.** Every listed company is split into 10,000 shares. Users place limit orders (fractional allowed, 0.01 share min). A batch auction clears every 10 seconds (demo setting; 30s to 60s in "real" mode). The house market maker guarantees there is always a bid and an ask. "Acquire" opens a flow: a Grok drafted letter of intent and a due diligence checklist specific to the state and business type with citations. (Backup feature, only if ahead of schedule: a Black Scholes priced acquisition option, pay a premium now for the right to buy 100% at a strike within 90 days.) A portfolio tab suggests other stakes with Kelly sized amounts. A surveillance panel shows what the compliance agents flagged this session.
+**Phase 2, Trade and Acquire.** Every listed company is split into 10,000 shares. Users place limit orders (fractional allowed, 0.01 share min). A batch auction clears every 10 seconds (demo setting; 30s to 60s in "real" mode). The house market maker guarantees there is always a bid and an ask. "Acquire" opens a flow: a Grok drafted letter of intent and a due diligence checklist specific to the state and business type with citations. A portfolio tab suggests other stakes with Kelly sized amounts. A surveillance panel shows what the compliance agents flagged this session.
 
 ### 3.2 Screens (Next.js routes)
 
@@ -135,7 +134,7 @@ Note on the rule "not permitted to start building or designing until the event":
 | `/` | Landing + search bar ("laundromat in Oklahoma") + trending companies | SearchBar, TrendingGrid |
 | `/search?q=` | Results list with bid / ask / last / confidence, filters (state, category, price band) | ResultCard, FilterRail, progress stream while the pipeline runs |
 | `/company/[id]` | Profile, valuation with sources, order book, chart, order ticket, acquire button | ProfileHeader, ValuationCard (range bar), OrderBook (live), PriceChart, OrderTicket, SourcesList |
-| `/company/[id]/acquire` | LOI draft, DD checklist (option quote is a backup add on) | LoiEditor, ChecklistAccordion, OptionQuote (backup) |
+| `/company/[id]/acquire` | LOI draft, DD checklist | LoiEditor, ChecklistAccordion |
 | `/portfolio` | Holdings, P&L, Kelly suggestions, "build me a portfolio" | HoldingsTable, SuggestionCards, RiskSlider |
 | `/surveillance` | Flags feed, per batch summary, audit log search | FlagsFeed, BatchTimeline |
 | `/agent` | Chat with the discovery/trading agent (same backend the iMessage bridge will use) | Chat, tool call cards |
@@ -276,7 +275,6 @@ orders       { _id, market_id, user_id, side: "buy"|"sell", qty, limit_price, st
 batches      { _id, market_id, t, clearing_price, volume, imbalance, n_buy, n_sell, book_snapshot: {bids[], asks[]} }
 trades       { _id, market_id, batch_id, buyer_id, seller_id, qty, price, t }
 positions    { _id, user_id, market_id, qty, avg_cost }
-options      { _id, market_id, holder_id, strike, expiry, premium, sigma_used, status }
 acquisitions { _id, market_id, user_id, loi_md, checklist[], status }
 flags        { _id, market_id, batch_id, rule, severity, subjects[], explanation, reviewer: "rules"|"grok"|"k2", t }
 audit_log    { _id, t, actor, action, payload_hash, payload }   # append only, never updated
@@ -304,7 +302,6 @@ All JSON, all under `/api/v1`. Auth: Auth0 access token in `Authorization: Beare
 - `GET /markets/{id}/batches?limit=` -> `[Batch]` (price history)
 - `GET /markets/{id}/trades?limit=`
 - `WS /ws/markets/{id}` -> pushes `book`, `batch`, `trade`, `flag` events
-- Backup, not in the frozen contract until we are ahead: `POST /markets/{id}/options/quote {strike, days}` -> `{premium, d1, d2, sigma, r}` and `POST /markets/{id}/options/buy`
 
 **Portfolio**
 - `GET /portfolio` -> `{cash, positions[], pnl}`
@@ -382,7 +379,6 @@ ladder = 5 levels each side, price step = delta/2, qty at level i = D * exp(-0.5
 - Server timestamps only, orders are immutable once placed (cancel creates a new event), everything mirrored to `audit_log`.
 - The house never trades against its own quotes and its ladder is recomputed only between batches (no look ahead at the current round's orders).
 - Limit prices are clamped to [0.5x, 2x] of the reference so fat fingers do not print absurd prices.
-- If options are built (8.7, backup), exercise settles at the batch price, not at a user chosen price.
 
 ### 8.6 Kelly sizing for the portfolio builder
 For a candidate company with market price `p`, model value `v = V_post / 10000`, and belief vol `sigma`:
@@ -398,21 +394,13 @@ Across N suggestions, treat covariance as diagonal (thin markets, no shared hist
 
 Matching before sizing: candidate set = Atlas Vector Search top 30 on the embedding of the user's profile text (sectors, states, horizon, free text) filtered by state and budget, minus companies they already hold.
 
-### 8.7 Black Scholes for acquisition options (BACKUP: build only after the feature freeze checklist in section 11 is green)
-An acquisition option is the right to buy 100% of the company (all 10,000 shares) at strike `K` (per share) within `T` days. Treat the company value as the lognormal underlying with vol `sigma` from the belief (annualized), `r = 0.04`:
-
-```
-d1 = (ln(S/K) + (r + sigma^2/2) T) / (sigma sqrt(T)),   d2 = d1 - sigma sqrt(T)
-C  = S N(d1) - K e^{-rT} N(d2)         # premium per share, times 10000 for the whole company
-```
-
-On exercise, the holder buys all outstanding shares at `max(K, last batch price)` from every holder (a forced tender at a price no worse than market; minority holders are protected). This is also where the "legal" flow attaches: exercising generates the LOI and the checklist. If options trade, their prices give an implied `sigma` we feed back into the market maker (8.4). Kept simple on purpose: European exercise, no dividends, cash settled in play money.
+### 8.7 Not building: acquisition options
+Decided Sep 11: no Black Scholes acquisition options in the hackathon build. Whole company acquisition is handled by the LOI flow (9.6). If it ever comes back it is a roadmap item: an option on the company value priced with the belief `sigma`, exercised at the batch price.
 
 ### 8.8 What to unit test (30 minutes, high payoff in judging)
 - Auction: given a hand written book, `p*` and fills match a worked example; pro rata rationing sums correctly; band clamp works.
 - Market maker: skew sign flips with inventory sign; spread grows with sigma.
 - Kelly: f = 0 when p = v; cap respected.
-- Black Scholes (only if 8.7 is built): C(K -> 0) -> S, C(sigma -> 0) -> max(S - K e^{-rT}, 0).
 
 ---
 
@@ -473,7 +461,7 @@ Hours 0 to 2: Next.js scaffold, Auth0, design tokens, mocked data from `packages
 Hours 0 to 2: Querit + Places clients, intent parser, `CompanyProfile` schema. Hours 2 to 6: extractor with structured output and citations, `valuation.py`, embeddings, Mongo upsert, SSE job endpoint. Hours 6 to 10: run 8 seed queries (laundromats OK, car washes TX, restaurants Pittsburgh, machine shops OH, and so on) and cache 60 companies in `seeds/`. Hours 10 to 19: quality passes on extraction, grok web_search fallback, refresh endpoint, help A with copy.
 
 **C. Exchange engine (owns `services/market`, `routers/market.py`, WebSocket hub, tests).**
-Hours 0 to 3: `book.py`, `auction.py` with unit tests (pure functions first, no DB). Hours 3 to 6: Mongo persistence, batch scheduler (asyncio task per market), WebSocket hub, order endpoints, demo auth. Hours 6 to 10: market maker (`mm.py`), band and halt rules, belief update. Hours 10 to 14: `kelly.py`, belief update tuning; `options.py` only if everything else is green. Hours 14 to 19: load test with a bot script that places random orders as 50 fake users (this is also the demo's "other bidders"), tune `gamma`, `k`, `T`.
+Hours 0 to 3: `book.py`, `auction.py` with unit tests (pure functions first, no DB). Hours 3 to 6: Mongo persistence, batch scheduler (asyncio task per market), WebSocket hub, order endpoints, demo auth. Hours 6 to 10: market maker (`mm.py`), band and halt rules, belief update. Hours 10 to 14: `kelly.py`, belief update tuning, bot trader script. Hours 14 to 19: load test with a bot script that places random orders as 50 fake users (this is also the demo's "other bidders"), tune `gamma`, `k`, `T`.
 
 **D. Agents and platform (owns `llm.py`, `services/agents`, `routers/{portfolio,acquire,agent,surveillance}.py`, deploy, coordination).**
 Hours 0 to 1: attend IFM workshop, get keys (xAI, IFM, Querit, Places, Atlas, Auth0, Vultr), write `.env.example`, `docker-compose.yml`, deploy skeleton API to Vultr, `CLAUDE.md` and `docs/`. Hours 1 to 4: `llm.py` with both providers, chat agent with tools (against C's endpoints, mocked until ready). Hours 4 to 9: compliance rules + Grok + K2 reviewers, flags feed. Hours 9 to 13: portfolio matcher (vector search + Kelly from C + narrative), acquisition flow. Hours 13 to 19: Cursor prize checklist, Devpost text, Vultr deploy of final API, iMessage bridge stub if time.
@@ -550,7 +538,7 @@ This is deliberately low tech. A shared markdown log that every agent reads at s
 0:50 Click one. Profile with sources, valuation range, the live order book, countdown. "Every ten seconds we run a uniform price auction and clear at the volume maximizing price. There is always a counterparty because the house market maker quotes from the valuation belief with inventory skew."
 1:20 Judges scan the QR and place bids from phones. Batch clears, price moves, chart ticks. Bot traders keep it alive.
 1:50 Portfolio tab. "Given your profile, here are four stakes sized by half Kelly." One sentence on the math.
-2:10 Acquire. LOI draft and Oklahoma specific diligence checklist with citations (option quote if built).
+2:10 Acquire. LOI draft and Oklahoma specific diligence checklist with citations.
 2:35 Surveillance. A planted wash trade from the bot gets flagged; Grok explains it, K2 concurs. "Two model families, independent review."
 2:50 Stack slide: Next.js, FastAPI, MongoDB Atlas Vector Search, Auth0, Vultr, Querit, Grok, K2, built in Cursor. Track: Optimization.
 
@@ -567,7 +555,6 @@ This is deliberately low tech. A shared markdown log that every agent reads at s
 | Auth0 eats an hour | Demo auth header from minute one; Auth0 only on the landing page login button | Keep demo auth |
 | Vector search index not building on M0 | Local cosine over 60 embeddings in numpy | Fine at this scale |
 | Acquisition flow too much | LOI is one Grok call; checklist is one more | Keep LOI only |
-| Acquisition options (8.7) | Backup feature by decision on Sep 11. Build only if section 11 is on schedule at 1 PM | Not built; mention as roadmap |
 | iMessage | Not in scope for the hackathon; mention as next step | n/a |
 | Solana, ElevenLabs, Gemini | Not attempted | n/a |
 
