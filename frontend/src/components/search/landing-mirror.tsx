@@ -6,7 +6,20 @@ import "./landing.css";
 
 const FOG = "242, 242, 242";
 const BRUSH = 44;
-const FADE = 0.005; // per frame, so a wiped patch is gone in roughly fifteen seconds
+/*
+ * The mask decays in steps, not every frame, and a residue below the floor is
+ * cleared outright. Both details are load bearing.
+ *
+ * `destination-out` can only scale alpha, never subtract a constant, and mask
+ * alpha is stored as an 8 bit integer. So a per frame fade of 0.005 reaches a
+ * fixed point wherever round(a * 0.995) == a, which is most of the low end: the
+ * measured stall was alpha 128 of 255, forever. Fading 0.06 every eighth frame
+ * puts that fixed point near 8, and clearing anything under 16 takes it to zero.
+ * Same wall clock recovery, about fifteen seconds, but it actually finishes.
+ */
+const FADE = 0.06;
+const FADE_EVERY = 8; // frames
+const FLOOR = 16; // mask alpha below this is residue, not a wipe
 
 type Tile = { cat: string; where: string; value: string };
 
@@ -154,13 +167,16 @@ export function LandingMirror() {
 
     let raf = 0;
     let lastMeasure = 0;
+    let tick = 0;
 
     const frame = (now: number) => {
       // the mirror hazes back over: the mask decays, the fog itself is untouched
-      maskCtx.globalCompositeOperation = "destination-out";
-      maskCtx.fillStyle = `rgba(0,0,0,${FADE})`;
-      maskCtx.fillRect(0, 0, w, h);
-      maskCtx.globalCompositeOperation = "source-over";
+      if (++tick % FADE_EVERY === 0) {
+        maskCtx.globalCompositeOperation = "destination-out";
+        maskCtx.fillStyle = `rgba(0,0,0,${FADE})`;
+        maskCtx.fillRect(0, 0, w, h);
+        maskCtx.globalCompositeOperation = "source-over";
+      }
 
       ctx.globalCompositeOperation = "source-over";
       ctx.clearRect(0, 0, w, h);
@@ -175,8 +191,15 @@ export function LandingMirror() {
         sCtx.drawImage(mask, 0, 0, 40, 24);
         const d = sCtx.getImageData(0, 0, 40, 24).data;
         let open = 0;
-        for (let i = 3; i < d.length; i += 4) open += d[i] / 255;
-        setCleared(open / (40 * 24));
+        let peak = 0;
+        for (let i = 3; i < d.length; i += 4) {
+          open += d[i] / 255;
+          if (d[i] > peak) peak = d[i];
+        }
+        // nothing left but rounding residue, so take it to zero rather than let
+        // it sit at the fixed point
+        if (peak < FLOOR) maskCtx.clearRect(0, 0, w, h);
+        setCleared(peak < FLOOR ? 0 : open / (40 * 24));
       }
       raf = requestAnimationFrame(frame);
     };
