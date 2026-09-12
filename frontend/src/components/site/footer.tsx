@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="border-t border-line bg-background">
       <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-12 xl:border-l xl:border-r xl:border-line">
-        <div className="grid gap-10 md:grid-cols-[1fr_auto_auto]">
+        <div className="grid gap-10 md:grid-cols-[1fr_auto]">
           <div className="max-w-md">
             <div className="flex items-center gap-2.5 text-[16px]">
               <span aria-hidden className="inline-block size-3 bg-primary" />
@@ -23,16 +23,6 @@ export function Footer() {
               <li><Link className="text-muted-foreground hover:text-foreground" href="/search?q=laundromat%20in%20Oklahoma">Discover</Link></li>
               <li><Link className="text-muted-foreground hover:text-foreground" href="/portfolio">Portfolio</Link></li>
               <li><Link className="text-muted-foreground hover:text-foreground" href="/surveillance">Surveillance</Link></li>
-            </ul>
-          </div>
-          <div>
-            <Label as="h2" className="mb-3">
-              Built with
-            </Label>
-            <ul className="space-y-2 text-[14px] text-muted-foreground">
-              <li>Grok, Querit, K2 Horizon</li>
-              <li>MongoDB Atlas, Auth0, Vultr</li>
-              <li>HackCMU 2026</li>
             </ul>
           </div>
         </div>

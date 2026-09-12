@@ -88,7 +88,7 @@ export default async function Home() {
             </div>
             <div>
               <Label className="mb-3 block">02 Price</Label>
-              <p className="text-[16px]">A uniform-price batch auction every ten seconds. A house market maker so there is always a counterparty.</p>
+              <p className="text-[16px]">A uniform-price batch auction every ten seconds. The owner's ask ladder and buyback floor mean there is always a counterparty. The platform never trades.</p>
             </div>
             <div>
               <Label className="mb-3 block">03 Acquire</Label>
