@@ -11,6 +11,8 @@ import os
 
 os.environ["MONGODB_URI"] = ""  # empty selects MemoryStore in app/deps.py
 os.environ["STATE_FILE"] = ""  # no snapshot file
+for _k in ("XAI_API_KEY", "IFM_API_KEY", "QUERIT_API_KEY", "GOOGLE_PLACES_API_KEY"):
+    os.environ[_k] = ""  # tests fake the model; never bill or wait on the network
 os.environ.setdefault("DEMO_AUTH", "1")
 os.environ.setdefault("SEED", "0")
 os.environ.setdefault("BOTS", "0")

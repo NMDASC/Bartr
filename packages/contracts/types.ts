@@ -240,12 +240,14 @@ export interface Batch {
   _id: string;
   market_id: string;
   t: Iso;
-  clearing_price: number;
+  clearing_price: number | null;
   volume: number;
   /** demand minus supply at the clearing price. Signed. */
   imbalance: number;
   n_buy: number;
   n_sell: number;
+  band_hit?: boolean;
+  ref_moved?: boolean;
   book_snapshot?: { bids: BookLevel[]; asks: BookLevel[] };
 }
 
@@ -323,6 +325,9 @@ export interface Acquisition {
   loi_md: string;
   checklist: ChecklistItem[];
   status: "draft" | "sent" | "closed";
+  checklist_source: "template" | "grok";
+  loi_source: "template" | "grok";
+  checklist_status: "researching" | "ready" | "unavailable" | "kept";
 }
 
 // ---------------------------------------------------------------- surveillance
@@ -397,9 +402,9 @@ export interface Overview { user_id: string; display_name: string; portfolio: Po
 export interface ChannelStatus { configured: boolean; connected: boolean; phone_number: string | null; last_seen: Iso | null; identity: string; identity_kind: string }
 export type CaseStatus = "open" | "investigating" | "resolved" | "dismissed";
 export interface SecurityCase { id: string; flag: Flag; status: CaseStatus; note: string; company_name: string; category: string; occurrences: number; first_seen: Iso; last_seen: Iso; history: { t: Iso; actor: string; status: CaseStatus; note: string }[] }
-export interface AgentCall extends ActivityEvent { payload: { provider: string; model: string; feature: string; status: "success" | "error"; duration_ms: number; input: unknown; output: unknown; error: string | null } }
+export interface AgentCall extends ActivityEvent { payload: { provider: string; model: string; feature: string; status: "success" | "error"; duration_ms: number; input: unknown; output: unknown; raw_response?: unknown; error: string | null } }
 export interface SecurityOverview { cases: SecurityCase[]; assets: { id: string; name: string; flags: number; high: number; occurrences: number; users: string[]; rules: string[] }[]; users: { id: string; flags: number; high: number; assets: string[]; rules: string[] }[]; calls: AgentCall[]; audit: ActivityEvent[]; summary: { open: number; high: number; disputed: number; markets: number; agent_calls: number; agent_errors: number }; providers: { grok: boolean; k2: boolean }; as_of: Iso; audit_window: string }
-export interface CaseDetail extends SecurityCase { trades: Trade[]; orders: Order[]; batches: Batch[]; audit: ActivityEvent[] }
-export interface SecurityUser { id: string; display_name: string; cases: SecurityCase[]; summary: { orders: number; cancelled: number; trades: number; traded_notional: number }; positions: Record<string, {qty: number; avg_cost: number}>; orders: Order[]; trades: Trade[]; calls: AgentCall[] }
+export interface CaseDetail extends SecurityCase { trades: Trade[]; orders: Order[]; batches: Batch[]; audit: ActivityEvent[]; evidence_window?: string }
+export interface SecurityUser { id: string; display_name: string; cases: SecurityCase[]; summary: { orders: number; cancelled: number; trades: number; traded_notional: number }; positions: Record<string, {qty: number; avg_cost: number}>; orders: Order[]; trades: Trade[]; calls: AgentCall[]; evidence_window?: string }
 
 export interface SecurityEventPage { items: ActivityEvent[]; before: number; next_offset: number | null }

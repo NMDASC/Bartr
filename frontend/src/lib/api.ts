@@ -147,7 +147,7 @@ export async function getBook(id: string) {
 
 export async function getBatches(id: string, limit = 60) {
   if (IS_MOCK) return mock.getBatches(id, limit);
-  return j<Batch[]>(`/markets/${id}/batches?limit=${limit}`);
+  return j<Batch[]>(`/markets/${id}/batches?limit=${limit}&all=true`);
 }
 
 export async function placeOrder(id: string, o: { side: Side; qty: number; limit_price: number }) {
@@ -246,7 +246,7 @@ export async function reviewCase(token:string,id:string,status:import("@contract
 export async function reviewAgents(token:string) {return j<{reviewed:number;remaining:number}>("/security/review",{method:"POST",headers:{"x-admin-token":token}});}
 export async function getSecurityUser(token:string,id:string) { return j<import("@contracts/types").SecurityUser>(`/security/users/${encodeURIComponent(id)}`,{headers:{"x-admin-token":token}}); }
 export async function getAcquisitionDraft(id:string):Promise<Acquisition|null>{if(IS_MOCK)return null;return j(`/acquire/${encodeURIComponent(id)}/draft`);}
-export async function saveAcquisitionDraft(id:string,acq:Acquisition):Promise<Acquisition>{if(IS_MOCK)throw new Error("Connect the API to save acquisition drafts.");return j(`/acquire/${encodeURIComponent(id)}/draft`,{method:"PUT",body:JSON.stringify({loi_md:acq.loi_md,checklist:acq.checklist})});}
+export async function saveAcquisitionDraft(id:string,acq:Acquisition):Promise<Acquisition>{if(IS_MOCK)throw new Error("Connect the API to save acquisition drafts.");return j(`/acquire/${encodeURIComponent(id)}/draft`,{method:"PUT",body:JSON.stringify({loi_md:acq.loi_md,checklist:acq.checklist,checklist_source:acq.checklist_source})});}
 
 export async function getSecurityEvents(token: string, options: { kind: "agents" | "audit"; query?: string; before?: number; offset?: number }) {
   const params = new URLSearchParams(Object.entries(options).filter(([,value])=>value!==undefined).map(([key,value])=>[key,String(value)]));

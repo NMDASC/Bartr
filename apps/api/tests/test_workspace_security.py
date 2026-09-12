@@ -160,7 +160,7 @@ def test_tool_loop_failure_after_order_does_not_execute_fallback_order(client, m
         return Completion(content="", tool_calls=[ToolCall(id="tool-1", name="place_order", arguments={"id": CID, "side": "buy", "qty": 1, "limit": store.get_market(CID)["ref_price"]})])
     monkeypatch.setattr(chat_agent, "is_configured", lambda p: True)
     monkeypatch.setattr(chat_agent, "complete", fake)
-    answer = asyncio.run(chat_agent.reply(f"buy 1 of {CID} at 56", "workspace-interrupted", engine, store))
+    answer = asyncio.run(chat_agent.reply(f"buy 1 of {CID} at {store.get_market(CID)['ref_price']}", "workspace-interrupted", engine, store))
     assert "interrupted" in answer.content
     assert len(store.user_orders("workspace-interrupted")) == 1
 
@@ -206,3 +206,78 @@ def test_missing_reviewer_retries_without_exposing_peer_opinion(client, monkeypa
     for packet in packets:
         assert "reviews" not in packet["flag"]
         assert packet["flag"]["explanation"] == "Original deterministic evidence"
+
+
+def test_acquisition_background_preserves_edits_and_duplicate_start(client, monkeypatch, tmp_path):
+    from app.routers import acquire
+    from app.services.agents import acquire_agent
+    monkeypatch.setattr(acquire, "CHECKLISTS", {})
+    uid = "workspace-background-buyer"
+    starts = 0
+    async def scenario():
+        nonlocal starts
+        research_started, research_release = asyncio.Event(), asyncio.Event()
+        async def loi(*args):
+            nonlocal starts
+            starts += 1
+            await asyncio.sleep(0)
+            return "# Buyer draft"
+        async def checklist(*args):
+            research_started.set()
+            await research_release.wait()
+            return [{"item": "Researched requirement", "why": "Official record", "citation": None, "done": False}]
+        monkeypatch.setattr(acquire_agent, "loi", loi)
+        monkeypatch.setattr(acquire_agent, "checklist", checklist)
+        first, second = await asyncio.gather(acquire.start(CID, uid), acquire.start(CID, uid))
+        assert first["acquisition_id"] == second["acquisition_id"] and starts == 1
+        await research_started.wait()
+        first["checklist"][0]["done"] = True
+        acquire.save_draft(CID, acquire.DraftIn(loi_md="# Edited letter", checklist=first["checklist"]), uid)
+        research_release.set()
+        await asyncio.gather(*list(acquire._research_tasks))
+        saved = store.get_draft(uid, CID)
+        assert saved["loi_md"] == "# Edited letter" and saved["checklist"][0]["done"]
+        assert saved["checklist_status"] == "kept"
+        mem = MemoryStore(str(tmp_path / "draft-state.json"))
+        mem.put_draft(uid, CID, saved)
+        mem.save()
+        assert MemoryStore(str(tmp_path / "draft-state.json")).get_draft(uid, CID) == saved
+        assert store.get_draft("different-buyer", CID) is None
+    asyncio.run(scenario())
+
+
+def test_compliance_uses_captured_order_evidence_not_later_trades(client, monkeypatch):
+    import json
+    from app.services.agents import compliance
+    now = time.time()
+    uid = "workspace-frozen-subject"
+    flag = {"id": "frozen-review-packet", "market_id": CID, "batch_id": "frozen-batch", "rule": "spoofing", "severity": "high", "subjects": [uid],
+            "explanation": "Three cancelled unfilled orders", "reviews": [{"reviewer": "rules", "severity": "high"}], "reviewer": "rules", "disputed": False, "t": now}
+    order = {"id": "frozen-cancel", "market_id": CID, "user_id": uid, "side": "buy", "qty": 1, "limit_price": 50,
+             "status": "cancelled", "filled_qty": 0, "origin": "user", "created_at": now, "cancelled_at": now}
+    store.put_order(order)
+    security_console.capture([flag])
+    store.add_trade({"id": "later-unrelated", "market_id": CID, "batch_id": "future", "buyer_id": uid, "seller_id": "other", "qty": 4, "price": 55, "t": now+10})
+    packets = []
+    async def model(messages, **kwargs):
+        packets.append(json.loads(messages[1]["content"]))
+        return compliance.ReviewOpinion(severity="high", explanation="Cancelled orders support the flag.")
+    monkeypatch.setattr(compliance, "is_configured", lambda provider: True)
+    monkeypatch.setattr(compliance, "complete", model)
+    compliance._CACHE.clear()
+    asyncio.run(compliance.review_flags([flag]))
+    assert len(packets) == 2 and packets[0] == packets[1]
+    assert packets[0]["orders"][0]["_id"] == "frozen-cancel"
+    assert all(t["_id"] != "later-unrelated" for t in packets[0]["trades"])
+
+
+def test_old_active_orders_remain_visible_after_recent_history(client):
+    uid = "workspace-long-order-history"
+    now = time.time()
+    for i in range(55):
+        store.put_order({"id": f"history-{i}", "market_id": CID, "user_id": uid, "side": "sell", "qty": 2,
+                         "limit_price": 55, "status": "open" if i == 0 else "cancelled", "filled_qty": 0,
+                         "origin": "user", "seq": i, "created_at": now+i, "cancelled_at": None if i == 0 else now+i+1})
+    response = client.get(f"/api/v1/markets/{CID}/orders/mine", headers={"X-Demo-User": uid})
+    assert response.status_code == 200
+    assert any(o["_id"] == "history-0" for o in response.json())

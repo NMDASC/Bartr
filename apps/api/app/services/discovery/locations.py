@@ -63,7 +63,7 @@ def parse_location(query: str, states: dict[str, str]) -> tuple[str | None, str 
         explicit = "DC"
 
     # Prefer the location clause to words in the business name/category.
-    clause = re.search(r"\b(?:in|near|around)\s+(.+?)(?=\s+(?:under|over|with|below|above|that|for|within)\b|[!?]|$)", lower)
+    clause = re.search(r"\b(?:in|near|around)\s+(.+?)(?=\s+(?:under|over|with|below|above|that|for|within|and|or|then|please|show|give|tell|which|who|what|where|by)\b|[!?.,;]|$)", lower)
     target = clause.group(1).strip() if clause else lower
     city_text = target.split(",", 1)[0].strip()
     if clause:

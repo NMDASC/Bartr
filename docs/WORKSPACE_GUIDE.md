@@ -58,11 +58,15 @@ The transcript and audit tabs search all stored content, including nested model 
 and responses, and load older results without moving the time anchor. The overview export
 contains all cases and the latest 500 rows per event feed; a case export contains its
 retained evidence packet. Linked case/user previews limit recent trades/orders to 100 and
-related audit to 100. Use the archive search for earlier calls and detection packets.
+related audit to 100; linked records are filtered before these limits. User trade totals
+cover all stored trades. Use the archive search for earlier calls and detection packets.
 
 Use `STATE_FILE` for durable MemoryStore snapshots or `MONGODB_URI` for MongoStore. Run
 migration 007 when using Mongo. New case records, dispositions, agent transcripts,
 conversations and acquisition drafts survive restart when persistence is configured.
+Drafts use separate per-user documents so research cannot overwrite trading balances.
+Checklist research runs in the background; saved checklist edits are preserved. The
+workspace shows research progress and offers new research when local edits are pending.
 Existing records cannot reconstruct model output that occurred before logging was added.
 
 ## iMessage setup

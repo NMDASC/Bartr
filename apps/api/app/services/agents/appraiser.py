@@ -50,7 +50,7 @@ async def appraise(c: dict) -> dict | None:
     if not notes:
         notes = f"No web research available. Description on file: {c.get('description') or 'none'}. Observables: {c['observables']}"
     user = f"Business: {c['name']}, {c['category']}, {c.get('city')}, {c.get('state')}.\n\nResearch notes:\n{notes[:12000]}"
-    a = await grok.structured("appraise", Appraisal, SYSTEM, user)
+    a = await grok.structured("appraise", Appraisal, SYSTEM, user, tier="deep")
     if a is None:
         return None
     # clamp to a sane band around the category base rate so one hallucinated zero cannot poison the posterior

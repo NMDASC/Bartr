@@ -16,22 +16,157 @@ function Badge({text}:{text:string}) {return <span className={`inline-flex round
 function JsonView({value}:{value:unknown}) {return <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-surface p-3 font-mono text-[10px] leading-5">{typeof value==="string"?value:JSON.stringify(value,null,2)}</pre>;}
 export default function SecurityPage() {
  const [token,setToken]=useState(""),[input,setInput]=useState(""),[data,setData]=useState<SecurityOverview|null>(null),[error,setError]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState("cases"),[query,setQuery]=useState(""),[status,setStatus]=useState("all"),[risk,setRisk]=useState("all"),[selected,setSelected]=useState<CaseDetail|null>(null),[call,setCall]=useState<AgentCall|null>(null),[caseBusy,setCaseBusy]=useState(false),[note,setNote]=useState(""),[disposition,setDisposition]=useState<CaseStatus>("investigating"),[notice,setNotice]=useState("");
- const sessionVersion=useRef(0);
- const [profile,setProfile]=useState<SecurityUser|null>(null);
- const openProfile=async(id:string)=>{try{const version=sessionVersion.current;const result=await getSecurityUser(token,id);if(version===sessionVersion.current)setProfile(result);}catch(e){setError(e instanceof Error?e.message:"User profile unavailable");}};
- const refresh=useCallback(async(key:string)=>{const version=sessionVersion.current;try{const d=await getSecurity(key);if(version!==sessionVersion.current)return false;setData(d);setError("");return true;}catch(e){if(version!==sessionVersion.current)return false;setError(e instanceof Error?e.message:"Console unavailable");return false;}},[]);
- useEffect(()=>{if(!token)return;const id=setInterval(()=>void refresh(token),15000);return()=>clearInterval(id);},[token,refresh]);
- const unlock=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);if(await refresh(input)){setToken(input);setInput("");}setBusy(false);};
- const open=async(c:SecurityCase)=>{setCaseBusy(true);setNotice("");try{setSelected(await getCase(token,c.id));setNote("");setDisposition(c.status==="open"?"investigating":c.status);}catch(e){setError(String(e));}finally{setCaseBusy(false);}};
- const save=async()=>{if(!selected)return;setCaseBusy(true);try{await reviewCase(token,selected.id,disposition,note);setSelected(await getCase(token,selected.id));setNotice("Review saved to the audit trail.");setNote("");await refresh(token);}catch(e){setError(e instanceof Error?e.message:"Review could not be saved");}finally{setCaseBusy(false);}};
+ const sessionVersion = useRef(0);
+ const selectionVersion = useRef(0);
+ const [profile, setProfile] = useState<SecurityUser | null>(null);
+ useEffect(() => () => { sessionVersion.current += 1; selectionVersion.current += 1; }, []);
+
+ const refresh = useCallback(async (key: string, version = sessionVersion.current) => {
+   try {
+     const result = await getSecurity(key);
+     if (version !== sessionVersion.current) return false;
+     setData(result);
+     setError("");
+     return true;
+   } catch (e) {
+     if (version !== sessionVersion.current) return false;
+     setError(e instanceof Error ? e.message : "Console unavailable");
+     return false;
+   }
+ }, []);
+ useEffect(() => {
+   if (!token) return;
+   const version = sessionVersion.current;
+   const id = setInterval(() => void refresh(token, version), 15000);
+   return () => clearInterval(id);
+ }, [token, refresh]);
+
+ const unlock = async (e: React.FormEvent) => {
+   e.preventDefault();
+   const version = ++sessionVersion.current;
+   setBusy(true);
+   if (await refresh(input, version)) {
+     if (version !== sessionVersion.current) return;
+     setToken(input);
+     setInput("");
+   }
+   if (version === sessionVersion.current) setBusy(false);
+ };
+ const lock = () => {
+   sessionVersion.current += 1;
+   selectionVersion.current += 1;
+   setData(null);
+   setToken("");
+   setInput("");
+   setSelected(null);
+   setCall(null);
+   setProfile(null);
+   setError("");
+   setNotice("");
+   setNote("");
+   setBusy(false);
+   setCaseBusy(false);
+   setDisposition("investigating");
+   setQuery("");
+   setStatus("all");
+   setRisk("all");
+   setTab("cases");
+ };
+ const closeCase = () => {
+   selectionVersion.current += 1;
+   setSelected(null);
+   setCaseBusy(false);
+   setNote("");
+   setNotice("");
+ };
+ const closeProfile = () => {
+   selectionVersion.current += 1;
+   setProfile(null);
+   setCaseBusy(false);
+ };
+ const open = async (item: SecurityCase) => {
+   const version = sessionVersion.current;
+   const selection = ++selectionVersion.current;
+   const current = () => version === sessionVersion.current && selection === selectionVersion.current;
+   setCaseBusy(true);
+   setSelected(null);
+   setProfile(null);
+   setNotice("");
+   setError("");
+   try {
+     const result = await getCase(token, item.id);
+     if (!current()) return;
+     setSelected(result);
+     setNote("");
+     setDisposition(result.status === "open" ? "investigating" : result.status);
+   } catch (e) {
+     if (current()) setError(e instanceof Error ? e.message : "Investigation unavailable");
+   } finally {
+     if (current()) setCaseBusy(false);
+   }
+ };
+ const openProfile = async (id: string) => {
+   const version = sessionVersion.current;
+   const selection = ++selectionVersion.current;
+   const current = () => version === sessionVersion.current && selection === selectionVersion.current;
+   setCaseBusy(true);
+   setProfile(null);
+   setSelected(null);
+   setError("");
+   try {
+     const result = await getSecurityUser(token, id);
+     if (current()) setProfile(result);
+   } catch (e) {
+     if (current()) setError(e instanceof Error ? e.message : "User profile unavailable");
+   } finally {
+     if (current()) setCaseBusy(false);
+   }
+ };
+ const save = async () => {
+   if (!selected) return;
+   const version = sessionVersion.current;
+   const selection = selectionVersion.current;
+   const current = () => version === sessionVersion.current && selection === selectionVersion.current;
+   setCaseBusy(true);
+   setError("");
+   try {
+     await reviewCase(token, selected.id, disposition, note);
+     if (!current()) return;
+     const result = await getCase(token, selected.id);
+     if (!current()) return;
+     setSelected(result);
+     setNotice("Review saved to the audit trail.");
+     setNote("");
+     await refresh(token, version);
+   } catch (e) {
+     if (current()) setError(e instanceof Error ? e.message : "Review could not be saved");
+   } finally {
+     if (current()) setCaseBusy(false);
+   }
+ };
+ const runReview = async () => {
+   const version = sessionVersion.current;
+   setBusy(true);
+   setError("");
+   try {
+     const result = await reviewAgents(token);
+     if (version !== sessionVersion.current) return;
+     setNotice(`${result.reviewed} findings reviewed.${result.remaining ? ` ${result.remaining} still awaiting complete opinions.` : ""}`);
+     await refresh(token, version);
+   } catch (e) {
+     if (version === sessionVersion.current) setError(e instanceof Error ? e.message : "Agent review unavailable");
+   } finally {
+     if (version === sessionVersion.current) setBusy(false);
+   }
+ };
  const filtered=data?.cases.filter(c=>(status==="all"||c.status===status)&&(risk==="all"||(risk==="disputed"?c.flag.disputed:c.flag.severity===risk))&&(JSON.stringify([c.company_name,c.flag.market_id,c.flag.subjects,c.flag.rule,c.id]).toLowerCase().includes(query.toLowerCase())))??[];
  const exportData=()=>{if(!data)return;const url=URL.createObjectURL(new Blob([JSON.stringify(selected??data,null,2)],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download=selected?`bartr-case-${selected.id}.json`:"bartr-security-report.json";a.click();URL.revokeObjectURL(url);};
  const investigate=(id:string)=>{setQuery(id);setTab("cases");setStatus("all");setRisk("all");};
- return <div className="page-wrap fade-up"><div className="mb-7 flex flex-wrap items-center justify-between gap-4"><div><div className="eyebrow mb-2">Exchange operations</div><h1 className="page-title">Trust, with a paper trail.</h1><p className="page-subtitle">Every signal. Every agent opinion. One clear view.</p></div>{data&&<div className="flex gap-2"><Button onClick={exportData}><Download size={14}/>Export evidence</Button><Button variant="primary" disabled={busy||(!data.providers.grok&&!data.providers.k2)} onClick={async()=>{setBusy(true);try{const r=await reviewAgents(token);setNotice(`${r.reviewed} findings reviewed.${r.remaining?` ${r.remaining} still awaiting complete opinions.`:""}`);await refresh(token);}catch(e){setError(String(e));}finally{setBusy(false);}}}><Sparkles size={14}/>{busy?"Reviewing…":"Run agent review"}</Button></div>}</div>
+ return <div className="page-wrap fade-up"><div className="mb-7 flex flex-wrap items-center justify-between gap-4"><div><div className="eyebrow mb-2">Exchange operations</div><h1 className="page-title">Trust, with a paper trail.</h1><p className="page-subtitle">Every signal. Every agent opinion. One clear view.</p></div>{data&&<div className="flex gap-2"><Button onClick={exportData}><Download size={14}/>Export evidence</Button><Button variant="primary" disabled={busy||(!data.providers.grok&&!data.providers.k2)} onClick={runReview}><Sparkles size={14}/>{busy?"Reviewing…":"Run agent review"}</Button></div>}</div>
  {error&&<p role="alert" className="mb-5 rounded-lg border border-down/20 bg-down/5 p-3 text-xs text-down">{error}</p>}{notice&&<p role="status" className="mb-4 flex items-center gap-2 text-xs text-up"><CheckCircle2 size={14}/>{notice}</p>}
  {!data?<div className="dashboard-panel grid min-h-[500px] lg:grid-cols-2"><div className="flex flex-col justify-center bg-[#eae6fb] p-9 lg:p-12"><span className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-white/70 text-[#8170b0]"><ShieldCheck size={30} strokeWidth={1.3}/></span><span className="eyebrow text-[#8877a9]">Bartr security</span><h2 className="mt-4 text-[34px] leading-[1.15]">A clearer picture<br/>of market integrity.</h2><div className="mt-8 space-y-4 text-xs text-[#80748f]">{["User and asset investigations","Independent Grok + K2 opinions","Trade-level evidence and review history"].map(t=><p key={t} className="flex gap-3"><CheckCircle2 size={15}/>{t}</p>)}</div></div><form onSubmit={unlock} className="order-first flex flex-col justify-center p-9 lg:order-none lg:p-12"><LockKeyhole size={23} className="mb-5 text-muted-foreground"/><h2 className="text-xl">Administrator access</h2><p className="mt-3 mb-6 text-sm leading-6 secondary">Enter the API’s administrator token to open investigations and agent transcripts.</p><label className="mb-2 text-xs secondary" htmlFor="admin-token">Access token</label><Input id="admin-token" type="password" autoComplete="off" value={input} onChange={e=>setInput(e.target.value)} required/><Button type="submit" className="mt-4" variant="primary" disabled={busy||!input}>{busy?"Checking access…":"Open security console"}<ArrowRight size={14}/></Button><p className="mt-5 text-[10px] secondary">Access is checked by the server. The token stays in this page’s memory.</p></form></div>:<>
  <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">{[{label:"Open investigations",value:data.summary.open,icon:ShieldAlert,color:"text-accent",detail:`${data.cases.length} total cases`},{label:"High priority",value:data.summary.high,icon:Activity,color:"text-down",detail:"Open cases requiring attention"},{label:"Reviewer disagreements",value:data.summary.disputed,icon:Sparkles,color:"text-[#b78c47]",detail:"Independent opinions to reconcile"},{label:"Markets monitored",value:data.summary.markets,icon:ShieldCheck,color:"text-up",detail:`${data.summary.agent_calls} agent calls · ${data.summary.agent_errors} errors`}].map(m=><div key={m.label} className="dashboard-panel metric-card"><div className="mb-3 flex items-center justify-between text-[11px] secondary">{m.label}<m.icon size={17} className={m.color}/></div><p className="metric-value">{m.value}</p><p className="mt-2 text-[10px] secondary">{m.detail}</p></div>)}</div>
- <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white px-5 py-3"><div className="flex flex-wrap items-center gap-5 text-[10px]">{[["Rules engine",true],["Grok",data.providers.grok],["K2",data.providers.k2]].map(([l,v])=><span key={String(l)} className={`flex items-center gap-2 ${v?"text-up":"text-muted-foreground"}`}><span className="status-dot"/>{l}<span className="text-muted-foreground">{v?(l==="Rules engine"?"Active":"Configured"):"Not configured"}</span></span>)}</div><div className="flex items-center gap-4"><span className="text-[10px] secondary">Updated {stamp(data.as_of)}</span><button onClick={()=>{sessionVersion.current++;setData(null);setToken("");setSelected(null);setCall(null);setProfile(null);setError("");setNotice("");}} className="flex items-center gap-1 text-[10px] text-muted-foreground"><LockKeyhole size={11}/>Lock</button></div></div>
+ <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white px-5 py-3"><div className="flex flex-wrap items-center gap-5 text-[10px]">{[["Rules engine",true],["Grok",data.providers.grok],["K2",data.providers.k2]].map(([l,v])=><span key={String(l)} className={`flex items-center gap-2 ${v?"text-up":"text-muted-foreground"}`}><span className="status-dot"/>{l}<span className="text-muted-foreground">{v?(l==="Rules engine"?"Active":"Configured"):"Not configured"}</span></span>)}</div><div className="flex items-center gap-4"><span className="text-[10px] secondary">Updated {stamp(data.as_of)}</span><button onClick={lock} className="flex items-center gap-1 text-[10px] text-muted-foreground"><LockKeyhole size={11}/>Lock</button></div></div>
  <div className="mb-5 flex flex-wrap gap-2 border-b border-line" role="group" aria-label="Security views">{[["cases","Investigations",data.cases.length],["assets","Flagged assets",data.assets.length],["users","User profiles",data.users.length],["agents","Agent transcripts",data.calls.length],["audit","Audit trail",data.audit.length]].map(([v,l,n])=><button key={String(v)} aria-pressed={tab===v} onClick={()=>{setTab(String(v));setQuery("");}} className={`border-b-2 px-4 py-3.5 text-xs ${tab===v?"border-accent text-accent":"border-transparent text-muted-foreground"}`}>{l}<span className="ml-2 text-[10px] opacity-70">{n}</span></button>)}</div>
  <div className="mb-5 flex flex-wrap gap-3"><div className="relative min-w-52 flex-1"><Search size={15} className="absolute left-3 top-3.5 text-muted-foreground"/><Input value={query} onChange={e=>setQuery(e.target.value)} className="bg-white pl-9" placeholder={(tab==="agents"||tab==="audit")?"Search all stored inputs, responses, users, or assets…":"Search a business, user, rule, or case…"} maxLength={200} aria-label="Search security records"/></div>{tab==="cases"&&<><Select className="!w-40 bg-white" value={status} onChange={e=>setStatus(e.target.value)} aria-label="Case status"><option value="all">All statuses</option>{["open","investigating","resolved","dismissed"].map(s=><option key={s}>{s}</option>)}</Select><Select className="!w-36 bg-white" value={risk} onChange={e=>setRisk(e.target.value)} aria-label="Severity"><option value="all">All severities</option>{["high","medium","low","benign","disputed"].map(s=><option key={s}>{s}</option>)}</Select></>}{query&&<button onClick={()=>setQuery("")} className="text-xs text-accent">Clear search</button>}</div>
  {tab==="cases"&&<section className="dashboard-panel"><div className="overflow-x-auto"><table className="data-table"><thead><tr><th>Finding / Business</th><th>Priority</th><th>Subjects</th><th>Review</th><th>Status</th><th>Last detected</th><th/></tr></thead><tbody>{filtered.map(c=><tr key={c.id}><td><button onClick={()=>void open(c)} className="flex items-center gap-3 text-left"><BusinessAvatar category={c.category}/><span><span className="block text-xs font-medium">{categoryName(c.flag.rule)}</span><span className="mt-1 block text-[10px] secondary">{c.company_name}</span></span></button></td><td><Badge text={c.flag.severity}/></td><td><div className="flex flex-col gap-1">{c.flag.subjects.length?c.flag.subjects.map(u=><button key={u} onClick={()=>investigate(u)} className="text-left font-mono text-[10px] text-accent">{u}</button>):<span className="text-xs secondary">Market-wide</span>}</div></td><td><span className={c.flag.disputed?"text-[#a77726]":"text-muted-foreground"}>{c.flag.disputed?"Disputed":c.flag.reviews.length>1?"Reviewed":"Rules only"}</span></td><td><span className="text-[10px]">{categoryName(c.status)}</span></td><td className="whitespace-nowrap text-muted-foreground">{stamp(c.last_seen)}</td><td><button onClick={()=>void open(c)} disabled={caseBusy} aria-label={`Investigate ${c.company_name} ${c.flag.rule}`} className="rounded-lg border border-line p-2 text-accent"><ChevronRight size={14}/></button></td></tr>)}</tbody></table></div>{!filtered.length&&<EmptyState title={query||status!=="all"||risk!=="all"?"No cases match these filters":"No findings recorded"} description={data.cases.length?"Change your filters to see other investigations.":"Detected market signals will appear here with their evidence."}/>}</section>}
@@ -40,9 +175,9 @@ export default function SecurityPage() {
  {(tab==="agents"||tab==="audit")&&<EventFeed key={tab} token={token} kind={tab} query={query} onCall={setCall} onAsset={investigate}/>}
  <p className="mt-4 text-[10px] secondary">{data.audit_window}</p>
  </>}
- {selected&&<Dialog label="Investigation detail" drawer onClose={()=>setSelected(null)}><div className="mb-5 flex items-center justify-between"><span className="eyebrow">Investigation / {selected.id}</span><button onClick={()=>setSelected(null)} aria-label="Close investigation" className="rounded-lg bg-surface p-2"><X size={17}/></button></div><div className="mb-3 flex gap-2"><Badge text={selected.flag.severity}/><span className="soft-tag">{categoryName(selected.status)}</span>{selected.flag.disputed&&<span className="soft-tag !bg-[#fcf0da] !text-[#a77726]">Reviewers disagree</span>}</div><h2 className="text-2xl">{categoryName(selected.flag.rule)}</h2><Link href={`/company/${selected.flag.market_id}`} className="mt-2 inline-flex items-center gap-2 text-sm text-accent">{selected.company_name}<ArrowUpRight size={13}/></Link><p className="my-5 text-sm leading-6 secondary">{selected.flag.explanation}</p><div className="mb-6 flex flex-wrap gap-2">{selected.flag.subjects.map(u=><button key={u} onClick={()=>{void openProfile(u);setSelected(null);}} className="soft-tag"><Fingerprint size={12}/>{u}</button>)}</div><dl className="mb-6 grid grid-cols-2 gap-3 rounded-xl bg-surface p-4 text-xs"><div><dt className="eyebrow text-[9px]">First detected</dt><dd className="mt-1">{stamp(selected.first_seen)}</dd></div><div><dt className="eyebrow text-[9px]">Latest detection</dt><dd className="mt-1">{stamp(selected.last_seen)}</dd></div><div><dt className="eyebrow text-[9px]">Evidence updates</dt><dd className="mt-1">{selected.occurrences}</dd></div><div><dt className="eyebrow text-[9px]">Batch</dt><dd className="mt-1 break-all font-mono text-[10px]">{selected.flag.batch_id}</dd></div></dl><h3 className="section-title mb-3">Independent opinions</h3><div className="mb-6 space-y-3">{selected.flag.reviews.map(r=><div key={r.reviewer} className="rounded-xl border border-line p-4"><div className="flex justify-between"><span className="text-xs font-medium">{r.reviewer==="grok"?"Grok":r.reviewer==="k2"?"K2":"Rules engine"}</span><Badge text={r.severity}/></div><p className="mt-3 text-xs leading-5 secondary">{r.explanation??(r.reviewer==="rules"?"Deterministic detection. See the linked trade and order evidence below.":"No explanation recorded for this opinion.")}</p></div>)}</div><details className="mb-4 rounded-xl border border-line p-4" open><summary className="text-sm font-medium">Trade evidence <span className="ml-2 text-xs secondary">{selected.trades.length}</span></summary><div className="mt-3 max-h-60 overflow-auto">{selected.trades.length?<table className="data-table"><thead><tr><th>Trade</th><th>Buyer → Seller</th><th>Fill</th></tr></thead><tbody>{selected.trades.map(t=><tr key={t._id}><td className="!px-1 font-mono text-[9px]">{t._id}</td><td className="!px-1 font-mono text-[9px]">{t.buyer_id}<br/>→ {t.seller_id}</td><td className="!px-1 whitespace-nowrap font-mono">{t.qty} @ ${px(t.price)}</td></tr>)}</tbody></table>:<p className="text-xs secondary">No associated trades in the retained evidence window.</p>}</div></details><details className="mb-4 rounded-xl border border-line p-4"><summary className="text-sm font-medium">Orders & batch snapshots <span className="ml-2 text-xs secondary">{selected.orders.length} orders</span></summary><div className="mt-3"><JsonView value={{orders:selected.orders,batches:selected.batches}}/></div></details><details className="mb-6 rounded-xl border border-line p-4"><summary className="text-sm font-medium">Related audit & agent records <span className="ml-2 text-xs secondary">{selected.audit.length}</span></summary><div className="mt-3"><JsonView value={selected.audit}/></div></details><section className="border-t border-line pt-5"><h3 className="section-title mb-4">Review this case</h3><label className="mb-2 block text-xs secondary" htmlFor="disposition">Disposition</label><Select id="disposition" value={disposition} onChange={e=>setDisposition(e.target.value as CaseStatus)}>{["open","investigating","resolved","dismissed"].map(s=><option key={s} value={s}>{categoryName(s)}</option>)}</Select><label className="mt-4 mb-2 block text-xs secondary" htmlFor="review-note">Review note</label><textarea id="review-note" value={note} onChange={e=>setNote(e.target.value)} maxLength={2000} rows={3} className="w-full rounded-lg border border-line bg-surface p-3 text-sm" placeholder="Record your findings and reason for this decision."/><div className="mt-3 flex gap-2"><Button onClick={save} variant="primary" disabled={caseBusy||!note.trim()}>{caseBusy?"Saving…":"Save review"}</Button><Button onClick={exportData}><Download size={13}/>Export case</Button></div>{error&&<p role="alert" className="mt-3 text-xs text-down">{error}</p>}{notice&&<p role="status" className="mt-3 text-xs text-up">{notice}</p>}</section>{selected.history.length>0&&<section className="mt-6"><h3 className="section-title mb-3">Review history</h3>{selected.history.map((h,i)=><div key={i} className="mb-3 border-l-2 border-accent/30 pl-3"><p className="text-xs">{categoryName(h.status)} <span className="ml-2 text-[10px] secondary">{stamp(h.t)}</span></p><p className="mt-1 text-xs secondary">{h.note}</p></div>)}</section>}</Dialog>}
- {call&&<Dialog label="Agent transcript" onClose={()=>setCall(null)}><div className="mb-5 flex justify-between"><div><p className="eyebrow">Agent transcript</p><h2 className="mt-2 text-xl">{call.payload.model}</h2></div><button onClick={()=>setCall(null)} aria-label="Close transcript"><X size={19}/></button></div><p className="mb-4 text-xs secondary">{call.payload.feature} · {call.actor} · {stamp(call.t)}</p><h3 className="mb-2 text-sm">Input</h3><JsonView value={call.payload.input}/><h3 className="mt-5 mb-2 text-sm">{call.payload.status==="error"?"Error":"Full response"}</h3><JsonView value={call.payload.error??call.payload.output}/></Dialog>}
+ {data&&token&&selected&&<Dialog label="Investigation detail" drawer onClose={closeCase}><div className="mb-5 flex items-center justify-between"><span className="eyebrow">Investigation / {selected.id}</span><button onClick={closeCase} aria-label="Close investigation" className="rounded-lg bg-surface p-2"><X size={17}/></button></div><div className="mb-3 flex gap-2"><Badge text={selected.flag.severity}/><span className="soft-tag">{categoryName(selected.status)}</span>{selected.flag.disputed&&<span className="soft-tag !bg-[#fcf0da] !text-[#a77726]">Reviewers disagree</span>}</div><h2 className="text-2xl">{categoryName(selected.flag.rule)}</h2><Link href={`/company/${selected.flag.market_id}`} className="mt-2 inline-flex items-center gap-2 text-sm text-accent">{selected.company_name}<ArrowUpRight size={13}/></Link><p className="my-5 text-sm leading-6 secondary">{selected.flag.explanation}</p><div className="mb-6 flex flex-wrap gap-2">{selected.flag.subjects.map(u=><button key={u} onClick={()=>void openProfile(u)} className="soft-tag"><Fingerprint size={12}/>{u}</button>)}</div><dl className="mb-6 grid grid-cols-2 gap-3 rounded-xl bg-surface p-4 text-xs"><div><dt className="eyebrow text-[9px]">First detected</dt><dd className="mt-1">{stamp(selected.first_seen)}</dd></div><div><dt className="eyebrow text-[9px]">Latest detection</dt><dd className="mt-1">{stamp(selected.last_seen)}</dd></div><div><dt className="eyebrow text-[9px]">Evidence updates</dt><dd className="mt-1">{selected.occurrences}</dd></div><div><dt className="eyebrow text-[9px]">Batch</dt><dd className="mt-1 break-all font-mono text-[10px]">{selected.flag.batch_id}</dd></div></dl><p className="mb-4 text-[10px] secondary">Detection snapshot · Up to 100 trades and 100 orders</p><h3 className="section-title mb-3">Independent opinions</h3><div className="mb-6 space-y-3">{selected.flag.reviews.map(r=><div key={r.reviewer} className="rounded-xl border border-line p-4"><div className="flex justify-between"><span className="text-xs font-medium">{r.reviewer==="grok"?"Grok":r.reviewer==="k2"?"K2":"Rules engine"}</span><Badge text={r.severity}/></div><p className="mt-3 text-xs leading-5 secondary">{r.explanation??(r.reviewer==="rules"?"Deterministic detection. See the linked trade and order evidence below.":"No explanation recorded for this opinion.")}</p></div>)}</div><details className="mb-4 rounded-xl border border-line p-4" open><summary className="text-sm font-medium">Trade evidence <span className="ml-2 text-xs secondary">{selected.trades.length}</span></summary><div className="mt-3 max-h-60 overflow-auto">{selected.trades.length?<table className="data-table"><thead><tr><th>Trade</th><th>Buyer → Seller</th><th>Fill</th></tr></thead><tbody>{selected.trades.map(t=><tr key={t._id}><td className="!px-1 font-mono text-[9px]">{t._id}</td><td className="!px-1 font-mono text-[9px]">{t.buyer_id}<br/>→ {t.seller_id}</td><td className="!px-1 whitespace-nowrap font-mono">{t.qty} @ ${px(t.price)}</td></tr>)}</tbody></table>:<p className="text-xs secondary">No associated trades in the retained evidence window.</p>}</div></details><details className="mb-4 rounded-xl border border-line p-4"><summary className="text-sm font-medium">Orders & batch snapshots <span className="ml-2 text-xs secondary">{selected.orders.length} orders</span></summary><div className="mt-3"><JsonView value={{orders:selected.orders,batches:selected.batches}}/></div></details><details className="mb-6 rounded-xl border border-line p-4"><summary className="text-sm font-medium">Recent audit & agent records <span className="ml-2 text-xs secondary">{selected.audit.length}</span></summary><div className="mt-3"><p className="mb-2 text-[10px] secondary">Latest 100 linked records across all stored history</p><JsonView value={selected.audit}/></div></details><section className="border-t border-line pt-5"><h3 className="section-title mb-4">Review this case</h3><label className="mb-2 block text-xs secondary" htmlFor="disposition">Disposition</label><Select id="disposition" value={disposition} onChange={e=>setDisposition(e.target.value as CaseStatus)}>{["open","investigating","resolved","dismissed"].map(s=><option key={s} value={s}>{categoryName(s)}</option>)}</Select><label className="mt-4 mb-2 block text-xs secondary" htmlFor="review-note">Review note</label><textarea id="review-note" value={note} onChange={e=>setNote(e.target.value)} maxLength={2000} rows={3} className="w-full rounded-lg border border-line bg-surface p-3 text-sm" placeholder="Record your findings and reason for this decision."/><div className="mt-3 flex gap-2"><Button onClick={save} variant="primary" disabled={caseBusy||!note.trim()}>{caseBusy?"Saving…":"Save review"}</Button><Button onClick={exportData}><Download size={13}/>Export case</Button></div>{error&&<p role="alert" className="mt-3 text-xs text-down">{error}</p>}{notice&&<p role="status" className="mt-3 text-xs text-up">{notice}</p>}</section>{selected.history.length>0&&<section className="mt-6"><h3 className="section-title mb-3">Review history</h3>{selected.history.map((h,i)=><div key={i} className="mb-3 border-l-2 border-accent/30 pl-3"><p className="text-xs">{categoryName(h.status)} <span className="ml-2 text-[10px] secondary">{stamp(h.t)}</span></p><p className="mt-1 text-xs secondary">{h.note}</p></div>)}</section>}</Dialog>}
+ {data&&token&&call&&<Dialog label="Agent transcript" onClose={()=>setCall(null)}><div className="mb-5 flex justify-between"><div><p className="eyebrow">Agent transcript</p><h2 className="mt-2 text-xl">{call.payload.model}</h2></div><button onClick={()=>setCall(null)} aria-label="Close transcript"><X size={19}/></button></div><p className="mb-4 text-xs secondary">{call.payload.feature} · {call.actor} · {stamp(call.t)}</p><h3 className="mb-2 text-sm">Input</h3><JsonView value={call.payload.input}/><h3 className="mt-5 mb-2 text-sm">{call.payload.status==="error"?"Error":"Response"}</h3><JsonView value={call.payload.error??call.payload.output}/><details className="mt-5 rounded-lg border border-line p-4"><summary className="cursor-pointer text-sm">Complete provider record</summary><div className="mt-3"><JsonView value={call.payload}/></div></details></Dialog>}
 
- {profile&&<Dialog label="User security profile" onClose={()=>setProfile(null)}><div className="flex justify-between"><div><p className="eyebrow">User security profile</p><h2 className="mt-2 flex items-center gap-2 text-xl"><Fingerprint size={21}/>{profile.display_name}</h2><p className="mt-1 font-mono text-xs secondary">{profile.id}</p></div><button aria-label="Close user profile" onClick={()=>setProfile(null)}><X size={19}/></button></div><div className="my-5 grid grid-cols-2 gap-3 sm:grid-cols-4">{[["Cases",profile.cases.length],["Orders",profile.summary.orders],["Cancelled",profile.summary.cancelled],["Trades",profile.summary.trades]].map(([l,v])=><div key={String(l)} className="rounded-lg bg-surface p-3"><p className="eyebrow text-[9px]">{l}</p><p className="mt-1 text-xl">{v}</p></div>)}</div><h3 className="section-title mb-3">Linked investigations</h3><div className="mb-5 divide-y divide-hairline">{profile.cases.map(c=><button key={c.id} onClick={()=>{void open(c);setProfile(null);}} className="flex w-full items-center justify-between py-3 text-left"><span><span className="block text-xs">{categoryName(c.flag.rule)}</span><span className="mt-1 block text-[10px] secondary">{c.company_name}</span></span><Badge text={c.flag.severity}/><ChevronRight size={14}/></button>)}</div><details className="mb-3 rounded-lg border border-line p-4"><summary className="cursor-pointer text-sm">Positions & trade history</summary><div className="mt-3"><JsonView value={{positions:profile.positions,trades:profile.trades}}/></div></details><details className="mb-3 rounded-lg border border-line p-4"><summary className="cursor-pointer text-sm">Recent orders (up to 100)</summary><div className="mt-3"><JsonView value={profile.orders}/></div></details><details className="rounded-lg border border-line p-4"><summary className="cursor-pointer text-sm">Related agent transcripts ({profile.calls.length})</summary><div className="mt-3"><JsonView value={profile.calls}/></div></details></Dialog>}
+ {data&&token&&profile&&<Dialog label="User security profile" onClose={closeProfile}><div className="flex justify-between"><div><p className="eyebrow">User security profile</p><h2 className="mt-2 flex items-center gap-2 text-xl"><Fingerprint size={21}/>{profile.display_name}</h2><p className="mt-1 font-mono text-xs secondary">{profile.id}</p></div><button aria-label="Close user profile" onClick={closeProfile}><X size={19}/></button></div><div className="my-5 grid grid-cols-2 gap-3 sm:grid-cols-4">{[["Cases",profile.cases.length],["Orders",profile.summary.orders],["Cancelled",profile.summary.cancelled],["Trades",profile.summary.trades]].map(([l,v])=><div key={String(l)} className="rounded-lg bg-surface p-3"><p className="eyebrow text-[9px]">{l}</p><p className="mt-1 text-xl">{v}</p></div>)}</div><p className="mb-4 text-[10px] secondary">All-time totals · Lists show up to 100 recent records</p><h3 className="section-title mb-3">Linked investigations</h3><div className="mb-5 divide-y divide-hairline">{profile.cases.map(c=><button key={c.id} onClick={()=>void open(c)} className="flex w-full items-center justify-between py-3 text-left"><span><span className="block text-xs">{categoryName(c.flag.rule)}</span><span className="mt-1 block text-[10px] secondary">{c.company_name}</span></span><Badge text={c.flag.severity}/><ChevronRight size={14}/></button>)}</div><details className="mb-3 rounded-lg border border-line p-4"><summary className="cursor-pointer text-sm">Positions & trade history</summary><div className="mt-3"><JsonView value={{positions:profile.positions,trades:profile.trades}}/></div></details><details className="mb-3 rounded-lg border border-line p-4"><summary className="cursor-pointer text-sm">Recent orders (up to 100)</summary><div className="mt-3"><JsonView value={profile.orders}/></div></details><details className="rounded-lg border border-line p-4"><summary className="cursor-pointer text-sm">Related agent transcripts ({profile.calls.length})</summary><div className="mt-3"><JsonView value={profile.calls}/></div></details></Dialog>}
  </div>;
 }

@@ -5,18 +5,109 @@ official citations so the acquire demo does not wait on a model call.
 """
 from __future__ import annotations
 
+import asyncio
+import json
 import uuid
 import time
 from datetime import date
+from pathlib import Path
+from copy import deepcopy
+from threading import RLock
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.deps import current_user, engine, store
+from app.deps import current_user, store
 from app.schemas import Acquisition, ChecklistItem
 from pydantic import BaseModel, Field
 from app.services.market.treasury import SHARES
 
 router = APIRouter(prefix="/acquire", tags=["acquire"])
+
+# Researched checklists cached by (city, state, category). Pre-warmed from seeds/checklists.json
+# (scripts/warm_checklists.py) so the demo companies get the cited version instantly; anything
+# else gets the template now and the researched version a minute later via GET /acquire/{id}.
+CHECKLISTS: dict[str, list[dict]] = {}
+_CHECKLIST_FILE = Path(__file__).resolve().parent.parent.parent / "seeds" / "checklists.json"
+if _CHECKLIST_FILE.exists():
+    CHECKLISTS.update(json.loads(_CHECKLIST_FILE.read_text()))
+
+
+def _ck(c: dict) -> str:
+    return f"{c.get('city')}|{c.get('state')}|{c['category']}"
+
+
+_draft_lock = RLock()
+_start_locks: dict[tuple[str, str], asyncio.Lock] = {}
+_research_tasks: set[asyncio.Task] = set()
+_research_jobs: dict[tuple[str, str, str], asyncio.Task] = {}
+
+
+def _persist(uid: str, cid: str, draft: dict) -> None:
+    store.put_draft(uid, cid, draft)
+    if hasattr(store, "save"):
+        store.save()
+
+
+def _mark_unavailable(uid: str, cid: str, acq_id: str) -> None:
+    """End an interrupted job without touching a saved letter or checklist."""
+    with _draft_lock:
+        draft = store.get_draft(uid, cid)
+        if draft and draft["acquisition_id"] == acq_id and draft.get("checklist_status") == "researching":
+            draft["checklist_status"] = "unavailable"
+            _persist(uid, cid, draft)
+
+
+def _recover_draft(uid: str, cid: str) -> dict | None:
+    """A persisted research badge must correspond to a job in this API worker.
+
+    After a restart there is no safe running job to poll. Keep the saved document
+    intact and expose the existing unavailable state instead of polling forever.
+    """
+    with _draft_lock:
+        draft = store.get_draft(uid, cid)
+        if draft and draft.get("checklist_status") == "researching":
+            task = _research_jobs.get((uid, cid, draft["acquisition_id"]))
+            if task is None or task.done():
+                draft["checklist_status"] = "unavailable"
+                _persist(uid, cid, draft)
+        return draft
+
+
+def _research_finished(key: tuple[str, str, str], task: asyncio.Task) -> None:
+    with _draft_lock:
+        _research_tasks.discard(task)
+        if _research_jobs.get(key) is task:
+            _research_jobs.pop(key, None)
+        # This also covers cancellation before the coroutine ever starts, when
+        # its exception handler cannot run, and unexpected worker failures.
+        if task.cancelled() or task.exception() is not None:
+            _mark_unavailable(*key)
+
+
+async def _research_checklist(uid: str, acq_id: str, c: dict, original: list[dict]) -> None:
+    from app.services.agents import acquire_agent
+    try:
+        items = await acquire_agent.checklist(c)
+    except asyncio.CancelledError:
+        _mark_unavailable(uid, c["id"], acq_id)
+        raise
+    except Exception:
+        items = None
+    with _draft_lock:
+        if items:
+            CHECKLISTS[_ck(c)] = deepcopy(items)
+        draft = store.get_draft(uid, c["id"])
+        if not draft or draft["acquisition_id"] != acq_id:
+            return
+        # A saved checklist belongs to the buyer; research must not replace edits.
+        if draft["checklist"] != original:
+            draft["checklist_status"] = "kept"
+        elif items:
+            draft.update(checklist=deepcopy(items), checklist_source="grok", checklist_status="ready")
+        else:
+            draft["checklist_status"] = "unavailable"
+        _persist(uid, c["id"], draft)
+
 
 GENERIC = [
     ("Three years of tax returns and P&L", "Verify the SDE the price is built on"),
@@ -122,60 +213,71 @@ def checklist_for(c: dict) -> list[dict]:
 
 @router.post("/{cid}/start", response_model=Acquisition, status_code=201)
 async def start(cid: str, uid: str = Depends(current_user)):
-    from app.services.agents import acquire_agent
-    c = store.get_company(cid)
-    if not c:
-        raise HTTPException(404, "no such company")
-    existing = engine.user(uid).get("acquisitions", {}).get(cid)
-    if existing:
-        return existing
-    m = store.get_market(cid)
-    if not m:
-        raise HTTPException(409, "This business has not been priced yet")
-    px = m["last_price"] or m["ref_price"]
-    seller = ", ".join(c.get("owners") or ["the owner"])
-    where = c.get("address") or ", ".join(x for x in (c.get("city"), c.get("state")) if x)
-    loi = await acquire_agent.loi(c, uid, seller, where, px, px * SHARES, date.today().strftime("%B %d, %Y")) or draft_loi(c, m, uid)
-    items = await acquire_agent.checklist(c) or checklist_for(c)
-    acq = {"acquisition_id": f"acq_{uuid.uuid4().hex[:8]}", "market_id": cid, "loi_md": loi,
-           "checklist": items, "status": "draft"}
-    user = engine.user(uid)
-    user.setdefault("acquisitions", {})[cid] = acq
-    store.put_user(user)
-    store.audit({"t": time.time(), "actor": uid, "action": "acquire_start", "payload": {"market_id": cid, "acquisition_id": acq["acquisition_id"]}})
-    if hasattr(store, "save"):
-        store.save()
-    return acq
+    # Serialize only duplicate starts for this buyer and company.
+    async with _start_locks.setdefault((uid, cid), asyncio.Lock()):
+        from app.services.agents import acquire_agent
+        c = store.get_company(cid)
+        if not c:
+            raise HTTPException(404, "no such company")
+        existing = _recover_draft(uid, cid)
+        if existing:
+            return existing
+        m = store.get_market(cid)
+        if not m:
+            raise HTTPException(409, "This business has not been priced yet")
+        px = m["last_price"] or m["ref_price"]
+        seller = ", ".join(c.get("owners") or ["the owner"])
+        where = c.get("address") or ", ".join(x for x in (c.get("city"), c.get("state")) if x)
+        generated = await acquire_agent.loi(c, uid, seller, where, px, px * SHARES, date.today().strftime("%B %d, %Y"))
+        cached = CHECKLISTS.get(_ck(c))
+        acq = {"acquisition_id": f"acq_{uuid.uuid4().hex[:8]}", "market_id": cid,
+               "loi_md": generated or draft_loi(c, m, uid), "status": "draft",
+               "checklist": deepcopy(cached) if cached else checklist_for(c),
+               "checklist_source": "grok" if cached else "template", "loi_source": "grok" if generated else "template",
+               "checklist_status": "ready" if cached else "researching"}
+        with _draft_lock:
+            _persist(uid, cid, acq)
+            store.audit({"t": time.time(), "actor": uid, "action": "acquire_start", "payload": {"market_id": cid, "acquisition_id": acq["acquisition_id"]}})
+            if not cached:
+                key = (uid, cid, acq["acquisition_id"])
+                task = asyncio.create_task(_research_checklist(uid, acq["acquisition_id"], c, deepcopy(acq["checklist"])))
+                _research_tasks.add(task)
+                _research_jobs[key] = task
+                task.add_done_callback(lambda finished, key=key: _research_finished(key, finished))
+        return acq
 
 
 @router.get("/{acq_id}", response_model=Acquisition)
 def get(acq_id: str, uid: str = Depends(current_user)):
-    a = next((a for a in engine.user(uid).get("acquisitions", {}).values() if a["acquisition_id"] == acq_id), None)
+    a = next((a for a in store.user_drafts(uid) if a["acquisition_id"] == acq_id), None)
     if not a:
         raise HTTPException(404, "no such acquisition")
-    return a
+    return _recover_draft(uid, a["market_id"])
 
 
 @router.get("/{cid}/draft", response_model=Acquisition | None)
 def draft(cid: str, uid: str = Depends(current_user)):
-    return engine.user(uid).get("acquisitions", {}).get(cid)
+    return _recover_draft(uid, cid)
 
 
 class DraftIn(BaseModel):
     loi_md: str = Field(min_length=1, max_length=100000)
     checklist: list[ChecklistItem] = Field(max_length=100)
+    checklist_source: str = "template"
 
 
 @router.put("/{cid}/draft", response_model=Acquisition)
 def save_draft(cid: str, body: DraftIn, uid: str = Depends(current_user)):
-    user = engine.user(uid)
-    acq = user.get("acquisitions", {}).get(cid)
-    if not acq:
-        raise HTTPException(404, "Create a draft first")
-    acq = {**acq, "loi_md": body.loi_md, "checklist": [i.model_dump() for i in body.checklist]}
-    user["acquisitions"][cid] = acq
-    store.put_user(user)
-    store.audit({"t": time.time(), "actor": uid, "action": "acquire_draft_saved", "payload": {"market_id": cid, "acquisition_id": acq["acquisition_id"]}})
-    if hasattr(store, "save"):
-        store.save()
-    return acq
+    with _draft_lock:
+        acq = _recover_draft(uid, cid)
+        if not acq:
+            raise HTTPException(404, "Create a draft first")
+        items = [i.model_dump() for i in body.checklist]
+        changed = items != acq["checklist"]
+        acq = {**acq, "loi_md": body.loi_md, "checklist": items}
+        if changed:
+            acq["checklist_source"] = "grok" if body.checklist_source == "grok" else "template"
+            acq["checklist_status"] = "kept"
+        store.audit({"t": time.time(), "actor": uid, "action": "acquire_draft_saved", "payload": {"market_id": cid, "acquisition_id": acq["acquisition_id"]}})
+        _persist(uid, cid, acq)
+        return acq

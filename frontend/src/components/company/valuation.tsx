@@ -3,6 +3,18 @@ import { usd, pct } from "@/lib/format";
 import { Label } from "@/components/ui/label";
 
 /** Model value vs market-implied value on one ruled scale. */
+/**
+ * The API names estimators with its own enum (income, listing, proxy, llm, base_rate).
+ * Those are internal identifiers, not labels a reader can use, so the UI names the method instead.
+ */
+const ESTIMATOR_LABEL: Record<string, string> = {
+  income: "Income",
+  listing: "Asking price",
+  proxy: "Inferred",
+  llm: "AI estimate",
+  base_rate: "Category median",
+};
+
 export function Valuation({ company, last, advanced = false }: { company: Company; last: number | null; advanced?: boolean }) {
   const v = company.valuation;
   const f = company.financials;
@@ -14,6 +26,11 @@ export function Valuation({ company, last, advanced = false }: { company: Compan
       </div>
     );
   }
+  // shared log scale across every method's +/-1 sigma range, so the bars are comparable
+  const spans = v.estimates.flatMap((e) => [e.value * Math.exp(-e.sigma), e.value * Math.exp(e.sigma)]).concat([v.v0]);
+  const sLo = Math.log(Math.min(...spans)) - 0.05;
+  const sHi = Math.log(Math.max(...spans)) + 0.05;
+  const scale = (x: number) => Math.max(0, Math.min(100, ((Math.log(Math.max(x, 1)) - sLo) / Math.max(.01, sHi - sLo)) * 100));
   const shares = company.market?.shares_outstanding ?? 10000;
   const market = last !== null ? last * shares : null;
   // log scale between low and high, padded
@@ -25,9 +42,7 @@ export function Valuation({ company, last, advanced = false }: { company: Compan
     <div className="bg-card border border-line">
       <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
         <Label>Valuation</Label>
-        <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
-          <span className="normal-case">σ</span> {v.sigma.toFixed(2)}
-        </span>
+
       </div>
       <div className="p-3">
         <div className="grid grid-cols-2 gap-3 mb-4">
@@ -65,20 +80,26 @@ export function Valuation({ company, last, advanced = false }: { company: Compan
           <dd className="text-right">{pct(f?.confidence ?? null)} {f?.method === "proxy" ? <span className="text-tint-400">proxy</span> : null}</dd>
         </dl>
         <details open={advanced} className="mt-3 border-t border-hairline pt-3">
-          <summary className="cursor-pointer text-xs mb-3">
-            Valuation methodology
-            <span className="font-mono text-[10px] text-muted-foreground tabular-nums"> · spread {v.disagreement.toFixed(2)}</span>
-          </summary>
-          <ol className="flex flex-col gap-2">
-            {v.estimates.map((e) => (
-              <li key={e.name} className="grid grid-cols-[64px_1fr_auto] gap-x-3 items-baseline">
-                <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-tint-500">{e.name.replace("_", " ")}</span>
-                <span className="text-[12px] secondary leading-[1.3]">{e.note}</span>
-                <span className="font-mono text-[11px] tabular-nums text-right whitespace-nowrap">
-                  {usd(e.value, { compact: true })} <span className="text-tint-400">±{e.sigma.toFixed(2)}</span>
-                </span>
-              </li>
-            ))}
+          <summary className="cursor-pointer mb-3 text-xs">Valuation methodology</summary>
+          <ol className="flex flex-col gap-1.5">
+            {v.estimates.map((e) => {
+              const lo = e.value * Math.exp(-e.sigma);
+              const hi = e.value * Math.exp(e.sigma);
+              return (
+                <li key={e.name} className="grid grid-cols-[86px_1fr_46px] items-center gap-x-2">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-tint-500 leading-[1.2]">
+                    {ESTIMATOR_LABEL[e.name] ?? e.name.replace(/_/g, " ")}
+                  </span>
+                  <span className="relative block h-4" title={e.note}>
+                    <span className="absolute left-0 right-0 top-1/2 h-px bg-hairline" />
+                    <span className="absolute top-1/2 h-px -translate-y-1/2 bg-tint-400" style={{ left: `${scale(lo)}%`, width: `${scale(hi) - scale(lo)}%` }} />
+                    <span className="absolute top-1/2 size-[5px] -translate-x-1/2 -translate-y-1/2 bg-primary" style={{ left: `${scale(e.value)}%` }} />
+                    <span className="absolute inset-y-0 w-px bg-accent/45" style={{ left: `${scale(v.v0)}%` }} />
+                  </span>
+                  <span className="font-mono text-[11px] tabular-nums text-right">{usd(e.value, { compact: true })}</span>
+                </li>
+              );
+            })}
           </ol>
         </details>
       </div>

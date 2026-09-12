@@ -37,7 +37,9 @@ def place_order(mid: str, body: OrderIn, uid: str = Depends(current_user)):
 @router.get("/{mid}/orders/mine", response_model=list[Order], response_model_by_alias=True)
 def my_orders(mid: str, uid: str = Depends(current_user)):
     os_ = [o for o in store.user_orders(uid, mid) if o["status"] != "rejected"]
-    return [views.order(o) for o in sorted(os_, key=lambda o: -o["created_at"])[:50]]
+    active = [o for o in os_ if o["status"] in ("open", "partial")]
+    history = sorted((o for o in os_ if o["status"] not in ("open", "partial")), key=lambda o: -o["created_at"])[:50]
+    return [views.order(o) for o in sorted(active + history, key=lambda o: -o["created_at"])]
 
 
 @router.delete("/orders/{oid}", response_model=Order, response_model_by_alias=True)

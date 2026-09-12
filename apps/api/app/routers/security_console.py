@@ -119,7 +119,8 @@ def detail(cid: str):
     # Evidence belongs to the detection time. Opening a case must not replace it
     # with later activity from the same subjects or mutate the saved record.
     return {**wire_case(case), **case.get("evidence", evidence),
-            "audit": [{**e, "t": views.iso(e["t"])} for e in store.audit_log(10000) if e.get("flag_id") == cid or (e.get("actor") in subjects and (e.get("market_id") == f["market_id"] or e.get("payload", {}).get("market_id") == f["market_id"]))][-100:]}
+            "audit": [{**e, "t": views.iso(e["t"])} for e in store.linked_audit(actors=list(subjects), flag_ids=[cid], market_id=f["market_id"], limit=100)],
+            "evidence_window": "Detection snapshot: up to 100 trades and 100 orders. Audit shows the latest 100 linked records from all stored history."}
 
 
 class Disposition(BaseModel):
@@ -189,9 +190,11 @@ def user_profile(uid: str):
     cases = [wire_case(c) for c in store.list_cases() if uid in c["flag"]["subjects"]]
     if not user and not cases:
         raise HTTPException(404, "No user or investigation found")
-    orders = store.user_orders(uid)
-    trades = [t for m in store.list_markets() for t in store.trades(m["id"], 1000) if uid in (t["buyer_id"],t["seller_id"])]
-    calls = [{**e, "t": views.iso(e["t"])} for e in store.audit_log(10000) if e.get("action") == "agent_call" and (e.get("actor") == uid or e.get("flag_id") in {c["id"] for c in cases})]
+    orders = sorted(store.user_orders(uid), key=lambda o: (o["created_at"], o["id"]))
+    trades = store.user_trades(uid, limit=100)
+    trade_summary = store.user_trade_summary(uid)
+    calls = [{**e, "t": views.iso(e["t"])} for e in store.linked_audit(actors=[uid], flag_ids=[c["id"] for c in cases], calls_only=True, limit=100)]
     return {"id": uid, "display_name": (user or {}).get("display_name", uid), "cases": cases,
-            "summary": {"orders": len(orders), "cancelled": sum(o["status"]=="cancelled" for o in orders), "trades": len(trades), "traded_notional": round(sum(t["qty"]*t["price"] for t in trades),2)},
-            "positions": (user or {}).get("positions", {}), "orders": [views.order(o) for o in orders[-100:]], "trades": [views.trade(t) for t in trades[-100:]], "calls": calls[-100:]}
+            "summary": {"orders": len(orders), "cancelled": sum(o["status"]=="cancelled" for o in orders), **trade_summary},
+            "positions": (user or {}).get("positions", {}), "orders": [views.order(o) for o in orders[-100:]], "trades": [views.trade(t) for t in trades], "calls": calls,
+            "evidence_window": "Totals cover all stored history. Lists show up to 100 recent orders, trades, and linked agent records."}

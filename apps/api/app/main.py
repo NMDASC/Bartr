@@ -25,12 +25,27 @@ TICK_S = float(os.getenv("TICK_S", "1.0"))
 SEED_FILE = Path(__file__).resolve().parent.parent / "seeds" / "companies.json"
 
 
+APPRAISALS_FILE = SEED_FILE.parent / "appraisals.json"
+
+
 def load_seeds() -> int:
+    """Seeds plus cached Grok appraisals (scripts/appraise_seeds.py), so the ensemble's `llm`
+    estimator is real at boot and the company page shows the appraisal without a live call."""
     if not SEED_FILE.exists() or store.list_companies():
         return 0
+    appraisals = json.loads(APPRAISALS_FILE.read_text()) if APPRAISALS_FILE.exists() else {}
     n = 0
     for c in json.loads(SEED_FILE.read_text()):
-        engine.create_company(c)
+        a = appraisals.get(c.get("id"))
+        if a:
+            c = {**c, **{k: v for k, v in a["patch"].items() if c.get(k) is None}}
+            c["sources"] = sorted(set(c.get("sources", [])) | set(a["appraisal"].get("sources", [])))
+            if a["appraisal"].get("owners") and not c.get("owners"):
+                c["owners"] = a["appraisal"]["owners"]
+        co = engine.create_company(c)
+        if a:
+            co["appraisal"] = {**a["appraisal"], "k2": a["k2"], "clamped": a["clamped"], "at": a["at"], "cached": True}
+            store.put_company(co)
         n += 1
     return n
 

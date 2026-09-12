@@ -1396,6 +1396,7 @@ paths:
         schema:
           anyOf:
           - type: number
+            minimum: 0
           - type: 'null'
           title: Before
       - name: offset
@@ -1642,6 +1643,29 @@ components:
           - closed
           title: Status
           default: draft
+        checklist_source:
+          type: string
+          enum:
+          - template
+          - grok
+          title: Checklist Source
+          default: template
+        loi_source:
+          type: string
+          enum:
+          - template
+          - grok
+          title: Loi Source
+          default: template
+        checklist_status:
+          type: string
+          enum:
+          - researching
+          - ready
+          - unavailable
+          - kept
+          title: Checklist Status
+          default: ready
       type: object
       required:
       - acquisition_id
@@ -2332,6 +2356,10 @@ components:
           type: array
           maxItems: 100
           title: Checklist
+        checklist_source:
+          type: string
+          title: Checklist Source
+          default: template
       type: object
       required:
       - loi_md

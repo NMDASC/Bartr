@@ -65,6 +65,9 @@ cd frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 pnpm dev
 
 `/readiness` lists `grok_features` and the last ten model calls. `scripts/grok_smoke.py` runs every feature once against real keys.
 
+**Model tiers.** Interactive calls use `XAI_FAST_MODEL` (default `grok-4.20-0309-non-reasoning`, measured 0.7 to 2.2s per call); research with web_search uses `XAI_MODEL` (grok-4.6, 40 to 80s). The slow calls are cached ahead of the demo:
+`scripts/appraise_seeds.py` (seeds -> `seeds/appraisals.json`, merged at boot; `--store` appraises every company in Atlas and writes back) and `scripts/warm_checklists.py` (per city/state/category -> `seeds/checklists.json`). Acquire returns the templated checklist instantly and swaps in the researched, cited one when it lands (`checklist_source`).
+
 ## Layout
 
 ```

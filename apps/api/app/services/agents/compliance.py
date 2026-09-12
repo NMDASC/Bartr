@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from app.llm import LLMNotConfigured, complete, is_configured
+from app.llm import LLMNotConfigured, complete, fast_model, is_configured
 from app.security import context
 
 _CACHE: dict[str, dict] = {}
@@ -31,7 +31,15 @@ async def _ask(provider: str, flag: dict) -> ReviewOpinion | None:
         rules = next((r for r in flag.get("reviews", []) if r["reviewer"] == "rules"), {})
         independent_flag = {k: v for k, v in flag.items() if k not in ("reviews", "reviewer", "disputed")}
         independent_flag.update(severity=rules.get("severity", flag["severity"]), explanation=rules.get("explanation", flag["explanation"]))
-        packet = {"flag": independent_flag, "trades": store.trades(flag["market_id"], 40)}
+        # Both reviewers receive the same immutable detection evidence, including
+        # cancelled orders for spoofing. Never substitute newer market activity.
+        from copy import deepcopy
+        case = next((c for c in store.list_cases() if c["id"] == flag["id"] and c["flag"]["t"] == flag["t"]), None)
+        if case is None or "evidence" not in case:
+            from app.routers.security_console import capture
+            capture([flag])
+            case = next((c for c in store.list_cases() if c["id"] == flag["id"] and c["flag"]["t"] == flag["t"]), None)
+        packet = {"flag": independent_flag, **deepcopy(case.get("evidence", {}) if case else {})}
         token = context.set({**context.get(), "feature": "compliance_review", "market_id": flag["market_id"], "flag_id": flag["id"]})
         import asyncio
         return await asyncio.wait_for(complete(
@@ -40,6 +48,7 @@ async def _ask(provider: str, flag: dict) -> ReviewOpinion | None:
                 {"role": "user", "content": json.dumps(packet, default=str)},
             ],
             provider=provider,  # type: ignore[arg-type]
+            model=fast_model(provider),  # type: ignore[arg-type]
             schema=ReviewOpinion,
         ), timeout=40)
     except (LLMNotConfigured, Exception):

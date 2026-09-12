@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>JB</title>
+<title>Bartr</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,57 +12,38 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
 <style>
 :root {
-  --white: #fff;
-  --black: #000;
-  --ink: #1d1d1f;
-  --ink-2: #6e6e73;
-  --paper: #f5f5f7;
-  --paper-2: #a1a1a6;
-  --green: #30D158;
-  --red: #FF453A;
+  --white: #fff; --black: #000;
+  --ink: #1d1d1f; --ink-2: #6e6e73;
+  --paper: #f5f5f7; --paper-2: #a1a1a6;
+  --green: #30D158; --red: #FF453A;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --font: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--black); overflow: hidden; }
-body {
-  font-family: var(--font);
-  font-variant-numeric: tabular-nums;
-  -webkit-font-smoothing: antialiased;
-  color: var(--ink);
-  font-size: 32px;
-  line-height: 1.25;
-}
+body { font-family: var(--font); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; color: var(--ink); font-size: 32px; line-height: 1.25; }
 
-/* backgrounds crossfade once, at the pricing slide */
 #bgL, #bgD { position: fixed; inset: 0; z-index: 0; }
 #bgL { background: var(--white); }
 #bgD { background: radial-gradient(ellipse 80% 70% at 50% 40%, #0b0b0c 0%, #000 100%); opacity: 0; transition: opacity 700ms var(--ease); }
 body.dark #bgD { opacity: 1; }
-
 #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; z-index: 1; }
 
-.slide {
-  position: absolute; inset: 0; padding: 120px 140px;
-  opacity: 0; visibility: hidden; transition: opacity 300ms var(--ease), visibility 0s 300ms;
-  color: var(--ink);
-}
+.slide { position: absolute; inset: 0; padding: 120px 140px; opacity: 0; visibility: hidden; transition: opacity 300ms var(--ease), visibility 0s 300ms; color: var(--ink); }
 .slide.active { opacity: 1; visibility: visible; transition: opacity 300ms var(--ease); }
 .slide[data-theme="dark"] { color: var(--paper); }
 .slide[data-theme="dark"] .muted { color: var(--paper-2); }
 .muted { color: var(--ink-2); }
 .green { color: var(--green); }
 
-/* enter motion */
 .fu { opacity: 0; transform: translateY(12px); }
-.slide.active .fu:not(.frag), .slide.active .frag.on {
-  animation: fu 600ms var(--ease) forwards;
-  animation-delay: calc(var(--i, 0) * 80ms + var(--d, 0ms));
-}
+.slide.active .fu:not(.frag), .slide.active .frag.on { animation: fu 600ms var(--ease) forwards; animation-delay: calc(var(--i, 0) * 80ms + var(--d, 0ms)); }
 @keyframes fu { to { opacity: 1; transform: none; } }
-html.still .fu, html.print .fu { opacity: 1 !important; transform: none !important; animation: none !important; }
+.dg { opacity: 0; }
+.slide.active .dg { animation: dgin 500ms var(--ease) forwards; animation-delay: calc(var(--i, 0) * 90ms + 250ms); }
+@keyframes dgin { to { opacity: 1; } }
+html.still .fu, html.print .fu, html.still .dg, html.print .dg { opacity: 1 !important; transform: none !important; animation: none !important; }
 
-/* type */
 .display { font-weight: 600; letter-spacing: -0.035em; line-height: 1.02; font-size: 128px; margin: 0; }
 .display.xl { font-size: 160px; }
 .display.md { font-size: 96px; }
@@ -71,87 +52,143 @@ html.still .fu, html.print .fu { opacity: 1 !important; transform: none !importa
 .small { font-size: 22px; }
 .kicker { position: absolute; top: 72px; left: 140px; font-size: 26px; font-weight: 500; margin: 0; }
 .kicker.right { left: auto; right: 140px; font-weight: 400; }
+.hl { font-size: 76px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; margin: 0; }
 
-/* browser frame, 1440x900 content */
-.device { --w: 1240px; width: var(--w); background: #fff; border-radius: 18px; overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 30px 80px rgba(0,0,0,0.14); }
+.device { --w: 1240px; width: var(--w); background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 30px 80px rgba(0,0,0,0.14); }
 .slide[data-theme="dark"] .device { box-shadow: 0 0 0 1px rgba(255,255,255,0.12), 0 40px 100px rgba(0,0,0,0.6); }
 .device .bar { height: 44px; background: #ececef; display: flex; align-items: center; padding: 0 16px; gap: 14px; }
-.device .bar i { width: 12px; height: 12px; border-radius: 50%; background: #d3d3d7; display: block; }
+.device .bar i { width: 12px; height: 12px; border-radius: 50%; display: block; }
 .device .bar i:nth-child(1) { background: #fe5f57; } .device .bar i:nth-child(2) { background: #febc2e; } .device .bar i:nth-child(3) { background: #28c840; }
-.device .bar span { margin-left: 12px; flex: 1; height: 26px; background: #fff; border-radius: 7px; font-size: 14px; line-height: 26px; color: #6e6e73; padding: 0 12px; font-weight: 400; letter-spacing: 0; }
+.device .bar span { margin-left: 12px; flex: 1; height: 26px; background: #fff; border-radius: 7px; font-size: 14px; line-height: 26px; color: #6e6e73; padding: 0 12px; font-weight: 400; }
 .device .shot { position: relative; width: 100%; aspect-ratio: 1440 / 900; background: #fafafa; overflow: hidden; }
-.device .shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-.device .ph { position: absolute; inset: 0; display: grid; place-items: center; color: #b4b4b8; font-size: 20px; text-align: center; line-height: 1.6;
-  background-image: linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px); background-size: 48px 48px; }
+.device .shot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; z-index: 1; }
+.device .ph { position: absolute; inset: 0; display: grid; place-items: center; color: #b4b4b8; font-size: 20px; text-align: center; line-height: 1.6; background-image: linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px); background-size: 48px 48px; }
 .device .ph b { display: block; color: #8a8a8e; font-weight: 500; }
 
-/* qr placeholder */
 .qr { position: absolute; width: 220px; height: 220px; background: #fff; border-radius: 12px; display: grid; place-items: center; overflow: hidden; }
-.qr img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.qr img { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
 .qr span { color: #000; font-size: 18px; font-weight: 500; text-align: center; line-height: 1.4; }
 .qr:before { content: ""; position: absolute; inset: 14px; border: 2px dashed #d3d3d7; border-radius: 8px; }
 
-/* equations */
 .math { font-size: 24px; }
 .katex-display { margin: 0.36em 0; text-align: left; }
 .katex-display > .katex { text-align: left; }
-.eqgrid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 70px; margin-top: 68px; }
-.eqgrid .span2 { grid-column: 1 / -1; }
 .legend { position: absolute; left: 140px; right: 140px; bottom: 64px; font-size: 18px; line-height: 1.55; color: var(--paper-2); }
-.legend .katex { font-size: 1.05em; }
 
-/* live auction */
-#live .book { position: absolute; left: 140px; top: 200px; width: 800px; }
-#live .book .cols { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; }
-#live .book h4 { font-size: 20px; font-weight: 500; margin: 0 0 14px; color: var(--paper-2); display: flex; justify-content: space-between; }
-#live .row { display: grid; grid-template-columns: 130px 110px 1fr; font-size: 24px; height: 46px; align-items: center; padding: 0 12px; border-radius: 8px;
-  opacity: 0; transform: translateX(-14px); transition: opacity 500ms var(--ease), transform 500ms var(--ease), background 250ms; }
+/* three column strip */
+.cols3 { display: grid; grid-template-columns: 1fr 1fr 1fr; column-gap: 60px; }
+.cols3 > div { border-top: 1px solid rgba(0,0,0,0.14); padding-top: 24px; }
+.slide[data-theme="dark"] .cols3 > div { border-top-color: rgba(255,255,255,0.18); }
+.cols3 h3 { font-size: 34px; font-weight: 600; margin: 0 0 14px; letter-spacing: -0.02em; }
+.cols3 p { font-size: 24px; line-height: 1.45; margin: 0; }
+
+/* estimator table */
+.est { border-collapse: collapse; font-size: 23px; width: 100%; }
+.est td { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.est td:nth-child(2), .est td:nth-child(3) { text-align: right; }
+.est td:nth-child(3) { color: var(--paper-2); }
+.est tr.sum td { border-bottom: 0; font-weight: 600; font-size: 27px; padding-top: 22px; }
+.est tr.sum td:nth-child(3) { font-weight: 400; }
+
+/* diagrams */
+svg.flow { overflow: visible; }
+svg.flow .box { fill: rgba(255,255,255,0.045); stroke: rgba(255,255,255,0.28); stroke-width: 1.2; }
+svg.flow .box.acc { stroke: var(--green); fill: rgba(48,209,88,0.08); }
+svg.flow .box.warn { stroke: var(--red); fill: rgba(255,69,58,0.08); }
+svg.flow .t { font-family: var(--font); font-size: 21px; font-weight: 600; fill: var(--paper); letter-spacing: -0.01em; }
+svg.flow .s { font-family: var(--font); font-size: 16.5px; fill: var(--paper-2); }
+svg.flow .e { fill: none; stroke: rgba(255,255,255,0.4); stroke-width: 1.6; }
+svg.flow .e.acc { stroke: var(--green); }
+svg.flow .e.dash { stroke-dasharray: 6 6; }
+svg.flow .el { font-family: var(--font); font-size: 15px; fill: var(--paper-2); }
+svg.flow .lg { filter: invert(1) brightness(0.95); }
+svg.flow.light .box { fill: rgba(0,0,0,0.025); stroke: rgba(0,0,0,0.22); }
+svg.flow.light .t { fill: var(--ink); } svg.flow.light .s { fill: var(--ink-2); }
+svg.flow.light .e { stroke: rgba(0,0,0,0.35); } svg.flow.light .el { fill: var(--ink-2); }
+svg.flow.light .lg { filter: none; }
+.logo { height: 44px; width: auto; filter: invert(1) brightness(0.95); }
+
+/* live marketplace */
+#live .people { position: absolute; left: 140px; right: 140px; top: 160px; display: grid; grid-template-columns: repeat(9, 1fr); column-gap: 24px; }
+#live .person { position: relative; text-align: center; opacity: 0; transform: translateY(10px); transition: opacity 500ms var(--ease), transform 500ms var(--ease); }
+#live .person.in { opacity: 1; transform: none; }
+#live .av { width: 62px; height: 62px; border-radius: 50%; margin: 0 auto 8px; display: grid; place-items: center; font-size: 21px; font-weight: 600; letter-spacing: -0.02em;
+  background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.28); transition: border-color 300ms, box-shadow 300ms, background 300ms; }
+#live .person.owner .av { background: rgba(255,255,255,0.18); border-color: var(--paper); }
+#live .person.filled .av { border-color: var(--green); box-shadow: 0 0 0 6px rgba(48,209,88,0.18); }
+#live .person.quoting .av { border-color: var(--green); box-shadow: 0 0 0 6px rgba(48,209,88,0.12); }
+#live .nm { font-size: 18px; font-weight: 500; }
+#live .rl { font-size: 13px; color: var(--paper-2); margin-top: 1px; min-height: 16px; }
+#live .tag { font-size: 13px; color: var(--green); font-weight: 600; margin-top: 1px; min-height: 16px; }
+#live .bub { position: absolute; left: 50%; top: -30px; transform: translate(-50%, 6px) scale(0.9); white-space: nowrap; font-size: 15px; font-weight: 600; padding: 5px 11px; border-radius: 999px;
+  background: rgba(48,209,88,0.16); color: var(--green); border: 1px solid rgba(48,209,88,0.5); opacity: 0; transition: opacity 220ms var(--ease), transform 220ms var(--ease); z-index: 3; }
+#live .person.owner .bub { background: rgba(255,255,255,0.1); color: var(--paper); border-color: rgba(255,255,255,0.35); }
+#live .bub.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+#live .chip { position: absolute; z-index: 4; white-space: nowrap; font-size: 15px; font-weight: 600; padding: 5px 11px; border-radius: 999px; background: rgba(48,209,88,0.22); color: var(--green); border: 1px solid rgba(48,209,88,0.5);
+  transition: transform 640ms cubic-bezier(0.4, 0, 0.2, 1), opacity 260ms 420ms; }
+#live .book { position: absolute; left: 140px; top: 372px; width: 780px; }
+#live .book .cols { display: grid; grid-template-columns: 1fr 1fr; column-gap: 36px; }
+#live .book h4 { font-size: 17px; font-weight: 500; margin: 0 0 8px; color: var(--paper-2); display: flex; justify-content: space-between; }
+#live .row { display: grid; grid-template-columns: 110px 90px 1fr; font-size: 21px; height: 40px; align-items: center; padding: 0 12px; border-radius: 8px; opacity: 0; transform: translateX(-14px);
+  transition: opacity 400ms var(--ease), transform 400ms var(--ease), background 250ms, height 300ms, margin 300ms; overflow: hidden; }
 #live .asks .row { transform: translateX(14px); }
 #live .row.in { opacity: 1; transform: none; }
+#live .row.gone { height: 0; opacity: 0; }
 #live .row .p { font-weight: 600; }
 #live .bids .row .p { color: var(--green); }
-#live .row .o { font-size: 17px; color: var(--paper-2); text-align: right; }
-#live .row .q { color: var(--paper); }
-#live .row.fill { background: rgba(48,209,88,0.22); }
-#live .row.fill .f { font-size: 17px; color: var(--green); text-align: right; }
+#live .row .o { font-size: 15px; color: var(--paper-2); text-align: right; }
+#live .row.fill { background: rgba(48,209,88,0.2); }
+#live .row.fill .o { color: var(--green); }
 #live .row.fill.flash { background: rgba(48,209,88,0.55); }
-#live .clock { position: absolute; right: 140px; top: 150px; text-align: right; }
-#live .clock .n { font-size: 160px; font-weight: 600; letter-spacing: -0.04em; line-height: 1; }
-#live .clock .t { font-size: 22px; color: var(--paper-2); margin-top: 4px; min-height: 30px; }
-#live svg { position: absolute; left: 980px; top: 340px; width: 800px; height: 440px; overflow: visible; }
+#live .clock { position: absolute; left: 980px; top: 372px; }
+#live .clock .r { font-size: 20px; color: var(--paper-2); font-weight: 500; }
+#live .clock .n { font-size: 84px; font-weight: 600; letter-spacing: -0.04em; line-height: 1; margin-top: 2px; }
+#live .clock .t { font-size: 17px; color: var(--paper-2); margin-top: 2px; min-height: 22px; }
+#live svg.curves { position: absolute; left: 1240px; top: 372px; width: 540px; height: 270px; overflow: visible; }
 #live svg .grid line { stroke: rgba(255,255,255,0.09); stroke-width: 1; }
-#live svg .tick { fill: var(--paper-2); font-size: 16px; font-family: var(--font); }
-#live svg .demand { stroke: var(--green); fill: none; stroke-width: 3; stroke-linejoin: round; }
-#live svg .supply { stroke: var(--paper); fill: none; stroke-width: 3; stroke-linejoin: round; }
+#live svg .band { fill: rgba(255,255,255,0.05); }
+#live svg .tick { fill: var(--paper-2); font-size: 14px; font-family: var(--font); }
+#live svg .area { opacity: 0; transition: opacity 600ms 700ms; }
+#live svg .area.on { opacity: 1; }
+#live svg .demand { stroke: var(--green); fill: none; stroke-width: 2.5; stroke-linejoin: round; }
+#live svg .supply { stroke: var(--paper); fill: none; stroke-width: 2.5; stroke-linejoin: round; }
 #live svg .curve { stroke-dasharray: 1; stroke-dashoffset: 1; }
-#live svg .curve.draw { transition: stroke-dashoffset 1100ms var(--ease); stroke-dashoffset: 0; }
+#live svg .curve.draw { transition: stroke-dashoffset 900ms var(--ease); stroke-dashoffset: 0; }
 #live svg .pstar { stroke: var(--green); stroke-width: 2; opacity: 0; transition: opacity 200ms, transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1); }
 #live svg .pstar.on { opacity: 1; }
 #live svg .dot { fill: var(--green); opacity: 0; transition: opacity 200ms; }
 #live svg .dot.on { opacity: 1; }
-#live svg .lab { font-family: var(--font); font-size: 18px; fill: var(--paper-2); }
-#live svg .lab.g { fill: var(--green); font-weight: 600; font-size: 22px; }
-#live svg .lab { opacity: 0; transition: opacity 300ms; }
+#live svg .lab { font-family: var(--font); font-size: 15px; fill: var(--paper-2); opacity: 0; transition: opacity 300ms; }
+#live svg .lab.g { fill: var(--green); font-weight: 600; font-size: 19px; }
 #live svg .lab.on { opacity: 1; }
-#live .result { position: absolute; left: 140px; bottom: 90px; font-size: 26px; color: var(--paper-2); opacity: 0; transition: opacity 400ms var(--ease); }
+#live svg.path { position: absolute; left: 980px; top: 690px; width: 620px; height: 250px; overflow: visible; }
+#live svg.path .pt { fill: var(--green); }
+#live svg.path .ln { stroke: var(--green); stroke-width: 2.5; fill: none; }
+#live svg.path .model { stroke: var(--paper-2); stroke-width: 1.5; stroke-dasharray: 6 6; fill: none; transition: d 600ms; }
+#live svg.path .pl { font-family: var(--font); font-size: 16px; font-weight: 600; fill: var(--green); }
+#live svg.path .ml { font-family: var(--font); font-size: 14px; fill: var(--paper-2); }
+#live .result { position: absolute; left: 140px; width: 780px; bottom: 60px; font-size: 21px; line-height: 1.45; color: var(--paper-2); opacity: 0; transition: opacity 400ms var(--ease); }
 #live .result.on { opacity: 1; }
 #live .result b { color: var(--paper); font-weight: 600; }
 #live .result .g { color: var(--green); font-weight: 600; }
-#live .qr { right: 140px; bottom: 80px; }
+#live .qr { right: 140px; bottom: 60px; width: 150px; height: 150px; }
+#live .qr span { font-size: 15px; }
 
-/* stack */
-.row7 { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 140px; }
-.row7 div { font-size: 38px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
-.row7 div small { display: block; font-size: 20px; font-weight: 400; color: var(--paper-2); margin-top: 6px; letter-spacing: 0; }
+.gk { border: 1px solid rgba(255,255,255,0.22); border-radius: 14px; padding: 22px 24px; background: rgba(255,255,255,0.035); }
+.gk.acc { border-color: var(--green); background: rgba(48,209,88,0.07); }
+.gk h3 { font-size: 26px; font-weight: 600; margin: 0 0 10px; letter-spacing: -0.015em; }
+.gk p { font-size: 18.5px; line-height: 1.42; margin: 0; color: var(--paper-2); }
 
-/* presenter clock */
-#presenter { position: absolute; left: 40px; bottom: 32px; font-size: 28px; font-weight: 500; color: #8e8e93; display: none; z-index: 5; letter-spacing: 0; }
+.sponsors { display: flex; justify-content: space-between; align-items: center; }
+.sponsors .sp { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+.sponsors .sp small { display: block; font-size: 15px; font-weight: 400; color: var(--paper-2); letter-spacing: 0; }
+.sponsors .logo { height: 34px; }
+
+#presenter { position: absolute; left: 40px; bottom: 32px; font-size: 28px; font-weight: 500; color: #8e8e93; display: none; z-index: 5; }
 #presenter.on { display: block; }
-#presenter b { font-weight: 600; color: inherit; }
+#presenter b { font-weight: 600; }
 #presenter.over { color: #f5f5f7; }
 
-/* print: every slide on its own 16:9 page, all motion at final state */
 @page { size: 1920px 1080px; margin: 0; }
 @media print {
   html, body { overflow: visible; height: auto; background: #fff; }
@@ -159,7 +196,7 @@ html.still .fu, html.print .fu { opacity: 1 !important; transform: none !importa
   #stage { position: static; transform: none !important; width: 1920px; height: auto; }
   .slide { position: relative; width: 1920px; height: 1080px; opacity: 1 !important; visibility: visible !important; break-after: page; page-break-after: always; overflow: hidden; background: #fff; }
   .slide[data-theme="dark"] { background: radial-gradient(ellipse 80% 70% at 50% 40%, #0b0b0c 0%, #000 100%); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .slide:last-child { break-after: auto; page-break-after: auto; }
+  .slide:last-of-type { break-after: auto; page-break-after: auto; }
 }
 html.print body { overflow: visible; height: auto; }
 html.print #stage { position: static; transform: none !important; height: auto; }
@@ -174,11 +211,12 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
 
 <!-- 1 Title -->
 <section class="slide" data-theme="light" id="s1">
-  <div style="position:absolute; left:140px; top:50%; transform:translateY(-58%);">
-    <h1 class="display fu" style="font-size:240px; letter-spacing:-0.05em;">JB</h1>
-    <p class="sub fu" style="margin-top:18px; max-width:1100px;">A stock market for the businesses that will never be listed.</p>
+  <div style="position:absolute; left:140px; top:50%; transform:translateY(-56%);">
+    <h1 class="display fu" style="font-size:220px; letter-spacing:-0.05em;">Bartr</h1>
+    <p class="fu" style="font-size:44px; font-weight:600; letter-spacing:-0.02em; margin:14px 0 0;">Discover. Exchange. Acquire.</p>
+    <p class="sub muted fu" style="margin-top:22px; max-width:1200px;">A price and a market for the businesses nobody lists.</p>
   </div>
-  <p class="small muted fu" style="position:absolute; left:140px; bottom:88px; margin:0; letter-spacing:0.01em;">Nico &nbsp;&nbsp; Vir &nbsp;&nbsp; Aditya &nbsp;&nbsp; Zhiyuan</p>
+  <p class="small muted fu" style="position:absolute; left:140px; bottom:88px; margin:0;">Nico &nbsp;&nbsp; Vir &nbsp;&nbsp; Aditya &nbsp;&nbsp; Zhiyuan</p>
   <p class="small muted fu" style="position:absolute; right:140px; bottom:88px; margin:0;">HackCMU 2026</p>
 </section>
 
@@ -186,107 +224,123 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
 <section class="slide" data-theme="light" id="s2">
   <div style="position:absolute; left:140px; top:200px; right:140px;">
     <h1 class="display fu"><span class="count" data-to="33" data-from="0" data-dur="1200">33</span> million small businesses.</h1>
-    <h1 class="display fu">None of them has a price.</h1>
+    <h1 class="display fu">Almost none has a price.</h1>
     <p class="sub muted fu frag" style="margin-top:96px; max-width:1500px; font-size:40px; line-height:1.2;">If you wanted to buy a laundromat in Squirrel Hill tonight, you could not even find the list.</p>
   </div>
 </section>
 
-<!-- 3 Discover -->
+<!-- 3 Use case -->
 <section class="slide" data-theme="light" id="s3">
+  <p class="kicker fu">What Bartr is</p>
+  <div style="position:absolute; left:140px; right:140px; top:180px;">
+    <h2 class="hl fu" style="font-size:64px;">Buyer: a price with an error bar, then 20 shares, then the keys.</h2>
+    <h2 class="hl fu" style="font-size:64px; margin-top:18px;">Owner: sell 30% of the shop to the crowd, keep the keys.</h2>
+    <p class="sub muted fu" style="margin-top:36px; max-width:1600px; font-size:30px;">Crowdfunding portals raise money for small businesses. BizBuySell sells them whole. Neither prices them every day or lets you go from one share to the whole company. Bartr does both.</p>
+    <div class="cols3" style="margin-top:60px;">
+      <div class="fu"><h3>Discover</h3><p>Type "laundromat in Pittsburgh". Businesses found on the web, each priced with a range and a σ.</p></div>
+      <div class="fu"><h3>Exchange</h3><p>Every business is 10,000 shares. Buy 20 of the laundromat on Murray Avenue. The owner sells 30% and keeps the keys.</p></div>
+      <div class="fu"><h3>Acquire</h3><p>Want all of it? A letter of intent at the last clearing price and a Pittsburgh diligence checklist with official links.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 Discover -->
+<section class="slide" data-theme="light" id="s4">
   <p class="kicker fu">Discover</p>
   <p class="kicker right muted fu">"laundromat in Pittsburgh"</p>
-  <div class="device fu" style="position:absolute; left:340px; top:150px;">
-    <div class="bar"><i></i><i></i><i></i><span>jb.app/search?q=laundromat+in+pittsburgh</span></div>
+  <div class="device fu" style="--w:1060px; position:absolute; left:140px; top:150px;">
+    <div class="bar"><i></i><i></i><i></i><span>bartr.app/search?q=laundromat+in+pittsburgh</span></div>
     <div class="shot">
-      <!-- SCREENSHOT: /search?q=laundromat+in+pittsburgh  (results streaming: Squirrel Hill Wash and Fold, Butler Street Laundromat, Bloomfield Coin Laundry) -->
+      <!-- SCREENSHOT: /search?q=laundromat+in+pittsburgh -->
       <img src="assets/search.png" alt="" onerror="this.remove()">
-      <div class="ph"><div><b>screenshot 1440 x 900</b>/search?q=laundromat in Pittsburgh<br>results streaming in: Squirrel Hill Wash and Fold, Butler Street Laundromat, Bloomfield Coin Laundry</div></div>
+      <div class="ph"><div><b>screenshot 1440 x 900</b>/search?q=laundromat in Pittsburgh</div></div>
     </div>
   </div>
-  <div style="position:absolute; left:340px; right:340px; bottom:70px; display:flex; justify-content:space-between;">
-    <p class="label fu">Places</p><p class="label fu">Querit</p><p class="label fu">Grok</p>
+  <div class="fu" style="position:absolute; left:1280px; top:150px; width:500px;">
+    <svg class="flow light" data-flow="discover" viewBox="0 0 500 720" width="500" height="720"></svg>
   </div>
 </section>
 
-<!-- 4 One company -->
-<section class="slide" data-theme="light" id="s4">
+<!-- 5 One company -->
+<section class="slide" data-theme="light" id="s5">
   <p class="kicker fu">One company</p>
   <div class="device fu" style="--w:1100px; position:absolute; left:140px; top:150px;">
-    <div class="bar"><i></i><i></i><i></i><span>jb.app/company/co_squirrel_hill_wash</span></div>
+    <div class="bar"><i></i><i></i><i></i><span>bartr.app/company/co_squirrel_hill_wash</span></div>
     <div class="shot">
-      <!-- SCREENSHOT: /company/co_squirrel_hill_wash  (profile, sources, the five estimators, valuation range bar) -->
+      <!-- SCREENSHOT: /company/co_squirrel_hill_wash -->
       <img src="assets/company.png" alt="" onerror="this.remove()">
-      <div class="ph"><div><b>screenshot 1440 x 900</b>/company/co_squirrel_hill_wash<br>profile, sources, five estimators, valuation range bar</div></div>
+      <div class="ph"><div><b>screenshot 1440 x 900</b>/company/co_squirrel_hill_wash</div></div>
     </div>
   </div>
-  <div style="position:absolute; left:1320px; top:420px; width:480px;">
+  <div style="position:absolute; left:1320px; top:400px; width:480px;">
     <p class="label muted fu" style="margin-bottom:10px;">Squirrel Hill Wash and Fold</p>
     <p class="display fu" style="font-size:96px;"><span class="count" data-to="570768" data-prefix="$" data-dur="1400">$570,768</span></p>
-    <p class="label muted fu" style="margin-top:14px;">$475k to $686k &nbsp;·&nbsp; σ 0.22</p>
-    <p class="label muted fu" style="margin-top:6px;">$57.08 a share</p>
+    <p class="label muted fu" style="margin-top:14px;">$475k to $686k &nbsp;·&nbsp; σ 0.22, about ±22%</p>
+    <p class="label muted fu" style="margin-top:6px;">$57.08 a share &nbsp;·&nbsp; 10,000 shares</p>
+    <p class="label muted fu" style="margin-top:6px;">Live book, countdown, order ticket</p>
   </div>
 </section>
 
-<!-- 5 How we price it -->
-<section class="slide" data-theme="dark" id="s5">
-  <p class="kicker fu">How we price it</p>
-  <p class="kicker right muted fu">Precision weighted Bayesian ensemble in log space</p>
-  <div class="eqgrid math" style="grid-template-columns: 830px 1fr; margin-top:80px;">
-    <div>
-      <div class="fu">$$\ln V \mid k \sim \mathcal{N}(\mu_k,\ \sigma_k^2)$$</div>
-      <div class="fu">$$\mu_{\text{list}} = \ln(h \cdot P_{\text{ask}}), \quad \sigma_{\text{list}} = 0.15$$</div>
-      <div class="fu">$$\mu_{\text{inc}} = \ln\!\Big(m_c \cdot h \cdot \mathrm{SDE} \cdot \prod_j q_j\Big), \quad \sigma_{\text{inc}} \in \{0.25, 0.40\}$$</div>
-      <div class="fu">$$\mathrm{SDE} = R \cdot \phi_c \ \text{if unobserved}$$</div>
-      <div class="fu">$$\mu_{\text{proxy}} = \ln\!\Big(m_c \cdot h \cdot \phi_c \cdot \hat R\Big), \quad \hat R = \tfrac{1}{|J|}\sum_{j \in J} n_j \rho_j, \quad \sigma_{\text{proxy}} = 0.60$$</div>
-      <div class="fu">$$\mu_{\text{llm}} = \tfrac{1}{M}\sum_{m=1}^{M} \ln \hat V_m$$</div>
-      <div class="fu">$$\sigma_{\text{llm}} = \max\!\Big(0.35 + 0.35(1-c),\ \tfrac{1}{2}\,|\ln \hat V_1 - \ln \hat V_2|\Big)$$</div>
-      <div class="fu">$$\mu_{\text{base}} = \ln\!\Big(\tilde P_c \cdot h \cdot \kappa_s \cdot \prod_j q_j\Big), \quad \sigma_{\text{base}} = 0.70$$</div>
-    </div>
-    <div>
-      <div class="fu">$$w_k = \sigma_k^{-2}, \qquad \mu = \frac{\sum_k w_k \mu_k}{\sum_k w_k}$$</div>
-      <div class="fu">$$\sigma^2 = \frac{1}{\sum_k w_k} + \frac{\sum_k w_k (\mu_k - \mu)^2}{\sum_k w_k}$$</div>
-      <div class="fu">$$\sigma \leftarrow \mathrm{clip}(\sigma,\ 0.12,\ 0.90), \qquad V_0 = e^{\mu}$$</div>
-      <div class="fu">$$V_q = \exp\!\big(\mu + \sigma\,\Phi^{-1}(q)\big)$$</div>
-      <div class="fu">$$\text{floor bid} = \frac{V_{0.20}}{N}, \qquad N = 10{,}000$$</div>
-      <div class="fu">$$\text{ask ladder} = \Big\{\frac{V_q}{N} : q \in \{0.55, 0.6125, 0.675, 0.7375, 0.80\}\Big\}$$</div>
-      <div class="fu">$$\hat\sigma_k = \mathrm{std}_i\big(\mu_k^{(i)} - \ln(h \cdot P^{(i)}_{\text{ask}})\big)$$</div>
-    </div>
-  </div>
-  <p class="legend math fu">
-    \(h = 0.88\) sold to asking haircut &nbsp;·&nbsp; \(m_c\) category SDE multiple (BizBuySell 2026) &nbsp;·&nbsp; \(\phi_c\) category SDE margin &nbsp;·&nbsp; \(q_j\) quality multipliers (reviews, tenure, owner operated) &nbsp;·&nbsp; \(\tilde P_c\) category median asking price &nbsp;·&nbsp; \(\kappa_s\) state price index &nbsp;·&nbsp; \(n_j, \rho_j\) observable counts and revenue per unit (employees, machines, reviews) &nbsp;·&nbsp; \(\hat V_m\) model opinions (Grok, K2) &nbsp;·&nbsp; \(c\) model confidence &nbsp;·&nbsp; \(\Phi^{-1}\) inverse normal CDF &nbsp;·&nbsp; \(\hat\sigma_k\) calibration on scraped listings with the price hidden
-  </p>
-</section>
-
-<!-- 6 How the market clears -->
+<!-- 6 How we price it -->
 <section class="slide" data-theme="dark" id="s6">
-  <p class="kicker fu">How the market clears</p>
-  <p class="kicker right muted fu">Frequent batch auction with owner liquidity</p>
-  <div class="eqgrid math" style="grid-template-columns: 1fr; margin-top:56px; font-size:27px;">
-    <div class="fu">$$D(p) = \sum_{b:\ \ell_b \ge p} q_b, \qquad S(p) = \sum_{s:\ \ell_s \le p} q_s$$</div>
-    <div class="fu">$$p^\star = \arg\max_{p \in \mathcal{L}} \min\{D(p), S(p)\} \quad \text{then } \arg\min |D(p) - S(p)| \quad \text{then } \arg\min |p - p_{t-1}|$$</div>
-    <div class="fu">$$p^\star \leftarrow \mathrm{clip}\big(p^\star,\ (1-\beta)\,p_{t-1},\ (1+\beta)\,p_{t-1}\big), \quad \beta = 0.10$$</div>
-    <div class="fu">$$x_i = q_i \cdot \frac{\min\{D(p^\star), S(p^\star)\}}{D(p^\star)} \ \text{(buyers, if } D > S\text{)}, \qquad \text{everyone trades at } p^\star$$</div>
-    <div class="fu">$$T = \mathrm{clip}\!\Big(\frac{200}{n_{\text{open}}},\ 10,\ 60\Big)\ \text{seconds}$$</div>
-    <div class="fu">$$w_t = \frac{v_t}{\bar v}, \qquad \mu_{\text{post}} = \frac{\mu/\sigma^2 + \sum_t w_t \ln(N p^\star_t)/s_m^2}{1/\sigma^2 + \sum_t w_t / s_m^2}, \qquad \sigma_{\text{post}}^2 = \frac{1}{1/\sigma^2 + \sum_t w_t/s_m^2}$$</div>
-    <div class="fu">$$\forall u:\ \{b \in B_u,\ s \in S_u,\ \ell_b \ge \ell_s\} \Rightarrow \text{cancel } \arg\max(\text{seq}), \qquad q \le 0.05N, \qquad \text{notional}_u \le 0.25\,\text{cash}_u$$</div>
+  <p class="kicker fu">How we price it</p>
+  <p class="kicker right muted fu">and how sure we are</p>
+  <div style="position:absolute; left:140px; top:160px; width:880px;">
+    <h2 class="hl fu" style="font-size:60px;">Five ways to value a business. Each one says how far off it tends to be.</h2>
+    <div class="math" style="margin-top:36px; font-size:24px;">
+      <div class="fu" style="display:grid; grid-template-columns: 300px 1fr; align-items:center; column-gap:24px; margin-bottom:6px;"><span class="label muted">1. Each method: an estimate and an error bar</span>$$\ln V_k = \mu_k \pm \sigma_k$$</div>
+      <div class="fu" style="display:grid; grid-template-columns: 300px 1fr; align-items:center; column-gap:24px; margin-bottom:6px;"><span class="label muted">2. Blend them, trusting the tighter ones more</span>$$\mu = \frac{\sum_k w_k\,\mu_k}{\sum_k w_k}, \qquad w_k = \frac{1}{\sigma_k^2}$$</div>
+      <div class="fu" style="display:grid; grid-template-columns: 300px 1fr; align-items:center; column-gap:24px; margin-bottom:6px;"><span class="label muted">3. Doubt has two parts, and we add both</span>$$\sigma^2 = \underbrace{\frac{1}{\sum_k w_k}}_{\text{the methods' own error}} + \underbrace{\frac{\sum_k w_k(\mu_k-\mu)^2}{\sum_k w_k}}_{\text{how much they disagree}}$$</div>
+      <div class="fu" style="display:grid; grid-template-columns: 300px 1fr; align-items:center; column-gap:24px;"><span class="label muted">4. Show a range, never a bare number</span>$$[V_{20},\ V_{80}] = e^{\mu \mp 0.84\,\sigma}, \qquad \sigma \ge 0.12 \ \text{always}$$</div>
+    </div>
   </div>
-  <p class="legend math fu">
-    \(\ell\) limit price &nbsp;·&nbsp; \(q\) quantity &nbsp;·&nbsp; \(\mathcal{L}\) set of limit prices in the book &nbsp;·&nbsp; \(p_{t-1}\) last clearing price &nbsp;·&nbsp; \(\beta\) price band &nbsp;·&nbsp; \(n_{\text{open}}\) open orders &nbsp;·&nbsp; \(v_t\) round volume, \(\bar v\) average volume &nbsp;·&nbsp; \(s_m\) per round price noise (0.10, then realized) &nbsp;·&nbsp; \(\mu, \sigma\) valuation posterior from the previous slide &nbsp;·&nbsp; \(N = 10{,}000\) shares &nbsp;·&nbsp; \(B_u, S_u\) one user's bids and asks &nbsp;·&nbsp; the platform never trades
-  </p>
+  <div style="position:absolute; left:1100px; top:170px; width:680px;">
+    <p class="label fu" style="margin:0 0 14px;">Where each σ comes from</p>
+    <p class="label muted fu" style="font-size:22px; line-height:1.45; margin:0 0 14px;">σ is how far off a method usually lands, in log terms: ±25% is σ 0.25. Today's values are priors from the BizBuySell 2026 tables. The calibration routine hides the asking price on real listings, runs each method, and records the miss; once it has run on scraped listings, measured misses replace the priors. A method that misses more gets less weight.</p>
+    <table class="est fu" style="font-size:21px;">
+      <tr><td>Listing price &nbsp;<span class="muted" style="font-size:16px;">it is actually for sale</span></td><td>±15%</td><td>σ 0.15</td></tr>
+      <tr><td>Income &nbsp;<span class="muted" style="font-size:16px;">owner earnings x category multiple; ±40% if earnings are inferred</span></td><td>±25%</td><td>σ 0.25</td></tr>
+      <tr><td>Model opinion &nbsp;<span class="muted" style="font-size:16px;">Grok's number when we have one; wider if K2 disagrees</span></td><td>±35%+</td><td>σ 0.35+</td></tr>
+      <tr><td>Proxy &nbsp;<span class="muted" style="font-size:16px;">revenue guessed from staff, machines, reviews</span></td><td>±60%</td><td>σ 0.60</td></tr>
+      <tr><td>Base rate &nbsp;<span class="muted" style="font-size:16px;">category median in that state</span></td><td>±70%</td><td>σ 0.70</td></tr>
+    </table>
+    <p class="label muted fu" style="font-size:21px; line-height:1.45; margin-top:18px;">Squirrel Hill: income $589k, model opinion $560k, base rate $469k agree closely, so σ lands at 0.22 and the range is $475k to $686k. Bloomfield Coin Laundry has only a Google pin: two weak methods, σ 0.82, range $96k to $384k. The page shows both.</p>
+  </div>
+  <p class="legend fu" style="font-size:20px;">Logs because value misses are multiplicative: 2x high and 2x low count the same. 0.84σ is where the 20th and 80th percentiles of a bell curve sit. Multiples and medians from BizBuySell 2026, sold price taken as 0.88 x asking. A method runs only when its evidence exists.</p>
 </section>
 
-<!-- 7 Live -->
+<!-- 7 The owner is the other side -->
+<section class="slide" data-theme="dark" id="s7">
+  <p class="kicker fu">How the market works</p>
+  <p class="kicker right muted fu">Frequent batch auction with owner liquidity</p>
+  <div style="position:absolute; left:140px; top:180px; width:820px;">
+    <h2 class="hl fu">The owner is the seller. There is no market maker.</h2>
+    <div style="margin-top:44px; font-size:24px; line-height:1.5;">
+      <p class="fu" style="margin:0 0 18px;"><b>Ask ladder.</b> 3,000 shares (30%) offered at five prices a little above the model value, the P55 to P80 points of its range. A shakier valuation means a wider owner spread.</p>
+      <p class="fu" style="margin:0 0 18px;"><b>Buyback floor.</b> The owner stands to buy back up to 1,000 shares at P20, about 17% under the model value.</p>
+      <p class="fu" style="margin:0;"><b>One price per round.</b> Every 10 to 60 seconds, faster when the book is busy, it clears at the price where the most shares change hands. Everyone in that round pays the same price. Between rounds the owner requotes from the updated model. Bartr holds no shares and takes no side.</p>
+    </div>
+    <div class="math fu" style="margin-top:40px; font-size:25px;">$$p^\star = \arg\max_{p}\ \min\{\underbrace{D(p)}_{\text{shares buyers want at } p},\ \underbrace{S(p)}_{\text{shares offered at } p}\}$$</div>
+  </div>
+  <div class="fu" style="position:absolute; left:1040px; top:170px; width:740px;">
+    <svg id="ladder" viewBox="0 0 740 760" width="740" height="760" style="overflow:visible;"></svg>
+  </div>
+</section>
+
+<!-- 8 Live -->
 <section class="slide" data-theme="dark" id="live">
   <p class="kicker fu">Live</p>
-  <p class="kicker right muted fu">Squirrel Hill Wash and Fold &nbsp;·&nbsp; round 2</p>
+  <p class="kicker right muted fu">Squirrel Hill Wash and Fold &nbsp;·&nbsp; 10,000 shares &nbsp;·&nbsp; opening model value 57.08</p>
+  <div class="people"></div>
   <div class="book">
     <div class="cols">
       <div class="bids"><h4><span>Bids</span><span>qty · limit</span></h4><div class="rows"></div></div>
       <div class="asks"><h4><span>Asks</span><span>qty · limit</span></h4><div class="rows"></div></div>
     </div>
   </div>
-  <div class="clock"><div class="n">10</div><div class="t">next batch</div></div>
-  <svg viewBox="0 0 800 440" aria-hidden="true"></svg>
+  <div class="clock"><div class="r">Round 1</div><div class="n">10</div><div class="t">next batch</div></div>
+  <svg class="curves" viewBox="0 0 540 270" aria-hidden="true"></svg>
+  <svg class="path" viewBox="0 0 620 250" aria-hidden="true"></svg>
   <p class="result"></p>
   <div class="qr">
     <!-- QR: live site URL, drop assets/qr.png -->
@@ -295,95 +349,140 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   </div>
 </section>
 
-<!-- 8 Portfolio -->
-<section class="slide" data-theme="dark" id="s8">
-  <p class="kicker fu">Portfolio</p>
-  <div style="position:absolute; left:140px; top:250px; width:820px;">
-    <div class="math fu" style="font-size:34px;">$$\mu = \ln\frac{v}{p}, \qquad f^\star = \frac{\mu}{\sigma^2}$$</div>
-    <div class="math fu" style="font-size:34px;">$$f = \mathrm{clip}\!\big(\tfrac{1}{2} f^\star,\ 0,\ 0.20\big), \qquad \$ = f \cdot B$$</div>
-    <p class="sub fu" style="margin-top:70px; line-height:1.3; max-width:760px;">Sized by half Kelly on the gap between model value and market price.</p>
-    <p class="small muted math fu" style="margin-top:40px; line-height:1.55; max-width:760px;">\(v\) model value per share &nbsp;·&nbsp; \(p\) market price &nbsp;·&nbsp; \(\sigma\) posterior uncertainty &nbsp;·&nbsp; \(B\) bankroll &nbsp;·&nbsp; half Kelly because the edge is estimated</p>
-  </div>
-  <div class="device fu" style="--w:800px; position:absolute; right:140px; top:250px;">
-    <div class="bar"><i></i><i></i><i></i><span>jb.app/portfolio</span></div>
-    <div class="shot">
-      <!-- SCREENSHOT: /portfolio  (holdings, Kelly suggestions with edge, sigma, f) -->
-      <img src="assets/portfolio.png" alt="" onerror="this.remove()">
-      <div class="ph"><div><b>screenshot 1440 x 900</b>/portfolio<br>four Kelly sized suggestions</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- 9 Acquire -->
+<!-- 9 Fair by construction -->
 <section class="slide" data-theme="dark" id="s9">
-  <p class="kicker fu">Acquire</p>
-  <div style="position:absolute; left:140px; top:250px; width:700px;">
-    <h1 class="display md fu" style="font-size:88px;">From a share to the whole company.</h1>
-    <p class="label muted fu" style="margin-top:60px; line-height:1.6;">Letter of intent, drafted<br>City of Pittsburgh business registration<br>Allegheny County Health Department permit<br>PA bulk sale clearance<br>Every item cited</p>
+  <p class="kicker fu">Anti arbitrage</p>
+  <p class="kicker right muted fu">Enforced in the engine, covered by tests</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:170px;">One price. No head start.</h2>
+  <div class="fu" style="position:absolute; left:140px; top:300px;">
+    <svg class="flow" data-flow="fair" viewBox="0 0 1640 510" width="1640" height="510"></svg>
   </div>
-  <div class="device fu" style="--w:900px; position:absolute; right:140px; top:250px;">
-    <div class="bar"><i></i><i></i><i></i><span>jb.app/company/co_squirrel_hill_wash/acquire</span></div>
-    <div class="shot">
-      <!-- SCREENSHOT: /company/co_squirrel_hill_wash/acquire  (LOI draft, Pittsburgh diligence checklist with citations) -->
-      <img src="assets/acquire.png" alt="" onerror="this.remove()">
-      <div class="ph"><div><b>screenshot 1440 x 900</b>/company/co_squirrel_hill_wash/acquire<br>LOI and Pittsburgh diligence checklist</div></div>
-    </div>
-  </div>
+  <p class="legend fu" style="font-size:21px; color:var(--paper);">No continuous matching, so speed buys nothing. Two band hits in a row halt the market for a round. The owner requotes only between rounds, never bids above its floor, never asks below P55, so the account that holds the float cannot chase the price. Server timestamps only; every order event lands in the append only audit log.</p>
 </section>
 
-<!-- 10 Surveillance -->
+<!-- 10 Make money -->
 <section class="slide" data-theme="dark" id="s10">
-  <p class="kicker fu">Surveillance</p>
-  <div style="position:absolute; left:140px; top:220px; right:140px;">
-    <h1 class="display md fu" style="max-width:1500px;">Every round, two model families read the tape.</h1>
-    <div style="margin-top:90px; display:grid; grid-template-columns: 1fr 1fr; column-gap:80px; max-width:1500px;">
-      <div class="fu" style="border-top:1px solid rgba(255,255,255,0.18); padding-top:24px;">
-        <p class="label" style="margin:0;"><span style="color:var(--red); font-weight:600;">&#9679;&nbsp; Flagged</span>&nbsp;&nbsp;wash trade &nbsp;·&nbsp; round 14 &nbsp;·&nbsp; bot_17 and bot_23</p>
-        <p class="label muted" style="margin-top:16px; line-height:1.5;">Grok: the two accounts have traded only with each other for 9 rounds, alternating sides at the clearing price. No economic purpose.</p>
-      </div>
-      <div class="fu" style="--d:900ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:24px;">
-        <p class="label" style="margin:0;"><span style="font-weight:600;">K2 concurs</span>&nbsp;&nbsp;independent review</p>
-        <p class="label muted" style="margin-top:16px; line-height:1.5;">Same pair, same pattern, 0.94 confidence. Orders cancelled, accounts frozen, entry written to the audit log.</p>
-      </div>
+  <p class="kicker fu">Portfolio</p>
+  <div style="position:absolute; left:140px; top:180px; width:760px;">
+    <h2 class="hl fu">Find the edge. Size it. Keep an exit.</h2>
+    <div style="margin-top:44px; font-size:24px; line-height:1.5;">
+      <p class="fu" style="margin:0 0 18px;"><b>Edge on every suggestion.</b> Our model value next to the market price, on every row. Only names priced below our value are suggested.</p>
+      <p class="fu" style="margin:0 0 18px;"><b>Your risk, your dial.</b> The Kelly multiplier slider (0.25 to 1.0) sizes every stake. Half Kelly by default, because the edge is an estimate.</p>
+      <p class="fu" style="margin:0;"><b>An exit that stands.</b> The owner's buyback bid is in every book: up to 1,000 shares at P20.</p>
+    </div>
+    <div class="math fu" style="margin-top:36px; font-size:25px;">$$\underbrace{\mu = \ln\tfrac{v}{p}}_{\text{gain if price meets value}}, \qquad \underbrace{f = m \cdot \tfrac{\mu}{\sigma^2}}_{\text{share of bankroll, capped at 20\% a name, 80\% overall}}$$</div>
+    <p class="small muted fu" style="margin-top:10px;">Bet more when the gap is big and the value is sure. Bet nothing when price equals value. Never more than a fifth on one name. \(m\) is the slider.</p>
+  </div>
+  <div class="device fu" style="--w:860px; position:absolute; right:140px; top:200px;">
+    <div class="bar"><i></i><i></i><i></i><span>bartr.app/portfolio</span></div>
+    <div class="shot">
+      <!-- SCREENSHOT: /portfolio -->
+      <img src="assets/portfolio.png" alt="" onerror="this.remove()">
+      <div class="ph"><div><b>screenshot 1440 x 900</b>/portfolio</div></div>
     </div>
   </div>
-  <p class="legend math fu" style="font-size:21px; color:var(--paper);">
-    Wash: same user on both sides within 3 rounds, or two accounts that only ever trade with each other. &nbsp;·&nbsp; Pump: \(|\Delta \ln p^\star| > 2\sigma_p\) with more than 60% of buy volume from one account.
-  </p>
 </section>
 
-<!-- 11 Stack -->
+<!-- 11 Acquire -->
 <section class="slide" data-theme="dark" id="s11">
-  <p class="kicker fu">Stack</p>
-  <div style="position:absolute; left:140px; right:140px; top:300px;">
-    <div class="row7">
-      <div class="fu">Grok<small>xAI</small></div>
-      <div class="fu">IFM K2<small>Horizon</small></div>
-      <div class="fu">Querit<small>web search</small></div>
-      <div class="fu">MongoDB Atlas<small>Vector Search</small></div>
-      <div class="fu">Auth0<small>login</small></div>
-      <div class="fu">Vultr<small>API</small></div>
-      <div class="fu">Vercel<small>web</small></div>
+  <p class="kicker fu">Acquire</p>
+  <div style="position:absolute; left:140px; top:220px; width:700px;">
+    <h2 class="hl fu">From a share to the whole company.</h2>
+    <p class="label muted fu" style="margin-top:50px; line-height:1.6;">Letter of intent at the last clearing price<br>City of Pittsburgh business registration<br>Allegheny County Health Department permit<br>PA bulk sale clearance<br>State, county and city items link to the official source</p>
+  </div>
+  <div class="device fu" style="--w:900px; position:absolute; right:140px; top:220px;">
+    <div class="bar"><i></i><i></i><i></i><span>bartr.app/company/co_squirrel_hill_wash/acquire</span></div>
+    <div class="shot">
+      <!-- SCREENSHOT: /company/co_squirrel_hill_wash/acquire -->
+      <img src="assets/acquire.png" alt="" onerror="this.remove()">
+      <div class="ph"><div><b>screenshot 1440 x 900</b>/company/co_squirrel_hill_wash/acquire</div></div>
     </div>
-    <p class="sub fu" style="margin-top:170px; text-align:center;">built in Cursor</p>
-    <p class="label muted fu" style="margin-top:24px; text-align:center;">Next.js 15 &nbsp;·&nbsp; FastAPI &nbsp;·&nbsp; Python &nbsp;·&nbsp; track: Optimization</p>
   </div>
 </section>
 
-<!-- 12 Close -->
+<!-- 12 Agentic security panel -->
 <section class="slide" data-theme="dark" id="s12">
-  <div style="position:absolute; left:140px; top:50%; transform:translateY(-60%);">
-    <h1 class="display xl fu">JB.<br>Price everything.</h1>
+  <p class="kicker fu">Security</p>
+  <p class="kicker right muted fu">Last 20 rounds of every market, plus a Grok red team that attacks it</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:170px; font-size:68px;">Rules scan every trade. Two models review every flag.</h2>
+  <div class="fu" style="position:absolute; left:140px; top:330px;">
+    <svg class="flow" data-flow="panel" viewBox="0 0 1640 330" width="1640" height="330"></svg>
   </div>
-  <div class="qr fu" style="right:140px; bottom:88px;">
+  <div style="position:absolute; left:140px; right:140px; top:720px; display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; column-gap:44px;">
+    <div class="fu" style="border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
+      <p class="label" style="margin:0;"><span style="color:var(--red); font-weight:600;">&#9679;&nbsp; Flagged</span>&nbsp;&nbsp;wash trading, high</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">Rules: wash_a and wash_b have traded 9 times and only with each other. Volume prints, ownership never changes.</p>
+    </div>
+    <div class="fu" style="--d:400ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
+      <p class="label" style="margin:0;"><b>Grok</b>&nbsp;&nbsp;explains (example)</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">"Alternating sides at the clearing price with no other counterparties. No economic purpose; treat as manipulation."</p>
+    </div>
+    <div class="fu" style="--d:800ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
+      <p class="label" style="margin:0;"><b>K2</b>&nbsp;&nbsp;agrees, high</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">A separate call, same flag packet, never sees Grok's answer. Every event is in the append only audit log.</p>
+    </div>
+    <div class="fu" style="--d:1200ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
+      <p class="label" style="margin:0;"><b>Red team</b>&nbsp;&nbsp;Grok attacks</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">Grok plans a wash, spoof or pump and runs it through bot accounts. Then we watch whether the rules catch it. Every attempt is logged.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 13 Grok -->
+<section class="slide" data-theme="dark" id="s13g">
+  <p class="kicker fu">Grok inside Bartr</p>
+  <p class="kicker right muted fu">grok-4.6 through the xAI API, one llm.py, K2 as the second tier</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:160px; font-size:60px;">Two tier appraisal, on request for any listed company. Grok researches, K2 checks, the ensemble decides.</h2>
+  <div class="fu" style="position:absolute; left:140px; top:330px;">
+    <svg class="flow" data-flow="appraise" viewBox="0 0 900 640" width="900" height="640"></svg>
+  </div>
+  <div style="position:absolute; left:1100px; top:330px; width:680px;">
+    <p class="label fu" style="margin:0 0 14px;">Everywhere else Grok runs</p>
+    <div class="fu" style="font-size:20px; line-height:1.5; color:var(--paper-2);">
+      <p style="margin:0 0 10px;"><b style="color:var(--paper);">Extraction gate.</b> Profiles from Querit pages; a number survives only if its quote is verbatim in the page, financials must be USD and dated.</p>
+      <p style="margin:0 0 10px;"><b style="color:var(--paper);">Compliance.</b> Every rule flag goes to Grok and to K2 in separate calls.</p>
+            <p style="margin:0 0 10px;"><b style="color:var(--paper);">Talking to you.</b> Chat agent with tools (search, company, book, place order, suggest), the same one behind iMessage. API routes today: an owner persona per company, a market narrator, a market health memo.</p>
+      <p style="margin:0 0 10px;"><b style="color:var(--paper);">Portfolio and acquire.</b> Parses your profile into constraints, writes the why on each suggestion, drafts the LOI and the diligence checklist.</p>
+      <p style="margin:0;"><b style="color:var(--paper);">Fallbacks everywhere.</b> Every call has a deterministic fallback; calls through the shared wrapper are cached and listed on /readiness.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 13 Architecture -->
+<section class="slide" data-theme="dark" id="s13">
+  <p class="kicker fu">How it runs</p>
+  <p class="kicker right muted fu">Next.js 16 &nbsp;·&nbsp; FastAPI &nbsp;·&nbsp; Python</p>
+  <div class="fu" style="position:absolute; left:140px; top:160px;">
+    <svg class="flow" data-flow="arch" viewBox="0 0 1640 800" width="1640" height="800"></svg>
+  </div>
+</section>
+
+<!-- 14 Close -->
+<section class="slide" data-theme="dark" id="s14">
+  <div style="position:absolute; left:140px; top:190px;">
+    <h1 class="display xl fu">Bartr.</h1>
+    <p class="fu" style="font-size:64px; font-weight:600; letter-spacing:-0.03em; margin:10px 0 0;">Discover. Exchange. Acquire.</p>
+    <p class="sub muted fu" style="margin-top:22px;">A price and a market for the businesses nobody lists.</p>
+  </div>
+  <div class="qr fu" style="right:140px; top:200px;">
     <!-- QR: live site URL, drop assets/qr.png -->
     <img src="assets/qr.png" alt="" onerror="this.remove()">
     <span>QR<br>live site</span>
   </div>
-  <p class="small muted fu" style="position:absolute; left:140px; bottom:88px; margin:0;">Nico &nbsp;&nbsp; Vir &nbsp;&nbsp; Aditya &nbsp;&nbsp; Zhiyuan</p>
+  <div class="sponsors fu" style="position:absolute; left:140px; right:140px; bottom:150px;">
+    <div class="sp"><span>Grok<small>xAI</small></span></div>
+    <div class="sp"><span>IFM K2<small>Horizon</small></span></div>
+    <div class="sp"><span>Querit<small>web search</small></span></div>
+    <div class="sp"><img class="logo" src="assets/logos/mongodb.svg" alt=""><span>MongoDB Atlas<small>database</small></span></div>
+    <div class="sp"><img class="logo" src="assets/logos/auth0.svg" alt=""><span>Auth0<small>login, in progress</small></span></div>
+    <div class="sp"><img class="logo" src="assets/logos/vultr.svg" alt=""><span>Vultr<small>API host</small></span></div>
+    <div class="sp"><img class="logo" src="assets/logos/vercel.svg" alt=""><span>Vercel<small>web host</small></span></div>
+    <div class="sp"><img class="logo" src="assets/logos/cursor.svg" alt=""><span>Cursor<small>editor</small></span></div>
+  </div>
+  <p class="small muted fu" style="position:absolute; left:140px; bottom:70px; margin:0;">Nico &nbsp;&nbsp; Vir &nbsp;&nbsp; Aditya &nbsp;&nbsp; Zhiyuan &nbsp;&nbsp;·&nbsp;&nbsp; HackCMU 2026</p>
 </section>
 
-<div id="presenter"><b>0:00</b> &nbsp; <span id="pn">1</span> / 12</div>
+<div id="presenter"><b>0:00</b> &nbsp; <span id="pn">1</span> / 15</div>
 </div>
 
 <script>
@@ -398,8 +497,6 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   const stage = document.getElementById('stage');
   const presenter = document.getElementById('presenter');
   let cur = -1, clockStart = null, clockOn = false;
-
-  // stagger index for every enter element, per slide
   slides.forEach(s => s.querySelectorAll('.fu').forEach((el, i) => el.style.setProperty('--i', i)));
 
   function fit() {
@@ -412,22 +509,14 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   addEventListener('resize', fit); fit();
 
   // ---------- count up ----------
-  function fmt(el, v) {
-    const dec = +(el.dataset.decimals || 0);
-    return (el.dataset.prefix || '') + v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + (el.dataset.suffix || '');
-  }
+  function fmt(el, v) { const dec = +(el.dataset.decimals || 0); return (el.dataset.prefix || '') + v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + (el.dataset.suffix || ''); }
   function countUp(el) {
     const to = +el.dataset.to, from = +(el.dataset.from || 0), dur = +(el.dataset.dur || 1200);
     const delay = (+getComputedStyle(el.closest('.fu') || el).getPropertyValue('--i') || 0) * 80 + 150;
     if (STILL) { el.textContent = fmt(el, to); return; }
     el.textContent = fmt(el, from);
     const t0 = performance.now() + delay;
-    function step(t) {
-      const x = Math.min(1, Math.max(0, (t - t0) / dur));
-      const e = 1 - Math.pow(1 - x, 3);
-      el.textContent = fmt(el, from + (to - from) * e);
-      if (x < 1) requestAnimationFrame(step);
-    }
+    function step(t) { const x = Math.min(1, Math.max(0, (t - t0) / dur)); const e = 1 - Math.pow(1 - x, 3); el.textContent = fmt(el, from + (to - from) * e); if (x < 1) requestAnimationFrame(step); }
     requestAnimationFrame(step);
   }
 
@@ -440,8 +529,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     cur = n;
     const s = slides[cur];
     document.body.classList.toggle('dark', s.dataset.theme === 'dark');
-    // restart enter animation
-    s.querySelectorAll('.fu').forEach(el => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
+    s.querySelectorAll('.fu, .dg').forEach(el => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
     s.classList.add('active');
     if (dir < 0) s.querySelectorAll('.frag').forEach(f => f.classList.add('on'));
     s.querySelectorAll('.count').forEach(countUp);
@@ -450,13 +538,8 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     history.replaceState(null, '', '#' + (cur + 1));
     document.getElementById('pn').textContent = cur + 1;
   }
-  function next() {
-    const f = slides[cur].querySelector('.frag:not(.on)');
-    if (f) { f.classList.add('on'); return; }
-    go(cur + 1, 1);
-  }
+  function next() { const f = slides[cur].querySelector('.frag:not(.on)'); if (f) { f.classList.add('on'); return; } go(cur + 1, 1); }
   function prev() { go(cur - 1, -1); }
-
   addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     switch (e.key) {
@@ -470,10 +553,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
       case 'Escape': if (document.fullscreenElement) document.exitFullscreen(); break;
     }
   });
-  // click right two thirds advances, left third goes back
   addEventListener('click', e => { if (e.target.closest('a')) return; (e.clientX < innerWidth / 3) ? prev() : next(); });
-
-  // presenter clock
   setInterval(() => {
     if (!clockOn) return;
     const s = clockStart ? Math.floor((performance.now() - clockStart) / 1000) : 0;
@@ -481,154 +561,389 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     presenter.classList.toggle('over', s >= 170);
   }, 250);
 
-  // ---------- live batch auction (slide 7) ----------
-  // Resting owner liquidity from the Squirrel Hill posterior: floor P20 for 1000, ladder P55..P80 x 600.
-  // 284.64 remain on the first rung after round 1 (real output of scripts/demo_pricing.py).
-  const REST = [
-    { side: 'ask', q: 284.64, p: 58.67, o: 'owner' }, { side: 'ask', q: 600, p: 60.76, o: 'owner' },
-    { side: 'ask', q: 600, p: 63.03, o: 'owner' }, { side: 'ask', q: 600, p: 65.59, o: 'owner' },
-    { side: 'ask', q: 600, p: 68.62, o: 'owner' },
-    { side: 'bid', q: 1000, p: 47.48, o: 'owner floor' },
-  ];
-  // Bids arriving during the round: half Kelly sized bots with private values, plus phones in the room.
-  const ARRIVE = [
-    { side: 'bid', q: 180, p: 64.20, o: 'bot' }, { side: 'bid', q: 60, p: 54.80, o: 'bot' },
-    { side: 'bid', q: 92.5, p: 61.10, o: 'bot' }, { side: 'bid', q: 48, p: 54.30, o: 'bot' },
-    { side: 'bid', q: 20, p: 62.00, o: 'you' }, { side: 'bid', q: 55, p: 54.60, o: 'bot' },
-    { side: 'bid', q: 34.31, p: 60.80, o: 'bot' }, { side: 'bid', q: 25, p: 49.10, o: 'bot' },
-  ];
-  const LAST = 58.67;
+  // ---------- flow diagrams ----------
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (t, a, txt) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; };
+  function flow(svg, spec) {
+    svg.innerHTML = '';
+    const id = svg.dataset.flow;
+    const defs = el('defs', {});
+    const mk = el('marker', { id: `ar-${id}`, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' });
+    mk.appendChild(el('path', { d: 'M0,0 L10,5 L0,10 z', fill: svg.classList.contains('light') ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.55)' }));
+    const mk2 = el('marker', { id: `arg-${id}`, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' });
+    mk2.appendChild(el('path', { d: 'M0,0 L10,5 L0,10 z', fill: '#30D158' }));
+    defs.appendChild(mk); defs.appendChild(mk2); svg.appendChild(defs);
+    const N = {}; spec.nodes.forEach(n => N[n.id] = n);
+    let i = 0;
+    // edges first so boxes sit on top
+    const eg = el('g', {}); svg.appendChild(eg);
+    for (const e of spec.edges) {
+      const a = N[e.a], b = N[e.b];
+      let ax, ay, bx, by, d;
+      if (b.x >= a.x + a.w) { ax = a.x + a.w; ay = a.y + a.h / 2; bx = b.x; by = b.y + b.h / 2; const m = (ax + bx) / 2; d = `M${ax},${ay} C${m},${ay} ${m},${by} ${bx},${by}`; }
+      else if (a.x >= b.x + b.w) { ax = a.x; ay = a.y + a.h / 2; bx = b.x + b.w; by = b.y + b.h / 2; const m = (ax + bx) / 2; d = `M${ax},${ay} C${m},${ay} ${m},${by} ${bx},${by}`; }
+      else if (b.y >= a.y + a.h) { ax = a.x + a.w / 2 + (e.ox || 0); ay = a.y + a.h; bx = b.x + b.w / 2 + (e.ox || 0); by = b.y; const m = (ay + by) / 2; d = `M${ax},${ay} C${ax},${m} ${bx},${m} ${bx},${by}`; }
+      else { ax = a.x + a.w / 2 + (e.ox || 0); ay = a.y; bx = b.x + b.w / 2 + (e.ox || 0); by = b.y + b.h; const m = (ay + by) / 2; d = `M${ax},${ay} C${ax},${m} ${bx},${m} ${bx},${by}`; }
+      const p = el('path', { class: 'e dg' + (e.acc ? ' acc' : '') + (e.dash ? ' dash' : ''), d, 'marker-end': `url(#${e.acc ? 'arg' : 'ar'}-${id})`, style: `--i:${i++}` });
+      if (e.both) p.setAttribute('marker-start', `url(#ar-${id})`);
+      eg.appendChild(p);
+      if (e.l) { const tx = (ax + bx) / 2 + (e.lx || 0), ty = (ay + by) / 2 + (e.ly || -10); eg.appendChild(el('text', { class: 'el dg', x: tx, y: ty, 'text-anchor': 'middle', style: `--i:${i}` }, e.l)); }
+    }
+    for (const n of spec.nodes) {
+      const g = el('g', { class: 'dg', style: `--i:${i++}` });
+      g.appendChild(el('rect', { class: 'box' + (n.acc ? ' acc' : '') + (n.warn ? ' warn' : ''), x: n.x, y: n.y, width: n.w, height: n.h, rx: 12 }));
+      const pad = 18;
+      g.appendChild(el('text', { class: 't', x: n.x + pad, y: n.y + 34 }, n.t));
+      (Array.isArray(n.s) ? n.s : (n.s ? [n.s] : [])).forEach((line, k) => g.appendChild(el('text', { class: 's', x: n.x + pad, y: n.y + 62 + k * 22 }, line)));
+      if (n.logo) g.appendChild(el('image', { class: 'lg', href: `assets/logos/${n.logo}.svg`, x: n.x + n.w - 46, y: n.y + 14, width: 30, height: 30 }));
+      svg.appendChild(g);
+    }
+  }
+  const FLOWS = {
+    discover: {
+      nodes: [
+        { id: 'q', x: 0, y: 0, w: 500, h: 84, t: '"laundromat in Pittsburgh"', s: 'Intent parser: category, city, state', acc: true },
+        { id: 'p', x: 0, y: 150, w: 500, h: 84, t: 'Google Places', s: 'Businesses, ratings, review counts', logo: 'googlemaps' },
+        { id: 'w', x: 0, y: 300, w: 500, h: 84, t: 'Querit', s: 'Reads the web about each one' },
+        { id: 'g', x: 0, y: 450, w: 500, h: 84, t: 'Grok  (xAI)', s: 'Structured profile, every number with a quote' },
+        { id: 'v', x: 0, y: 600, w: 500, h: 84, t: 'Valuation ensemble', s: 'A price and a range, streamed to the page', acc: true },
+      ],
+      edges: [{ a: 'q', b: 'p' }, { a: 'p', b: 'w' }, { a: 'w', b: 'g' }, { a: 'g', b: 'v' }],
+    },
+    fair: {
+      nodes: [
+        { id: 'o', x: 0, y: 0, w: 290, h: 120, t: 'Order arrives', s: ['limit, qty, side', 'server timestamp'] },
+        { id: 'c', x: 340, y: 0, w: 290, h: 120, t: 'Price clamp', s: ['limit within 0.5x to 2x', 'of the reference'] },
+        { id: 'st', x: 680, y: 0, w: 290, h: 120, t: 'Self trade check', s: ['your bid never meets', 'your ask; the later one is dropped'] },
+        { id: 'l', x: 1020, y: 0, w: 290, h: 120, t: 'Position limits', s: ['qty ≤ 5% of shares', 'open notional ≤ 25% of cash'] },
+        { id: 'b', x: 1360, y: 0, w: 280, h: 120, t: 'Resting book', s: ['immutable; a cancel is', 'a new event'] },
+        { id: 'a', x: 1360, y: 300, w: 280, h: 120, t: 'Batch every T s', s: ['T = clip(200 / n, 10, 60)', 'orders wait for the clear'], acc: true },
+        { id: 'u', x: 1020, y: 300, w: 290, h: 120, t: 'One uniform price', s: ['p* maximizes volume', 'no speed advantage'], acc: true },
+        { id: 'bd', x: 680, y: 300, w: 290, h: 120, t: 'Price band ±10%', s: ['clamp to the edge; if nothing trades', 'there, the reference walks to it'] },
+        { id: 'r', x: 340, y: 300, w: 290, h: 120, t: 'Pro rata fills', s: ['short side fills in full', 'long side rationed by qty'] },
+        { id: 'au', x: 0, y: 300, w: 290, h: 120, t: 'Audit log', s: ['append only, every event', 'then the security panel'], acc: true },
+      ],
+      edges: [{ a: 'o', b: 'c' }, { a: 'c', b: 'st' }, { a: 'st', b: 'l' }, { a: 'l', b: 'b' }, { a: 'b', b: 'a' }, { a: 'a', b: 'u', acc: true }, { a: 'u', b: 'bd', acc: true }, { a: 'bd', b: 'r' }, { a: 'r', b: 'au' }],
+    },
+    panel: {
+      nodes: [
+        { id: 't', x: 0, y: 100, w: 260, h: 110, t: 'Round tape', s: ['orders, fills, cancels,', 'book snapshots'] },
+        { id: 'r', x: 320, y: 100, w: 300, h: 110, t: 'Rules agent', s: ['wash, spoof, pump,', 'concentration, band hits'] },
+        { id: 'g', x: 690, y: 0, w: 300, h: 110, t: 'Grok  (xAI)', s: ['reads the flag, explains', 'it in plain words'] },
+        { id: 'k', x: 690, y: 200, w: 300, h: 110, t: 'K2  (IFM)', s: ['independent second model,', 'never sees Grok’s answer'] },
+        { id: 'v', x: 1060, y: 100, w: 260, h: 110, t: 'Verdict', s: ['agree, or disputed:', 'both opinions shown'] },
+        { id: 'a', x: 1380, y: 100, w: 260, h: 110, t: 'Surveillance feed', s: ['flag shown with both reviews;', 'separately, two band hits halt a market'], acc: true },
+      ],
+      edges: [{ a: 't', b: 'r' }, { a: 'r', b: 'g' }, { a: 'r', b: 'k' }, { a: 'g', b: 'v' }, { a: 'k', b: 'v' }, { a: 'v', b: 'a', acc: true }],
+    },
+    appraise: {
+      nodes: [
+        { id: 'r', x: 240, y: 0, w: 420, h: 96, t: 'Tier 1: Grok researches', s: ['xAI web search: owners, tenure, revenue,', 'asking prices, reviews, each with its URL'] },
+        { id: 'a', x: 0, y: 136, w: 420, h: 96, t: 'Tier 1: Grok appraises', s: ['structured: value, confidence 0 to 1,', 'revenue, earnings, staff; sources only from the notes'] },
+        { id: 'k', x: 480, y: 136, w: 420, h: 96, t: 'Tier 2: K2 second opinion', s: ['same notes, separate model,', 'never sees Grok\u2019s number'] },
+        { id: 'c', x: 240, y: 272, w: 420, h: 96, t: 'Sanity clamp', s: ['both held to 0.2x to 5x the category base rate,', 'so one hallucinated number cannot poison the price'] },
+        { id: 'e', x: 240, y: 408, w: 420, h: 96, t: 'Into the ensemble', s: ['one of five estimators; σ = 0.35 + 0.35 (1 − c),', 'widened by half the Grok to K2 gap'], acc: true },
+        { id: 'p', x: 240, y: 544, w: 420, h: 96, t: 'Price, range, owner quotes', s: ['before the first trade the posterior sets the', 'opening price, the P20 floor and the P55 to P80 ladder'], acc: true },
+      ],
+      edges: [{ a: 'r', b: 'a', ox: 0 }, { a: 'r', b: 'k', ox: 0 }, { a: 'a', b: 'c', ox: 0 }, { a: 'k', b: 'c', ox: 0 }, { a: 'c', b: 'e', acc: true }, { a: 'e', b: 'p', acc: true }],
+    },
+    arch: {
+      nodes: [
+        { id: 'u', x: 0, y: 280, w: 280, h: 120, t: 'Browser, phone', s: ['judges bid from phones', 'login by name, email or phone'] },
+        { id: 'w', x: 360, y: 280, w: 320, h: 120, t: 'Next.js 16', s: ['discover, company, portfolio,', 'acquire, surveillance, agent'], logo: 'nextdotjs', acc: true },
+        { id: 'im', x: 0, y: 560, w: 280, h: 110, t: 'iMessage bridge', s: ['text the agent,', 'same API underneath'] },
+        { id: 'api', x: 860, y: 280, w: 340, h: 120, t: 'FastAPI', s: ['REST + WebSocket', 'auction engine, treasury, Kelly'], logo: 'fastapi', acc: true },
+        { id: 'db', x: 1320, y: 280, w: 320, h: 120, t: 'MongoDB Atlas', s: ['companies, markets, orders,', 'append only audit log'], logo: 'mongodb' },
+        { id: 'pl', x: 900, y: 0, w: 260, h: 100, t: 'Google Places', s: 'businesses, ratings, reviews', logo: 'googlemaps' },
+        { id: 'qu', x: 1200, y: 0, w: 200, h: 100, t: 'Querit', s: 'reads the web' },
+        { id: 'gr', x: 1440, y: 0, w: 200, h: 100, t: 'Grok  (xAI)', s: 'cited profile' },
+        { id: 'ag', x: 860, y: 560, w: 340, h: 110, t: 'Agent panel', s: ['rules flag, Grok and K2 review;', 'chat agent for discovery and trading'] },
+        { id: 'k2', x: 1320, y: 560, w: 320, h: 110, t: 'IFM K2 Horizon', s: ['independent second reviewer,', 'never sees Grok\u2019s answer'] },
+        { id: 'bots', x: 360, y: 560, w: 320, h: 110, t: 'Demo traders', s: ['20 bots, private valuations,', 'half Kelly; one planted wash pair'] },
+      ],
+      edges: [
+        { a: 'u', b: 'w', l: 'HTTPS', ly: -12 }, { a: 'w', b: 'api', l: 'REST · WS', ly: -12 }, { a: 'api', b: 'db', l: 'pymongo', ly: -12 },
+        { a: 'im', b: 'api', l: '/agent/chat', ly: 40, lx: 40 }, { a: 'api', b: 'pl', l: 'discovery job', lx: -70, ly: 4 }, { a: 'pl', b: 'qu' }, { a: 'qu', b: 'gr' }, { a: 'gr', b: 'api', l: 'valuation ensemble', lx: 120, ly: 4 },
+        { a: 'api', b: 'ag', l: 'last 20 rounds', lx: -70, ly: 4 }, { a: 'ag', b: 'k2' }, { a: 'k2', b: 'db', l: 'flags, reviews', lx: 76, ly: 4 }, { a: 'bots', b: 'api', l: 'orders', ly: 40, lx: 40 },
+      ],
+    },
+  };
+  document.querySelectorAll('svg.flow').forEach(svg => flow(svg, FLOWS[svg.dataset.flow]));
 
-  // exact scan over the limit prices in the book, tiebreaks as on slide 6
+  // ---------- owner liquidity ladder (slide 7) ----------
+  function ladder(svg) {
+    const W = 740, H = 760, L = 120, R = 40, T = 40, B = 40;
+    const pmin = 42, pmax = 72;
+    const y = p => H - B - (p - pmin) / (pmax - pmin) * (H - T - B);
+    const x = q => L + q / 1000 * (W - L - R - 200);
+    const g = el('g', { class: 'dg', style: '--i:0' });
+    for (let p = 44; p <= 72; p += 4) { g.appendChild(el('line', { x1: L, x2: W - R, y1: y(p), y2: y(p), stroke: 'rgba(255,255,255,0.08)' })); g.appendChild(el('text', { x: L - 14, y: y(p) + 5, 'text-anchor': 'end', fill: '#a1a1a6', 'font-size': 15, 'font-family': 'inherit' }, p.toFixed(0))); }
+    g.appendChild(el('text', { x: L - 14, y: T - 16, 'text-anchor': 'end', fill: '#a1a1a6', 'font-size': 15, 'font-family': 'inherit' }, '$ / share'));
+    svg.appendChild(g);
+    let i = 1;
+    const rungs = [[58.67, 'P55'], [60.76, 'P61'], [63.03, 'P68'], [65.59, 'P74'], [68.62, 'P80']];
+    for (const [p, q] of rungs) {
+      const r = el('g', { class: 'dg', style: `--i:${i++}` });
+      r.appendChild(el('rect', { x: L, y: y(p) - 11, width: x(600) - L, height: 22, rx: 4, fill: 'rgba(255,255,255,0.14)', stroke: 'rgba(255,255,255,0.45)' }));
+      r.appendChild(el('text', { x: x(600) + 12, y: y(p) + 6, fill: '#f5f5f7', 'font-size': 17, 'font-weight': 600, 'font-family': 'inherit' }, `${p.toFixed(2)}`));
+      r.appendChild(el('text', { x: x(600) + 84, y: y(p) + 6, fill: '#a1a1a6', 'font-size': 15, 'font-family': 'inherit' }, `600 sh · ${q}`));
+      svg.appendChild(r);
+    }
+    const f = el('g', { class: 'dg', style: `--i:${i++}` });
+    f.appendChild(el('rect', { x: L, y: y(47.48) - 11, width: x(1000) - L, height: 22, rx: 4, fill: 'rgba(48,209,88,0.22)', stroke: '#30D158' }));
+    f.appendChild(el('text', { x: x(1000) + 12, y: y(47.48) + 6, fill: '#30D158', 'font-size': 17, 'font-weight': 600, 'font-family': 'inherit' }, '47.48'));
+    f.appendChild(el('text', { x: x(1000) + 84, y: y(47.48) + 6, fill: '#a1a1a6', 'font-size': 15, 'font-family': 'inherit' }, '1,000 sh · P20'));
+    svg.appendChild(f);
+    const m = el('g', { class: 'dg', style: `--i:${i++}` });
+    m.appendChild(el('line', { x1: L, x2: W - R, y1: y(57.08), y2: y(57.08), stroke: '#30D158', 'stroke-dasharray': '6 6', 'stroke-width': 1.5 }));
+    m.appendChild(el('text', { x: W - R, y: y(57.08) - 8, 'text-anchor': 'end', fill: '#30D158', 'font-size': 15, 'font-family': 'inherit' }, 'model value 57.08'));
+    svg.appendChild(m);
+    const lab = el('g', { class: 'dg', style: `--i:${i++}` });
+    lab.appendChild(el('text', { x: L, y: y(70.5), fill: '#f5f5f7', 'font-size': 18, 'font-weight': 600, 'font-family': 'inherit' }, 'Owner ask ladder  ·  3,000 shares, 30% float'));
+    lab.appendChild(el('text', { x: L, y: y(44.6), fill: '#30D158', 'font-size': 18, 'font-weight': 600, 'font-family': 'inherit' }, 'Owner buyback floor  ·  up to 1,000 shares'));
+    lab.appendChild(el('text', { x: L, y: y(52.4), fill: '#a1a1a6', 'font-size': 16, 'font-family': 'inherit' }, 'between the floor and the ladder, the crowd sets the price'));
+    svg.appendChild(lab);
+  }
+  ladder(document.getElementById('ladder'));
+
+  // ---------- live marketplace (slide 8) ----------
+  const PEOPLE = [
+    { id: 'rita', name: 'Rita K.', role: 'owner', owner: true },
+    { id: 'jonas', name: 'Jonas', role: 'Bloomfield' },
+    { id: 'priya', name: 'Priya', role: 'Oakland' },
+    { id: 'ana', name: 'Ana', role: 'phone, in the room' },
+    { id: 'leo', name: 'Leo', role: 'Shadyside' },
+    { id: 'tom', name: 'Tom', role: 'Lawrenceville' },
+    { id: 'ken', name: 'Ken', role: 'Greenfield' },
+    { id: 'sam', name: 'Sam', role: 'phone, in the room' },
+    { id: 'nina', name: 'Nina', role: 'South Side' },
+  ];
+  // Owner quotes at listing, straight from the valuation posterior (scripts/demo_pricing.py).
+  const REST = [
+    { side: 'ask', q: 600, p: 58.67, who: 'rita', rung: 0 }, { side: 'ask', q: 600, p: 60.76, who: 'rita', rung: 1 },
+    { side: 'ask', q: 600, p: 63.03, who: 'rita', rung: 2 }, { side: 'ask', q: 600, p: 65.59, who: 'rita', rung: 3 },
+    { side: 'ask', q: 600, p: 68.62, who: 'rita', rung: 4 }, { side: 'bid', q: 1000, p: 47.48, who: 'rita', floor: true },
+  ];
+  // Three rounds of bids. Unfilled bids rest in the book for the next round.
+  const ROUNDS = [
+    [{ q: 180, p: 64.20, who: 'jonas' }, { q: 60, p: 54.80, who: 'tom' }, { q: 90, p: 61.10, who: 'priya' }, { q: 55, p: 54.60, who: 'ken' }, { q: 35, p: 60.80, who: 'leo' }, { q: 25, p: 49.10, who: 'nina' }],
+    [{ q: 200, p: 62.00, who: 'ana' }, { q: 300, p: 63.50, who: 'jonas' }, { q: 150, p: 61.50, who: 'sam' }, { q: 150, p: 60.90, who: 'priya' }],
+    [{ q: 200, p: 65.00, who: 'leo' }, { q: 100, p: 63.10, who: 'ken' }, { side: 'ask', q: 100, p: 62.00, who: 'jonas' }, { q: 60, p: 64.00, who: 'ana' }, { q: 90, p: 63.20, who: 'sam' }],
+  ];
+  const MODEL0 = 57.08, SIGMA0 = 0.22, SM = 0.20, N = 10000;
+  const Z = { 0.20: -0.8416, 0.55: 0.1257, 0.6125: 0.2859, 0.675: 0.4538, 0.7375: 0.6355, 0.80: 0.8416 }, QS = [0.55, 0.6125, 0.675, 0.7375, 0.80];
+  const P = {}; PEOPLE.forEach(p => P[p.id] = p);
+
+  // slide 7: p* maximizes traded volume; ties by imbalance, then closeness to the last price
   function clear(orders, last) {
     const D = p => orders.filter(o => o.side === 'bid' && o.p >= p).reduce((a, o) => a + o.q, 0);
     const S = p => orders.filter(o => o.side === 'ask' && o.p <= p).reduce((a, o) => a + o.q, 0);
-    const cands = [...new Set(orders.map(o => o.p))];
     let best = null;
-    for (const p of cands) {
+    for (const p of new Set(orders.map(o => o.p))) {
       const d = D(p), s = S(p), c = { p, d, s, v: Math.min(d, s), imb: Math.abs(d - s), dist: Math.abs(p - last) };
       if (!best || c.v > best.v || (c.v === best.v && (c.imb < best.imb || (c.imb === best.imb && c.dist < best.dist)))) best = c;
     }
-    const fills = new Map();
-    const longSide = best.d > best.s ? 'bid' : 'ask';
-    const ratio = best.v / Math.max(best.d, best.s);
-    for (const o of orders) {
-      const elig = o.side === 'bid' ? o.p >= best.p : o.p <= best.p;
-      if (!elig) continue;
-      fills.set(o, o.side === longSide ? o.q * ratio : o.q);
-    }
+    const fills = new Map(), longSide = best.d > best.s ? 'bid' : 'ask', ratio = best.v / Math.max(best.d, best.s);
+    for (const o of orders) { const elig = o.side === 'bid' ? o.p >= best.p : o.p <= best.p; if (elig) fills.set(o, o.side === longSide ? o.q * ratio : o.q); }
     return { ...best, fills, D, S };
   }
+  // slide 7: normal-normal belief update, volume weighted. Same constants as apps/api engine._update_belief.
+  function beliefUpdate(rounds) {
+    const vbar = rounds.reduce((a, r) => a + r.v, 0) / rounds.length;
+    const lnps = rounds.map(r => Math.log(N * r.p));
+    let sm = SM, realized = 0;
+    if (lnps.length >= 3) { const mean = lnps.reduce((a, b) => a + b, 0) / lnps.length; realized = Math.sqrt(lnps.reduce((a, x) => a + (x - mean) ** 2, 0) / (lnps.length - 1)); sm = Math.max(0.05, realized); }
+    let num = Math.log(MODEL0 * N) / (SIGMA0 ** 2), den = 1 / (SIGMA0 ** 2);
+    rounds.forEach((r, i) => { const w = r.v / vbar; num += w * lnps[i] / (sm ** 2); den += w / (sm ** 2); });
+    return { value: Math.exp(num / den) / N, sigma: Math.max(0.08, Math.sqrt(1 / den + realized ** 2)) };
+  }
 
-  let auctionTimers = [];
-  function later(fn, ms) { if (STILL) ms = 0; auctionTimers.push(setTimeout(fn, ms)); }
-  function stopAuction() { auctionTimers.forEach(clearTimeout); auctionTimers = []; }
+  let timers = [];
+  function later(fn, ms) { if (STILL) ms = 0; timers.push(setTimeout(fn, ms)); }
+  function stopAuction() { timers.forEach(clearTimeout); timers = []; document.querySelectorAll('#live .chip').forEach(c => c.remove()); }
+  const live = document.getElementById('live');
+  function rel(node) { const r = node.getBoundingClientRect(), s = live.getBoundingClientRect(), k = s.width / 1920; return { x: (r.left - s.left) / k, y: (r.top - s.top) / k, w: r.width / k, h: r.height / k }; }
+  const q2 = v => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const qs = v => Number.isInteger(v) ? String(v) : q2(v);
 
   function runAuction() {
     stopAuction();
-    const live = document.getElementById('live');
-    const bidsEl = live.querySelector('.bids .rows'), asksEl = live.querySelector('.asks .rows');
-    const clockN = live.querySelector('.clock .n'), clockT = live.querySelector('.clock .t');
-    const svg = live.querySelector('svg'), result = live.querySelector('.result');
-    bidsEl.innerHTML = ''; asksEl.innerHTML = ''; svg.innerHTML = ''; result.classList.remove('on');
-    clockN.textContent = '10'; clockT.textContent = 'next batch';
-
-    const orders = REST.map(o => ({ ...o }));
-    const rowOf = new Map();
-    function addRow(o) {
+    const people = live.querySelector('.people'), bidsEl = live.querySelector('.bids .rows'), asksEl = live.querySelector('.asks .rows');
+    const clockR = live.querySelector('.clock .r'), clockN = live.querySelector('.clock .n'), clockT = live.querySelector('.clock .t');
+    const svg = live.querySelector('svg.curves'), path = live.querySelector('svg.path'), result = live.querySelector('.result');
+    people.innerHTML = ''; bidsEl.innerHTML = ''; asksEl.innerHTML = ''; svg.innerHTML = ''; result.classList.remove('on');
+    const cards = {};
+    PEOPLE.forEach((p, i) => {
+      const c = document.createElement('div');
+      c.className = 'person' + (p.owner ? ' owner' : '');
+      c.innerHTML = `<div class="bub"></div><div class="av">${p.name.split(' ').map(w => w[0]).join('').slice(0, 2)}</div><div class="nm">${p.name}</div><div class="rl">${p.role}</div><div class="tag"></div>`;
+      people.appendChild(c); cards[p.id] = c;
+      later(() => c.classList.add('in'), 60 * i);
+    });
+    const orders = REST.map(o => ({ ...o })), rowOf = new Map();
+    const bought = {}, history = [];
+    let ownerSold = 0, last = MODEL0;
+    function addRow(o, visible) {
       const row = document.createElement('div');
-      row.className = 'row';
-      row.innerHTML = `<span class="q">${o.q.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span><span class="p">${o.p.toFixed(2)}</span><span class="o">${o.o}</span>`;
+      row.className = 'row'; row.dataset.p = o.p;
+      const who = P[o.who];
+      row.innerHTML = `<span class="q">${q2(o.q)}</span><span class="p">${o.p.toFixed(2)}</span><span class="o">${o.floor ? 'owner floor' : who.owner ? 'owner' : who.name}</span>`;
+      if (o.side === 'ask' && !who.owner) row.querySelector('.p').style.color = 'var(--paper)';
       const host = o.side === 'bid' ? bidsEl : asksEl;
-      // keep price priority: bids descending, asks ascending
-      const rows = Array.from(host.children);
-      const before = rows.find(r => o.side === 'bid' ? +r.dataset.p < o.p : +r.dataset.p > o.p);
-      row.dataset.p = o.p;
-      host.insertBefore(row, before || null);
-      rowOf.set(o, row);
-      requestAnimationFrame(() => requestAnimationFrame(() => row.classList.add('in')));
-      if (STILL) row.classList.add('in');
+      const before = Array.from(host.children).find(r => o.side === 'bid' ? +r.dataset.p < o.p : +r.dataset.p > o.p);
+      host.insertBefore(row, before || null); rowOf.set(o, row);
+      if (visible || STILL) requestAnimationFrame(() => requestAnimationFrame(() => row.classList.add('in')));
+      return row;
     }
-    orders.forEach(addRow);
+    orders.forEach(o => addRow(o, true));
+    drawPath(path, history, MODEL0, SIGMA0);
+    later(() => { const b = cards.rita.querySelector('.bub'); b.textContent = 'asks from 58.67 · floor 47.48'; b.classList.add('on'); later(() => b.classList.remove('on'), 1800); }, 500);
 
-    // countdown 10 -> 0 while bids arrive
-    const TICK = 420;
-    for (let i = 1; i <= 10; i++) later(() => { clockN.textContent = String(10 - i); }, i * TICK);
-    ARRIVE.forEach((o, i) => later(() => { const c = { ...o }; orders.push(c); addRow(c); }, 300 + i * 440));
-
-    later(() => {
-      clockT.textContent = 'clearing';
-      const r = clear(orders, LAST);
-      drawCurves(svg, orders, r, LAST);
+    const TICK = 400, GAP = 560;
+    let t = 900;
+    ROUNDS.forEach((arrivals, ri) => {
+      const t0 = t;
+      later(() => { clockR.textContent = `Round ${ri + 1}`; clockN.textContent = '10'; clockN.style.color = ''; clockT.textContent = 'next batch'; live.querySelectorAll('.person.quoting').forEach(c => c.classList.remove('quoting')); }, t0);
+      const ticks = 10;
+      for (let i = 1; i <= ticks; i++) later(() => { clockN.textContent = String(ticks - i); }, t0 + i * TICK);
+      arrivals.forEach((o, i) => later(() => {
+        const c = { side: 'bid', ...o }; orders.push(c);
+        const card = cards[o.who], bub = card.querySelector('.bub');
+        bub.textContent = `${c.side === 'ask' ? 'sell' : 'buy'} ${qs(o.q)} @ ${o.p.toFixed(2)}`; bub.classList.add('on'); card.classList.add('quoting');
+        const row = addRow(c, false);
+        if (STILL) { row.classList.add('in'); return; }
+        later(() => {
+          const from = rel(bub), to = rel(row);
+          const chip = document.createElement('div'); chip.className = 'chip'; chip.textContent = bub.textContent;
+          chip.style.left = from.x + 'px'; chip.style.top = from.y + 'px';
+          live.appendChild(chip); void chip.offsetWidth;
+          chip.style.transform = `translate(${to.x - from.x}px, ${to.y - from.y}px) scale(0.85)`; chip.style.opacity = '0';
+          bub.classList.remove('on');
+          later(() => { chip.remove(); row.classList.add('in'); }, 560);
+        }, 420);
+      }, t0 + 300 + i * GAP));
+      const tc = t0 + ticks * TICK + 250;
       later(() => {
-        clockN.textContent = r.p.toFixed(2); clockN.style.color = 'var(--green)'; clockT.textContent = 'clearing price';
-        let n = 0;
-        for (const [o, f] of r.fills) {
-          const row = rowOf.get(o); if (!row) continue;
-          n += o.side === 'bid' ? 1 : 0;
-          row.classList.add('fill', 'flash');
-          row.querySelector('.o').outerHTML = `<span class="f">${f.toFixed(2)} filled</span>`;
-          later(() => row.classList.remove('flash'), 700);
-        }
-        result.innerHTML = `<span class="g">${r.v.toFixed(2)} shares</span> traded at <b>${r.p.toFixed(2)}</b> &nbsp;·&nbsp; ${n} bids filled &nbsp;·&nbsp; owner sold ${r.v.toFixed(2)} from the ladder &nbsp;·&nbsp; next batch in 10`;
-        result.classList.add('on');
-      }, 1500);
-    }, 10 * TICK + 250);
-    clockN.style.color = '';
+        clockT.textContent = 'clearing';
+        const r = clear(orders, last);
+        drawCurves(svg, orders, r, last);
+        later(() => {
+          clockN.textContent = r.p.toFixed(2); clockN.style.color = 'var(--green)'; clockT.textContent = 'clearing price';
+          const buyers = [], sellers = [];
+          for (const [o, f] of r.fills) {
+            const row = rowOf.get(o); if (!row) continue;
+            row.classList.add('fill', 'flash');
+            if (o.side === 'bid') {
+              buyers.push(P[o.who].name); bought[o.who] = (bought[o.who] || 0) + f;
+              cards[o.who].classList.add('filled'); cards[o.who].querySelector('.tag').textContent = `holds ${qs(Math.round(bought[o.who] * 100) / 100)}`;
+              row.querySelector('.o').textContent = `${q2(f)} filled`;
+            } else if (P[o.who].owner) {
+              ownerSold += f; row.querySelector('.o').textContent = `${q2(f)} sold`;
+            } else {
+              sellers.push(P[o.who].name); bought[o.who] = (bought[o.who] || 0) - f; row.querySelector('.o').textContent = `${q2(f)} sold`;
+              cards[o.who].querySelector('.tag').textContent = `holds ${qs(Math.round(bought[o.who] * 100) / 100)}, sold ${qs(f)}`;
+            }
+            o.q -= f;
+            later(() => { row.classList.remove('flash'); }, 700);
+            later(() => {
+              if (o.q < 0.005) { row.classList.add('gone'); later(() => { row.remove(); }, 400); orders.splice(orders.indexOf(o), 1); }
+              else { row.classList.remove('fill'); row.querySelector('.q').textContent = q2(o.q); row.querySelector('.o').textContent = P[o.who].owner ? 'owner' : P[o.who].name; }
+            }, 1500);
+          }
+          cards.rita.classList.add('filled'); cards.rita.querySelector('.tag').textContent = `sold ${qs(Math.round(ownerSold * 100) / 100)} of 3,000`;
+          history.push({ round: ri + 1, p: r.p, v: r.v });
+          const bel = beliefUpdate(history);
+          drawPath(path, history, bel.value, bel.sigma);
+          const uniq = [...new Set(buyers)];
+          const crowdSold = [...r.fills].filter(([o]) => o.side === 'ask' && !P[o.who].owner).reduce((a, [, f]) => a + f, 0);
+          const sellerNote = sellers.length ? ` ${[...new Set(sellers)].join(', ')} sold ${q2(crowdSold)} to them at the same price.` : '';
+          // owner requotes the unsold ladder and the floor from the updated posterior (treasury.py, between rounds)
+          const quoteAt = q => Math.round(bel.value * Math.exp(Z[q] * bel.sigma) * 100) / 100;
+          later(() => {
+            for (const o of orders) {
+              if (!P[o.who].owner) continue;
+              o.p = quoteAt(o.floor ? 0.20 : QS[o.rung]);
+              const row = rowOf.get(o); if (row) { row.dataset.p = o.p; row.querySelector('.p').textContent = o.p.toFixed(2); }
+            }
+          }, 1700);
+          result.innerHTML = `<b>Round ${ri + 1}:</b> <span class="g">${q2(r.v)} shares</span> at <b>${r.p.toFixed(2)}</b>, one price for ${uniq.join(', ')}. Owner sold ${q2(r.v - crowdSold)} from the ladder.${sellerNote}<br>` +
+            `Opening model value ${MODEL0.toFixed(2)}. After this round the model moves to <b>${bel.value.toFixed(2)}</b> and the owner requotes the ladder and the floor from it.`;
+          result.classList.add('on');
+          last = r.p;
+        }, 1300);
+      }, tc);
+      t = tc + 1300 + 2600;
+    });
+    later(() => {
+      clockR.textContent = 'After 3 rounds'; clockT.textContent = 'last clearing price';
+      const bel = beliefUpdate(history);
+      result.innerHTML = `<b>Three rounds:</b> ${history.map(h => h.p.toFixed(2)).join(' → ')}. Buyers paid above the opening model value, so the model moved: <b>${MODEL0.toFixed(2)} → ${bel.value.toFixed(2)}</b>.<br>Owner sold ${q2(ownerSold)} of 3,000 float shares. In round 3 a holder sold to new buyers at the same clearing price. Every buyer in a round paid the same price.`;
+    }, t);
   }
 
   function drawCurves(svg, orders, r, last) {
-    const W = 800, H = 440, L = 56, R = 16, T = 30, B = 40;
-    const pmin = 46, pmax = 68, ymax = 1600;
-    const x = p => L + (p - pmin) / (pmax - pmin) * (W - L - R);
-    const y = q => H - B - q / ymax * (H - T - B);
-    const ns = 'http://www.w3.org/2000/svg';
-    const el = (t, a, txt) => { const e = document.createElementNS(ns, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; };
-    const grid = el('g', { class: 'grid' });
-    for (let p = 48; p <= 68; p += 4) { grid.appendChild(el('line', { x1: x(p), x2: x(p), y1: T, y2: H - B })); svg.appendChild(el('text', { class: 'tick', x: x(p), y: H - 12, 'text-anchor': 'middle' }, p.toFixed(0))); }
-    for (let q = 400; q <= ymax; q += 400) { grid.appendChild(el('line', { x1: L, x2: W - R, y1: y(q), y2: y(q) })); svg.appendChild(el('text', { class: 'tick', x: L - 10, y: y(q) + 5, 'text-anchor': 'end' }, q.toLocaleString('en-US'))); }
+    svg.innerHTML = '';
+    const W = 540, H = 270, L = 50, R = 12, T = 26, B = 30, pmin = 46, pmax = 68, ymax = 1600;
+    const x = p => L + (p - pmin) / (pmax - pmin) * (W - L - R), y = q => H - B - Math.min(q, ymax) / ymax * (H - T - B);
     const clip = el('clipPath', { id: 'plot' }); clip.appendChild(el('rect', { x: 0, y: T - 8, width: W, height: H - T - B + 8 })); svg.appendChild(clip);
+    const lo = Math.max(pmin, last * 0.9), hi = Math.min(pmax, last * 1.1);
+    svg.appendChild(el('rect', { class: 'band', x: x(lo), y: T, width: x(hi) - x(lo), height: H - T - B }));
+    svg.appendChild(el('text', { class: 'tick', x: x(lo) + 5, y: T + 14 }, 'band ±10%'));
+    const grid = el('g', { class: 'grid' });
+    for (let p = 48; p <= 68; p += 4) { grid.appendChild(el('line', { x1: x(p), x2: x(p), y1: T, y2: H - B })); svg.appendChild(el('text', { class: 'tick', x: x(p), y: H - 9, 'text-anchor': 'middle' }, p.toFixed(0))); }
+    for (let q = 400; q <= ymax; q += 400) { grid.appendChild(el('line', { x1: L, x2: W - R, y1: y(q), y2: y(q) })); svg.appendChild(el('text', { class: 'tick', x: L - 8, y: y(q) + 5, 'text-anchor': 'end' }, q.toLocaleString('en-US'))); }
     svg.appendChild(grid);
-    // step curves sampled just around each limit price
     const ps = [...new Set(orders.map(o => o.p))].sort((a, b) => a - b);
-    function stepPath(fn, asc) {
-      let d = `M${x(pmin)},${y(fn(pmin))}`;
-      for (const p of ps) { const before = fn(p - 0.005), at = fn(p + 0.005); d += ` L${x(p)},${y(before)} L${x(p)},${y(at)}`; }
-      d += ` L${x(pmax)},${y(fn(pmax))}`;
-      return d;
-    }
+    function stepPath(fn) { let d = `M${x(pmin)},${y(fn(pmin))}`; for (const p of ps) d += ` L${x(p)},${y(fn(p - 0.005))} L${x(p)},${y(fn(p + 0.005))}`; return d + ` L${x(pmax)},${y(fn(pmax))}`; }
+    const dArea = el('path', { class: 'area', d: stepPath(r.D) + ` L${x(pmax)},${y(0)} L${x(pmin)},${y(0)} Z`, fill: 'rgba(48,209,88,0.10)', 'clip-path': 'url(#plot)' });
+    const sArea = el('path', { class: 'area', d: stepPath(r.S) + ` L${x(pmax)},${y(0)} L${x(pmin)},${y(0)} Z`, fill: 'rgba(255,255,255,0.06)', 'clip-path': 'url(#plot)' });
     const dem = el('path', { class: 'curve demand', d: stepPath(r.D), pathLength: 1, 'clip-path': 'url(#plot)' });
     const sup = el('path', { class: 'curve supply', d: stepPath(r.S), pathLength: 1, 'clip-path': 'url(#plot)' });
-    svg.appendChild(dem); svg.appendChild(sup);
-    const ld = el('text', { class: 'lab', x: x(48.2), y: y(r.D(48.2)) - 12 }, 'demand');
-    const ls = el('text', { class: 'lab', x: x(pmax) - 4, y: y(Math.min(r.S(pmax), ymax)) + 24, 'text-anchor': 'end' }, 'supply');
+    svg.appendChild(dArea); svg.appendChild(sArea); svg.appendChild(dem); svg.appendChild(sup);
+    const ld = el('text', { class: 'lab', x: x(pmin) + 4, y: y(r.D(pmin + 0.1)) - 8 }, 'buyers');
+    const ls = el('text', { class: 'lab', x: x(pmax) - 4, y: y(r.S(pmax)) + 20, 'text-anchor': 'end' }, 'owner asks');
     const line = el('line', { class: 'pstar', x1: 0, x2: 0, y1: T, y2: H - B, transform: `translate(${x(last)},0)` });
-    const dot = el('circle', { class: 'dot', cx: x(r.p), cy: y(r.v), r: 7 });
-    const lp = el('text', { class: 'lab g', x: x(r.p) - 14, y: T + 16, 'text-anchor': 'end' }, `p* ${r.p.toFixed(2)}`);
-    const lv = el('text', { class: 'lab', x: x(r.p) - 14, y: T + 42, 'text-anchor': 'end' }, `${r.v.toFixed(2)} shares`);
-    svg.appendChild(line); svg.appendChild(dot); svg.appendChild(ld); svg.appendChild(ls); svg.appendChild(lp); svg.appendChild(lv);
-    requestAnimationFrame(() => requestAnimationFrame(() => { dem.classList.add('draw'); sup.classList.add('draw'); ld.classList.add('on'); ls.classList.add('on'); }));
-    later(() => { line.classList.add('on'); }, 1000);
-    later(() => { line.setAttribute('transform', `translate(${x(r.p)},0)`); }, 1150);
-    later(() => { dot.classList.add('on'); lp.classList.add('on'); lv.classList.add('on'); }, 1500);
-    if (STILL) { dem.classList.add('draw'); sup.classList.add('draw'); ['on'].forEach(() => {}); [ld, ls, line, dot, lp, lv].forEach(e => e.classList.add('on')); line.setAttribute('transform', `translate(${x(r.p)},0)`); }
+    const dot = el('circle', { class: 'dot', cx: x(r.p), cy: y(r.v), r: 6 });
+    const lp = el('text', { class: 'lab g', x: x(r.p) - 10, y: y(r.v) - 30, 'text-anchor': 'end' }, `p* ${r.p.toFixed(2)}`);
+    const lv = el('text', { class: 'lab', x: x(r.p) - 10, y: y(r.v) - 10, 'text-anchor': 'end' }, `${q2(r.v)} shares`);
+    [line, dot, ld, ls, lp, lv].forEach(e => svg.appendChild(e));
+    requestAnimationFrame(() => requestAnimationFrame(() => { dem.classList.add('draw'); sup.classList.add('draw'); dArea.classList.add('on'); sArea.classList.add('on'); ld.classList.add('on'); ls.classList.add('on'); }));
+    later(() => line.classList.add('on'), 800);
+    later(() => line.setAttribute('transform', `translate(${x(r.p)},0)`), 950);
+    later(() => { dot.classList.add('on'); lp.classList.add('on'); lv.classList.add('on'); }, 1300);
+    if (STILL) { [dem, sup].forEach(e => e.classList.add('draw')); [dArea, sArea, ld, ls, line, dot, lp, lv].forEach(e => e.classList.add('on')); line.setAttribute('transform', `translate(${x(r.p)},0)`); }
+  }
+
+  // clearing price by round against the model value, which updates after every round
+  function drawPath(svg, history, model, sigma) {
+    svg.innerHTML = '';
+    const W = 620, H = 250, L = 50, R = 100, T = 30, B = 34, pmin = 54, pmax = 66;
+    const x = i => L + i / 3 * (W - L - R), y = p => H - B - (p - pmin) / (pmax - pmin) * (H - T - B);
+    const g = el('g', { class: 'grid' });
+    for (let p = 54; p <= 66; p += 3) { g.appendChild(el('line', { x1: L, x2: W - R, y1: y(p), y2: y(p), stroke: 'rgba(255,255,255,0.09)' })); svg.appendChild(el('text', { class: 'tick', x: L - 8, y: y(p) + 5, 'text-anchor': 'end' }, p.toFixed(0))); }
+    svg.appendChild(g);
+    ['open', 'round 1', 'round 2', 'round 3'].forEach((t, i) => svg.appendChild(el('text', { class: 'tick', x: x(i), y: H - 10, 'text-anchor': 'middle' }, t)));
+    svg.appendChild(el('text', { class: 'tick', x: L, y: T - 12 }, 'clearing price by round'));
+    const lo = model * Math.exp(-0.84 * sigma), hi = model * Math.exp(0.84 * sigma);
+    svg.appendChild(el('rect', { x: L, y: y(Math.min(hi, pmax)), width: W - L - R, height: Math.max(0, y(Math.max(lo, pmin)) - y(Math.min(hi, pmax))), fill: 'rgba(255,255,255,0.05)' }));
+    svg.appendChild(el('line', { class: 'model', x1: L, x2: W - R, y1: y(model), y2: y(model) }));
+    svg.appendChild(el('text', { class: 'ml', x: W - R + 6, y: y(model) + 5 }, `model ${model.toFixed(2)}`));
+    const pts = [[0, MODEL0], ...history.map(h => [h.round, h.p])];
+    svg.appendChild(el('path', { class: 'ln', d: pts.map(([i, p], k) => `${k ? 'L' : 'M'}${x(i)},${y(p)}`).join(' ') }));
+    pts.forEach(([i, p], k) => { svg.appendChild(el('circle', { class: 'pt', cx: x(i), cy: y(p), r: k ? 6 : 4 })); if (k) svg.appendChild(el('text', { class: 'pl', x: x(i), y: y(p) - 14, 'text-anchor': 'middle' }, p.toFixed(2))); });
+    svg.appendChild(el('text', { class: 'ml', x: W - R, y: T - 12, 'text-anchor': 'end' }, 'shaded: model P20 to P80'));
   }
 
   // ---------- equations ----------
   function renderMath() {
     if (!window.renderMathInElement) return;
-    document.querySelectorAll('.math').forEach(el => renderMathInElement(el, {
-      delimiters: [{ left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false }],
-      throwOnError: false,
-    }));
+    document.querySelectorAll('.math, .legend, .small').forEach(node => renderMathInElement(node, { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '\\(', right: '\\)', display: false }], throwOnError: false }));
   }
   function start() {
     renderMath();
     if (PRINT) {
       slides.forEach(s => { s.classList.add('active'); s.querySelectorAll('.frag').forEach(f => f.classList.add('on')); s.querySelectorAll('.count').forEach(countUp); });
-      cur = 0; runAuction();
-      document.documentElement.classList.add('ready');
-      return;
+      cur = 0; runAuction(); document.documentElement.classList.add('ready'); return;
     }
     const want = params.has('slide') ? +params.get('slide') - 1 : (parseInt(location.hash.slice(1), 10) || 1) - 1;
     go(Math.max(0, want), -1);

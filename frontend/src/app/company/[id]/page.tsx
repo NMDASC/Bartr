@@ -23,7 +23,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
               {categoryName(company.category)}
               {place ? ` · ${place}` : ""}
             </Label>
-            {company.status === "ready" ? <Chip tone="up">Priced</Chip> : <Chip tone="accent">Reading</Chip>}
+            {company.status === "ready" ? <Chip tone="up">Priced</Chip> : <Chip tone={company.status==="failed"?"down":"accent"}>{company.status==="failed"?"Pricing unavailable":"Reading"}</Chip>}
           </div>
           <div className="mt-4 flex items-center gap-4"><BusinessAvatar category={company.category} large/><h1 className="text-[26px] md:text-[34px] tracking-[-.04em]">{company.name}</h1></div>
           {company.description ? <p className="mt-3 max-w-2xl text-[13px] secondary">{company.description}</p> : null}

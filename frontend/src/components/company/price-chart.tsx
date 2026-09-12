@@ -5,11 +5,12 @@ import { createChart, ColorType, LineSeries, LineType, type IChartApi, type ISer
 import type { Batch } from "@contracts/types";
 
 /** Step line: one price per batch, held until the next round clears. */
-export function PriceChart({ batches, refPrice }: { batches: Batch[]; refPrice: number | null }) {
+export function PriceChart({ batches, refPrice, rangeKey = "all" }: { batches: Batch[]; refPrice: number | null; rangeKey?: string }) {
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
   const series = useRef<ISeriesApi<"Line"> | null>(null);
   const refLine = useRef<ReturnType<ISeriesApi<"Line">["createPriceLine"]> | null>(null);
+  const previous = useRef<{ rangeKey: string; times: number[] } | null>(null);
 
   useEffect(() => {
     if (!el.current) return;
@@ -49,17 +50,45 @@ export function PriceChart({ batches, refPrice }: { batches: Batch[]; refPrice: 
       chart.current = null;
       series.current = null;
       refLine.current = null;
+      previous.current = null;
     };
   }, []);
 
   useEffect(() => {
     const s = series.current;
-    if (!s) return;
+    const timeScale = chart.current?.timeScale();
+    if (!s || !timeScale) return;
     const points = new Map<number, number>();
-    for (const b of batches) if (Number.isFinite(b.clearing_price)) points.set(Math.floor(Date.parse(b.t)/1000), b.clearing_price);
-    s.setData([...points].sort((a,b)=>a[0]-b[0]).map(([time,value])=>({time:time as UTCTimestamp,value})));
-    chart.current?.timeScale().fitContent();
-  }, [batches]);
+    for (const batch of batches) {
+      const time = Math.floor(Date.parse(batch.t) / 1000);
+      if (Number.isFinite(time) && batch.clearing_price !== null && Number.isFinite(batch.clearing_price)) points.set(time, batch.clearing_price);
+    }
+    const data = [...points].sort((a, b) => a[0] - b[0]).map(([time, value]) => ({ time: time as UTCTimestamp, value }));
+    const currentTimes = data.map(point => Number(point.time));
+    const old = previous.current;
+    const visible = timeScale.getVisibleLogicalRange();
+    const resetRange = !old || old.rangeKey !== rangeKey || old.times.length === 0;
+    const followingLatest = !!visible && !!old?.times.length && visible.to >= old.times.length - 1;
+
+    s.setData(data);
+    if (data.length && (resetRange || !visible)) {
+      timeScale.fitContent();
+    } else if (data.length && visible && old) {
+      if (followingLatest) {
+        // Advance by new bars while retaining the trader's zoom and right margin.
+        const delta = data.length - old.times.length;
+        timeScale.setVisibleLogicalRange({ from: visible.from + delta, to: visible.to + delta });
+      } else {
+        // Rolling windows shift logical indices. Preserve the visible timestamp.
+        const oldIndex = Math.max(0, Math.min(old.times.length - 1, Math.floor(visible.from)));
+        const newIndex = currentTimes.indexOf(old.times[oldIndex]);
+        const overlap = old.times.findIndex(time => currentTimes.includes(time));
+        const delta = newIndex >= 0 ? newIndex - oldIndex : overlap >= 0 ? currentTimes.indexOf(old.times[overlap]) - overlap : 0;
+        timeScale.setVisibleLogicalRange({ from: visible.from + delta, to: visible.to + delta });
+      }
+    }
+    previous.current = { rangeKey, times: currentTimes };
+  }, [batches, rangeKey]);
 
   useEffect(() => {
     const s = series.current;

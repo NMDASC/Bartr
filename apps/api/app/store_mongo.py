@@ -102,6 +102,21 @@ class MongoStore:
         cur = self.db.trades.find({"market_id": mid}).sort("t", DESCENDING).limit(limit)
         return [_r(d) for d in reversed(list(cur))]
 
+    def user_trades(self, uid: str, limit: int = 100) -> list[dict]:
+        if limit <= 0:
+            return []
+        cur = self.db.trades.find({"$or": [{"buyer_id": uid}, {"seller_id": uid}]}).sort([("t", DESCENDING), ("id", DESCENDING)]).limit(limit)
+        return [_r(d) for d in reversed(list(cur))]
+
+    def user_trade_summary(self, uid: str) -> dict:
+        rows = self.db.trades.aggregate([
+            {"$match": {"$or": [{"buyer_id": uid}, {"seller_id": uid}]}},
+            {"$group": {"_id": None, "trades": {"$sum": 1},
+                        "traded_notional": {"$sum": {"$multiply": ["$qty", "$price"]}}}},
+        ])
+        summary = next(iter(rows), {})
+        return {"trades": summary.get("trades", 0), "traded_notional": round(summary.get("traded_notional", 0), 2)}
+
     # users
     def get_user(self, uid: str) -> dict | None:
         return _r(self.db.users.find_one({"_id": uid}))
@@ -114,6 +129,22 @@ class MongoStore:
 
     def list_users(self) -> list[dict]:
         return [_r(d) for d in self.db.users.find()]
+
+    # Separate documents prevent a background checklist from overwriting balances.
+    def get_draft(self, uid: str, cid: str) -> dict | None:
+        doc = self.db.acquisitions.find_one({"_id": f"{len(uid)}:{uid}{cid}"})
+        if doc:
+            return doc["draft"]
+        return (self.get_user(uid) or {}).get("acquisitions", {}).get(cid)
+
+    def put_draft(self, uid: str, cid: str, draft: dict) -> None:
+        key = f"{len(uid)}:{uid}{cid}"
+        self.db.acquisitions.replace_one({"_id": key}, {"_id": key, "user_id": uid, "market_id": cid, "draft": draft}, upsert=True)
+
+    def user_drafts(self, uid: str) -> list[dict]:
+        rows = dict((self.get_user(uid) or {}).get("acquisitions", {}))
+        rows.update({d["market_id"]: d["draft"] for d in self.db.acquisitions.find({"user_id": uid})})
+        return list(rows.values())
 
     # audit. Append only: no natural id, and it is never updated.
     def audit(self, event: dict) -> None:
@@ -135,6 +166,24 @@ class MongoStore:
         rows = (_r(d) for d in cursor.batch_size(200))
         matches = (e for e in rows if query.casefold() in json.dumps(e, default=str).casefold())
         return list(islice(matches, offset, offset + limit))
+
+    def linked_audit(self, *, actors, flag_ids, market_id=None, calls_only=False, limit=100):
+        if limit <= 0 or not (actors or flag_ids):
+            return []
+        links = []
+        if flag_ids:
+            links.append({"flag_id": {"$in": list(flag_ids)}})
+        if actors:
+            participants = {"$or": [{field: {"$in": list(actors)}} for field in
+                                     ("actor", "payload.user_id", "payload.buyer_id", "payload.seller_id")]}
+            if market_id is not None:
+                participants = {"$and": [participants, {"$or": [{"market_id": market_id}, {"payload.market_id": market_id}]}]}
+            links.append(participants)
+        match = {"$or": links}
+        if calls_only:
+            match["action"] = "agent_call"
+        cursor = self.db.audit_log.find(match).sort([("t", DESCENDING), ("_id", DESCENDING)]).limit(limit)
+        return [_r(d) for d in reversed(list(cursor))]
 
     def audit_counts(self):
         return {"calls": self.db.audit_log.count_documents({"action": "agent_call"}),

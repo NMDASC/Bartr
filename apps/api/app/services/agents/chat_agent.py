@@ -5,7 +5,7 @@ import json
 import math
 import re
 
-from app.llm import Completion, complete, is_configured
+from app.llm import Completion, complete, fast_model, is_configured
 from app.schemas import AgentMessage, ToolCallCard
 from app.services.discovery.intent import parse_intent
 from app.services.discovery.ranking import rank_companies
@@ -63,6 +63,70 @@ SYSTEM = (
     "Do not repeat a successful order action in another tool-loop turn."
 )
 
+MUTATIONS = frozenset(("place_order", "cancel_order"))
+ACTION_HELP = (
+    "Send one complete instruction, for example: buy 10 of Squirrel Hill Wash and Fold at $56. "
+    "Use the full business name or ID, shares and limit price. To cancel, send cancel order followed by your order ID."
+)
+
+
+def _requested_action(message: str) -> tuple[str, dict] | None:
+    """Recognize a complete instruction in this message, never in history or tool output.
+
+    Deliberately require one direct command. Questions about an order, conditional
+    instructions, quoted examples and references to previous messages confer no
+    trading authority, even when a model emits a mutation tool call for them.
+    """
+    prefix = r"\s*(?:(?:please|can you|could you|would you|i want to|i'd like to)\s+)?"
+    suffix = r"(?:\s+please)?\s*[.!?]?\s*"
+    cancel = re.fullmatch(prefix + r"cancel\s+(?:order\s+)?([\w-]+)" + suffix, message, re.I)
+    if cancel:
+        return "cancel_order", {"id": cancel.group(1)}
+    number = r"((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?)"
+    order = re.fullmatch(
+        prefix + r"(buy|sell)\s+" + number + r"\s+(?:shares?\s+)?(?:of\s+)?"
+        r"([^\r\n]+?)\s+at\s+\$?" + number + suffix,
+        message, re.I,
+    )
+    if order:
+        return "place_order", {"id": order.group(3).strip(), "side": order.group(1).lower(),
+                               "qty": float(order.group(2).replace(",", "")),
+                               "limit": float(order.group(4).replace(",", ""))}
+    return None
+
+
+def _canonical_action(name: str, args: dict, store) -> tuple[str, dict] | None:
+    """Bind a mutation to one asset and finite, explicit numeric terms."""
+    identifier = args.get("id", args.get("market_id"))
+    if not isinstance(identifier, str) or not identifier.strip():
+        return None
+    identifier = identifier.strip()
+    if name == "cancel_order":
+        return name, {"id": identifier}
+    if name != "place_order" or args.get("side") not in ("buy", "sell"):
+        return None
+    companies = store.list_companies()
+    q = identifier.casefold()
+    exact = [c for c in companies if q in (c["id"].casefold(), c["name"].casefold())]
+    matches = exact or [c for c in companies if q in c["name"].casefold() or q in c["id"].casefold()]
+    if len(matches) != 1:
+        return None
+    qty, price = args.get("qty"), args.get("limit", args.get("limit_price"))
+    if isinstance(qty, bool) or isinstance(price, bool):
+        return None
+    try:
+        qty, price = float(qty), float(price)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not all(math.isfinite(v) and v > 0 and round(v, 2) == v for v in (qty, price)):
+        return None
+    return name, {"id": matches[0]["id"], "side": args["side"], "qty": qty, "limit": price}
+
+
+def _authorization(message: str, store) -> tuple[str, dict] | None:
+    requested = _requested_action(message)
+    return _canonical_action(*requested, store) if requested else None
+
 
 def _find(store, name: str) -> dict | None:
     q = name.lower()
@@ -88,7 +152,13 @@ def search_companies(engine, store, q: str) -> tuple[str, list[dict], int]:
     return "\n".join(_line(c, engine) for c in picks), picks, len(ranked)
 
 
-def run_tool(name: str, args: dict, uid: str, engine, store) -> tuple[str, int]:
+def run_tool(name: str, args: dict, uid: str, engine, store, *, authorized: tuple[str, dict] | None = None) -> tuple[str, int]:
+    if name in MUTATIONS:
+        action = _canonical_action(name, args, store)
+        if authorized is None or action != authorized:
+            return "No action taken. The requested tool does not match a complete instruction in your latest message. " + ACTION_HELP, 0
+        # Execute the user-bound terms, never an unchecked model argument.
+        args = action[1]
     if name == "get_orders":
         orders = sorted(store.user_orders(uid), key=lambda o: o["created_at"], reverse=True)[:20]
         lines = []
@@ -157,25 +227,19 @@ def run_tool(name: str, args: dict, uid: str, engine, store) -> tuple[str, int]:
 
 
 def local_reply(message: str, uid: str, engine, store) -> AgentMessage:
-    cancel = re.fullmatch(r"\s*cancel\s+(?:order\s+)?([\w-]+)\s*[.!]?\s*", message, re.I)
-    if cancel:
-        args = {"id": cancel.group(1)}
-        text, n = run_tool("cancel_order", args, uid, engine, store)
-        return AgentMessage(role="assistant", content=text, tool_calls=[ToolCallCard(name="cancel_order", args=args, result_count=n)])
+    requested = _requested_action(message)
+    if requested:
+        name, args = requested
+        text, n = run_tool(name, args, uid, engine, store, authorized=_authorization(message, store))
+        return AgentMessage(role="assistant", content=text, tool_calls=[ToolCallCard(name=name, args=args, result_count=n)])
     if re.search(r"\b(orders?|bids?|fills?|status)\b", message, re.I) and not re.search(r"\b(buy|sell|cancel)\b", message, re.I):
         text, n = run_tool("get_orders", {}, uid, engine, store)
         return AgentMessage(role="assistant", content=text, tool_calls=[ToolCallCard(name="get_orders", args={}, result_count=n)])
     if re.search(r"\b(my portfolio|my holdings|my positions|my balance|available cash)\b", message, re.I):
         text, n = run_tool("get_portfolio", {}, uid, engine, store)
         return AgentMessage(role="assistant", content=text, tool_calls=[ToolCallCard(name="get_portfolio", args={}, result_count=n)])
-    buy = re.fullmatch(r"\s*(buy|sell)\s+(\d+(?:\.\d+)?)\s+(?:shares?\s+)?(?:of\s+)?(.+?)\s+at\s+\$?(\d+(?:\.\d+)?)\s*[.!]?\s*", message, re.I)
-    if buy:
-        side, qty, name, px = buy.group(1).lower(), float(buy.group(2)), buy.group(3).strip(), float(buy.group(4))
-        args = {"id": name, "side": side, "qty": qty, "limit": px}
-        text, n = run_tool("place_order", args, uid, engine, store)
-        return AgentMessage(role="assistant", content=text, tool_calls=[ToolCallCard(name="place_order", args=args, result_count=n)])
     if re.search(r"\b(buy|sell|cancel)\b", message, re.I):
-        return AgentMessage(role="assistant", content="Include the shares, business and limit price, for example: buy 10 of Squirrel Hill Wash and Fold at $56. To cancel, send cancel followed by your order ID. Send my orders to see IDs and status.")
+        return AgentMessage(role="assistant", content=ACTION_HELP)
     if re.search(r"\b(hold|portfolio|kelly|suggest|allocat)\b", message, re.I):
         text, n = run_tool("suggest_portfolio", {}, uid, engine, store)
         return AgentMessage(role="assistant", content=text, tool_calls=[ToolCallCard(name="suggest_portfolio", args={}, result_count=n)])
@@ -198,11 +262,15 @@ async def reply(message: str, uid: str, engine, store) -> AgentMessage:
     for event in prior:
         messages.extend([{"role": "user", "content": event["payload"]["message"]}, {"role": "assistant", "content": event["payload"]["reply"]["content"]}])
     messages.append({"role": "user", "content": message})
+    authorized = _authorization(message, store)
+    available_tools = [tool for tool in TOOLS if tool["function"]["name"] not in MUTATIONS
+                       or (authorized and tool["function"]["name"] == authorized[0])]
     cards: list[ToolCallCard] = []
     executed: dict[str, tuple[str, int]] = {}
+    mutation_results: list[str] = []
     try:
         for _ in range(4):
-            result = await complete(messages, tools=TOOLS, audit_feature="chat_agent")
+            result = await complete(messages, tools=available_tools, model=fast_model("xai"), audit_feature="chat_agent")
             if not isinstance(result, Completion) or not result.tool_calls:
                 content = result.content if isinstance(result, Completion) else str(result)
                 return AgentMessage(role="assistant", content=content.strip() or "Your requested tools have completed. Check your overview for order status.", tool_calls=cards or None)
@@ -215,12 +283,20 @@ async def reply(message: str, uid: str, engine, store) -> AgentMessage:
                 } for tc in result.tool_calls],
             })
             for tc in result.tool_calls:
-                key = tc.name + json.dumps(tc.arguments, sort_keys=True)
-                if tc.name in ("place_order", "cancel_order") and key in executed:
+                canonical = _canonical_action(tc.name, tc.arguments, store) if tc.name in MUTATIONS else None
+                if tc.name in MUTATIONS and (authorized is None or canonical != authorized):
+                    cards.append(ToolCallCard(name=tc.name, args=tc.arguments, result_count=0))
+                    content = ("An additional order action was blocked. " + " ".join(mutation_results)
+                               if mutation_results else "No order action was taken. " + ACTION_HELP)
+                    return AgentMessage(role="assistant", content=content, tool_calls=cards)
+                key = tc.name + json.dumps(canonical[1] if canonical else tc.arguments, sort_keys=True)
+                if tc.name in MUTATIONS and key in executed:
                     text, n = executed[key]
                 else:
-                    text, n = run_tool(tc.name, tc.arguments, uid, engine, store)
+                    text, n = run_tool(tc.name, tc.arguments, uid, engine, store, authorized=authorized)
                     executed[key] = (text, n)
+                    if tc.name in MUTATIONS and n:
+                        mutation_results.append(text)
                 cards.append(ToolCallCard(name=tc.name, args=tc.arguments, result_count=n))
                 messages.append({"role": "tool", "tool_call_id": tc.id, "content": text})
     except Exception:

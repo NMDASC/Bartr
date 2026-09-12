@@ -85,13 +85,27 @@ Live discovery in the UI, Pittsburgh first and then cities nationwide. REST/SSE 
 
 Pricing/ranking verification follow-up: exact-quote and field-associated USD checks gate financial evidence; repeated inputs deduplicate snapshots while source documents merge; source hostnames, not repeated URLs, contribute corroboration. `calibrate_pricing.py` fits category-scoped sale-basis profiles on explicit training rows and reports held-out error/coverage without auto-activation. Mismatched category/benchmark profiles fall back with a warning. Export GraphQL SDL with `scripts/gen_graphql.py`; usage and limitations are in `docs/DISCOVERY_PRICING.md`. Legacy seeded/manual company creation is not repriced automatically. Runtime verified `/graphql` pricing preview; full live discovery still requires a configured xAI key.
 
+## 017  Sat 03:40  author: Aditya  affects: all
+Keys arrived and every Grok feature was run for real (`scripts/grok_smoke.py`). Findings and fixes:
+- grok-4.6 takes 18 to 45s per structured call because it reasons; `grok-4.20-0309-non-reasoning` answers the same call in under 2s. `llm.fast_model()` added; every interactive path (intent, persona, narrator, profile, why, compliance, chat, red team plan, LOI) uses it. grok-4.6 with web_search stays for appraisal and checklist research. Zhiyuan / Vir: `chat_agent` and `compliance` now pass `model=fast_model(...)`.
+- Slow research is cached ahead of the demo: `seeds/appraisals.json` and `seeds/checklists.json` (scripts above), merged at boot. Acquire returns instantly and upgrades the checklist in the background (`checklist_source`).
+- Deterministic city parser was greedy: "laundromat in pittsburgh and show me the book" made the city "Pittsburgh And Show Me The Book", so chat found nothing. Clause now stops at conjunctions and verbs (`locations.py`).
+- Grok appraisals of the fictional seeds come back with confidence 0.12 to 0.25 and reasoning like "no confirmation this laundromat exists". Correct behavior, ugly on a slide. Atlas already holds 52 real businesses from the live pipeline (Laundry Factory, Shadyside Laundromat, ...); run `appraise_seeds.py --store` against Atlas and demo on real businesses.
+- Test venv needs `strawberry-graphql[fastapi]` and `pytest-asyncio` now. 103 tests pass offline; `.env` keys make the suite hit the network, so run tests with `XAI_API_KEY= QUERIT_API_KEY= GOOGLE_PLACES_API_KEY=` prefixed or add them to conftest.
+
+## 019  Fri 23:15  author: Aditya (with Claude)  affects: A
+Deck rebuilt as Bartr, 14 slides: use case slide up front (Discover. Exchange. Acquire.), real frontend screenshots in `apps/deck/assets/` (captured from `next start` on the Bartr rename), reduced math with the Squirrel Hill worked example, an owner liquidity ladder diagram (no market maker, per 003), a marketplace animation with named traders quoting into the book, an anti arbitrage flowchart, a "built for you to make money" slide with the Kelly multiplier, an agentic security panel flowchart, and an architecture diagram with sponsor logos. Fallbacks `Bartr.pdf` and `Bartr.pptx`. A: the QR (`assets/qr.png`) still needs the live URL.
+
+## 020  Sat 00:10  author: Aditya (with Claude)  affects: A, D
+Deck reviewed by five agents (slop editor, fact checker, presentation, impact and technical judges) and corrected: no claims the code does not back. Removed: "runs after every batch", cancel/freeze actions, a K2 confidence score, spoof detection, Auth0 as wired, Vector Search as used, 50 bots (it is 20), Next.js 15 (it is 16), "calibrated on real listings" (calibrate() exists, never run), "the first stock market", "the platform never trades", "always an exit", track line. Slide 8 now runs three rounds with the owner requoting from the updated belief and a crowd seller in round 3. New Grok slide (13) lists the twelve call sites from 016 (appraiser, persona, narrator, profile parser, compliance, red team, health memo, acquire, chat) and the evidence gate in pricing.verified_company; security slide names the red team and the spoofing rule. 15 slides. D: if surveillance gets wired into run_batch, or Auth0 lands, tell me and I will put the claims back.
+
 ## 019  Sat  author: Nico (with Codex)  affects: all
 User-authorized product redesign spans the frontend, personal overview, messaging bridge, and security console. The UI evolves the original Lemma direction into a persistent navigation shell, accessible white panels, editorial hierarchy, and progressive disclosure of the order book. `/` is the personal overview; `/search` is discovery; `/surveillance` is the administrator workspace. Personal data loads in the browser under the active normalized identity, never a shared server identity.
 
 Additive APIs: `/portfolio/overview`, `/agent/messages`, `/agent/channel`, `/agent/heartbeat`, and `/security/*`. Security and legacy surveillance routes require `X-Admin-Token` matching server-only `ADMIN_API_TOKEN`; unset configuration fails closed. Bridge telemetry requires server-only `BRIDGE_API_TOKEN`. No credential is shipped through NEXT_PUBLIC variables. Agent call inputs/outputs and case transitions are logged through Store with secret redaction. Security cases persist with snapshots, evidence, reviewer opinions and human dispositions; MemoryStore snapshots now include audit and cases. New migration 007 contains security-case indexes. Existing discovery edits are preserved. Types remain hand-authored; OpenAPI is exported after verification. Deployment and sending real external messages are outside this local implementation run.
 
 
-019 follow-up: acquisition drafts are saved as `users.acquisitions[company_id]`; GET/PUT
+019 follow-up: acquisition drafts are saved as per-user acquisition documents; GET/PUT
 `/acquire/{company_id}/draft` and the existing acquisition-id lookup are scoped to the
 current identity. Starting an existing draft preserves edits. The bridge forwards an
 optional chat `request_id`; replayed requests return the stored response, and conflicting
@@ -110,3 +124,17 @@ so Mongo surveillance does not block the API event loop or query every user per 
 Case writes and MemoryStore snapshots serialize concurrent updates. An unchanged
 concentration condition does not reopen a reviewed case just because another quiet
 batch elapsed.
+
+019 integration: incorporated the fast Grok tier and background checklist research from
+main. Draft storage is separate from balance documents, with compatibility reads for
+older user-embedded drafts. Duplicate starts serialize per buyer/business; researched
+checklists preserve buyer edits. The UI polls research progress and lets a buyer apply
+new research without overwriting an edited letter. Acquisition adds checklist source
+and research status fields. All active orders remain visible beyond the recent history
+limit; Advanced includes quiet rounds, spread and clearing band. Each chat mutation
+must match a complete, explicit instruction in the latest user message.
+
+Agent audit adds optional redacted raw provider responses alongside normalized output.
+Case/user linked audit filtering happens before recent-preview limits, and user trade
+totals cover stored history. Evidence previews state their retained limits. No provider
+output is reconstructed for calls made before this logging existed.

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any, Literal, TypeVar
 
@@ -21,6 +22,7 @@ Provider = Literal["xai", "ifm"]
 M = TypeVar("M", bound=BaseModel)
 
 _clients: dict[str, AsyncOpenAI] = {}
+_raw_response: ContextVar[Any] = ContextVar("llm_raw_response", default=None)
 
 _CONFIG = {
     "xai": ("XAI_API_KEY", "XAI_BASE_URL", "XAI_MODEL", "https://api.x.ai/v1", "grok-4.6"),
@@ -48,6 +50,15 @@ class Completion:
 def default_model(provider: Provider) -> str:
     _, _, model_var, _, model_default = _CONFIG[provider]
     return os.getenv(model_var) or model_default
+
+
+def fast_model(provider: Provider = "xai") -> str:
+    """Model for interactive calls. Measured Sat 03:00: grok-4.20-0309-non-reasoning answers a structured
+    parse in 0.8s vs 6.4s for grok-4.6 (and 20 to 45s on bigger prompts, because 4.6 reasons). Keep
+    grok-4.6 (default_model) for research with web_search, where quality matters more than latency."""
+    if provider == "xai":
+        return os.getenv("XAI_FAST_MODEL") or "grok-4.20-0309-non-reasoning"
+    return default_model(provider)
 
 
 def client(provider: Provider = "xai") -> AsyncOpenAI:
@@ -105,12 +116,16 @@ async def _complete(
 
     if schema is not None:
         parsed = await c.beta.chat.completions.parse(response_format=schema, **kwargs)
+        from app.security import response_snapshot
+        _raw_response.set(response_snapshot(parsed))
         out = parsed.choices[0].message.parsed
         if out is None:
             raise RuntimeError("model returned no parsed content")
         return out
 
     resp = await c.chat.completions.create(**kwargs)
+    from app.security import response_snapshot
+    _raw_response.set(response_snapshot(resp))
     msg = resp.choices[0].message
     if tools:
         calls = []
@@ -130,16 +145,23 @@ async def complete(messages, **kwargs):
     import time
     import asyncio
     from dataclasses import asdict, is_dataclass
-    from app.security import record_call
+    from app.security import error_response, record_call
     started = time.time()
     feature = kwargs.pop("audit_feature", None)
     provider = kwargs.get("provider", "xai")
     model = kwargs.get("model") or default_model(provider)
+    raw_token = _raw_response.set(None)
     try:
-        out = await _complete(messages, **kwargs)
-        result = out.model_dump() if isinstance(out, BaseModel) else asdict(out) if is_dataclass(out) else out
-    except (Exception, asyncio.CancelledError) as exc:
-        record_call(provider=provider, model=model, messages=messages, error=f"{type(exc).__name__}: {exc}", started=started, feature=feature)
-        raise
-    record_call(provider=provider, model=model, messages=messages, output=result, started=started, feature=feature)
-    return out
+        try:
+            out = await _complete(messages, **kwargs)
+            result = out.model_dump() if isinstance(out, BaseModel) else asdict(out) if is_dataclass(out) else out
+        except (Exception, asyncio.CancelledError) as exc:
+            raw = _raw_response.get()
+            record_call(provider=provider, model=model, messages=messages, error=f"{type(exc).__name__}: {exc}",
+                        started=started, feature=feature, raw_response=raw if raw is not None else error_response(exc))
+            raise
+        record_call(provider=provider, model=model, messages=messages, output=result, started=started,
+                    feature=feature, raw_response=_raw_response.get())
+        return out
+    finally:
+        _raw_response.reset(raw_token)

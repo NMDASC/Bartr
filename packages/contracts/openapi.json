@@ -2369,7 +2369,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "number"
+                  "type": "number",
+                  "minimum": 0
                 },
                 {
                   "type": "null"
@@ -2773,6 +2774,35 @@
             ],
             "title": "Status",
             "default": "draft"
+          },
+          "checklist_source": {
+            "type": "string",
+            "enum": [
+              "template",
+              "grok"
+            ],
+            "title": "Checklist Source",
+            "default": "template"
+          },
+          "loi_source": {
+            "type": "string",
+            "enum": [
+              "template",
+              "grok"
+            ],
+            "title": "Loi Source",
+            "default": "template"
+          },
+          "checklist_status": {
+            "type": "string",
+            "enum": [
+              "researching",
+              "ready",
+              "unavailable",
+              "kept"
+            ],
+            "title": "Checklist Status",
+            "default": "ready"
           }
         },
         "type": "object",
@@ -3919,6 +3949,11 @@
             "type": "array",
             "maxItems": 100,
             "title": "Checklist"
+          },
+          "checklist_source": {
+            "type": "string",
+            "title": "Checklist Source",
+            "default": "template"
           }
         },
         "type": "object",
