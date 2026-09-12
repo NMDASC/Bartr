@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JB frontend
 
-## Getting Started
+Next.js 16 (App Router), Tailwind v4, TypeScript. Owner: A.
 
-First, run the development server:
+## Run
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+pnpm i
+pnpm dev          # http://localhost:3000, mock mode
+pnpm build        # the check that matters before merging to main
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Modes
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| `NEXT_PUBLIC_API_URL` | Data |
+|---|---|
+| unset | `packages/contracts/examples/*.json` plus an in-browser simulator (`src/lib/mock.ts`) that runs the 8.3 batch auction, the 8.1 owner ladder and floor, and the 8.2b belief update every 10s. Orders you place rest in the book and fill. |
+| set, e.g. `http://localhost:8000` | FastAPI at `{url}/api/v1`, WebSocket at `{url}/ws/markets/{id}`. Contract in `packages/contracts/types.ts`. |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Everything goes through `src/lib/api.ts`. No screen imports fixtures or fetch directly.
 
-## Learn More
+## Routes
 
-To learn more about Next.js, take a look at the following resources:
+| Route | File | What it shows |
+|---|---|---|
+| `/` | `app/page.tsx` | hero, search, trending rows |
+| `/search?q=` | `app/search/page.tsx` + `components/search/results.tsx` | streamed results, filter rail, `READING` chip on stubs |
+| `/company/[id]` | `app/company/[id]/page.tsx` + `components/company/*` | price strip, countdown, step chart, order book, depth plate `JB. 1.1`, order ticket, valuation estimators, sources |
+| `/company/[id]/acquire` | `app/company/[id]/acquire/page.tsx` | LOI, diligence checklist with citations |
+| `/portfolio` | `app/portfolio/page.tsx` | cash, positions, half-Kelly suggestions with risk slider |
+| `/surveillance` | `app/surveillance/page.tsx` | flags feed, per-reviewer severities, disputed marker |
+| `/agent` | `app/agent/page.tsx` + `components/agent/chat.tsx` | chat with tool-call cards, same endpoint as iMessage |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Design system
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Lemma kinship. Tokens in `src/styles/lemma-tokens.css`, mapped into Tailwind's `@theme` in `src/app/globals.css`.
+Rules that are not negotiable: light only, `border-radius: 0` everywhere, no `box-shadow`, sections separate with
+`1px #D4D4DD` rules, secondary text is `#1D1956` at 65% (never a flat gray), every uppercase string is IBM Plex Mono
+with 0.06 to 0.15em tracking, headings weight 400, and `#755CFE` marks state (clearing price, active path, plate
+strokes), never importance. Bids `#2BC392`, asks `#EE5557`. Primitives in `src/components/ui`; no shadcn.
 
-## Deploy on Vercel
+Britti Sans is licensed and not installed. The sans stack is `brittiSans, Geist, Arial`. IBM Plex Mono is real.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Conventions
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Prices per share are `px()` (2 decimals, no symbol). Whole-company values are `usd(n, { compact: true })`.
+- `origin` on a book level is `user | treasury | bot | agent`. Treasury rows get the `OWNER` tag.
+- Plate figures use the `JB. x.y` prefix and must encode something real from live data.
+- Any new field the UI needs goes into `packages/contracts/types.ts` with a `docs/DECISIONS.md` entry, not into a component.
