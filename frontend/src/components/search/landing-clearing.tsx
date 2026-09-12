@@ -112,7 +112,7 @@ export function LandingClearing() {
   };
 
   return (
-    <div ref={hostRef} className="relative h-[230vh]">
+    <div ref={hostRef} className="relative h-[190vh]">
       <div className="sticky top-0 flex min-h-screen items-center">
         <div className="mx-auto w-full max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-16">
           <div className="grid items-center gap-10 lg:grid-cols-[300px_1fr]">

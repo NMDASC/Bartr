@@ -40,28 +40,6 @@ function Spark({ id, up }: { id: string; up: boolean }) {
   );
 }
 
-function CountUp({ value }: { value: number }) {
-  const [n, setN] = useState(value);
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setN(value);
-      return;
-    }
-    const t0 = performance.now();
-    let raf = 0;
-    const step = () => {
-      const t = Math.min(1, (performance.now() - t0) / 900);
-      setN(value * (1 - Math.pow(1 - t, 3)));
-      if (t < 1) raf = requestAnimationFrame(step);
-      else setN(value);
-    };
-    setN(0);
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [value]);
-  return <>{usd(n, { compact: true })}</>;
-}
-
 type Live = { bid: number; ask: number; last: number; dir: "up" | "down" | null; v: number };
 
 /**
@@ -114,10 +92,10 @@ export function LandingTrending({ companies }: { companies: CompanyCard[] }) {
       </div>
 
       <ul className="flex flex-col gap-px">
-        {companies.map((c, i) => {
+        {companies.map((c) => {
           const l = live[c._id] ?? { bid: c.bid ?? 0, ask: c.ask ?? 0, last: c.last ?? 0, dir: null, v: 0 };
           return (
-            <li key={c._id} className="bl-rise" style={{ animationDelay: `${i * 70}ms` }}>
+            <li key={c._id}>
               <Link
                 href={`/company/${c._id}`}
                 className="group relative grid grid-cols-[1fr_auto] md:grid-cols-[1fr_104px_120px_96px_96px_96px_80px] items-center gap-x-4 gap-y-1 bg-surface px-3 py-3 transition-colors duration-150 ease-out hover:bg-surface-hover"
@@ -138,7 +116,7 @@ export function LandingTrending({ companies }: { companies: CompanyCard[] }) {
                 </div>
 
                 <div className="font-mono text-[13px] tabular-nums text-right">
-                  <CountUp value={(c.v0_per_share ?? 0) * 10_000} />
+                  {usd((c.v0_per_share ?? 0) * 10_000, { compact: true })}
                 </div>
                 <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-up">{px(l.bid)}</div>
                 <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-down">{px(l.ask)}</div>

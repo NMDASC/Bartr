@@ -160,8 +160,8 @@ export function SearchBar({
 
       {chips?.length ? (
         <div className="mt-3 flex flex-wrap gap-2">
-          {chips.map((c, i) => (
-            <Button key={c} size="sm" className="bl-rise" style={{ animationDelay: `${140 + i * 70}ms` }} onClick={() => fill(c)}>
+          {chips.map((c) => (
+            <Button key={c} size="sm" onClick={() => fill(c)}>
               {c}
             </Button>
           ))}
