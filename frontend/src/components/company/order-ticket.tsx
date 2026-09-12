@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Callout } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
 
-export function OrderTicket({ marketId, book, last }: { marketId: string; book: Book | null; last: number | null }) {
+export function OrderTicket({ marketId, book }: { marketId: string; book: Book | null }) {
   const [side, setSide] = useState<Side>("buy");
   const [qty, setQty] = useState("50");
   const [limit, setLimit] = useState("");
@@ -84,8 +84,6 @@ export function OrderTicket({ marketId, book, last }: { marketId: string; book: 
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-mono text-[11px] tabular-nums">
           <dt className="uppercase tracking-[0.08em] text-muted-foreground">Notional</dt>
           <dd className="text-right">{notional !== null ? usd(notional) : "\u2014"}</dd>
-          <dt className="uppercase tracking-[0.08em] text-muted-foreground">Last</dt>
-          <dd className="text-right">{px(last)}</dd>
           <dt className="uppercase tracking-[0.08em] text-muted-foreground">Band</dt>
           <dd className="text-right">{book ? `${px(book.band.low)} to ${px(book.band.high)}` : "\u2014"}</dd>
         </dl>

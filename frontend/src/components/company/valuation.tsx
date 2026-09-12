@@ -26,11 +26,10 @@ export function Valuation({ company, last }: { company: Company; last: number | 
       <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
         <Label>Valuation</Label>
         <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
-          <span className="normal-case">σ</span> {v.sigma.toFixed(2)} · {v.estimates.length} estimators
+          <span className="normal-case">σ</span> {v.sigma.toFixed(2)}
         </span>
       </div>
       <div className="p-3">
-        {v.as_of ? <p className="mb-3 font-mono text-[10px] text-muted-foreground">AS OF {v.as_of.slice(0, 10)}</p> : null}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div>
             <Label tracking="tight" className="block mb-1">Model</Label>

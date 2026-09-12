@@ -21,7 +21,6 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
             <Label>
               {company.category}
               {place ? ` · ${place}` : ""}
-              {company.naics_guess ? ` · ${company.naics_guess}` : ""}
             </Label>
             {company.status === "ready" ? <Chip tone="up">Priced</Chip> : <Chip tone="accent">Reading</Chip>}
           </div>
