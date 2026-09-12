@@ -1,0 +1,49 @@
+# JB frontend
+
+Next.js 16 (App Router), Tailwind v4, TypeScript. Owner: A.
+
+## Run
+
+```
+pnpm i
+pnpm dev          # http://localhost:3000, mock mode
+pnpm build        # the check that matters before merging to main
+```
+
+## Modes
+
+| `NEXT_PUBLIC_API_URL` | Data |
+|---|---|
+| unset | `packages/contracts/examples/*.json` plus an in-browser simulator (`src/lib/mock.ts`) that runs the 8.3 batch auction, the 8.1 owner ladder and floor, and the 8.2b belief update every 10s. Orders you place rest in the book and fill. |
+| set, e.g. `http://localhost:8000` | FastAPI at `{url}/api/v1`, WebSocket at `{url}/ws/markets/{id}`. Contract in `packages/contracts/types.ts`. |
+
+Everything goes through `src/lib/api.ts`. No screen imports fixtures or fetch directly.
+
+## Routes
+
+| Route | File | What it shows |
+|---|---|---|
+| `/` | `app/page.tsx` | hero, search, trending rows |
+| `/search?q=` | `app/search/page.tsx` + `components/search/results.tsx` | streamed results, filter rail, `READING` chip on stubs |
+| `/company/[id]` | `app/company/[id]/page.tsx` + `components/company/*` | price strip, countdown, step chart, order book, depth plate `JB. 1.1`, order ticket, valuation estimators, sources |
+| `/company/[id]/acquire` | `app/company/[id]/acquire/page.tsx` | LOI, diligence checklist with citations |
+| `/portfolio` | `app/portfolio/page.tsx` | cash, positions, half-Kelly suggestions with risk slider |
+| `/surveillance` | `app/surveillance/page.tsx` | flags feed, per-reviewer severities, disputed marker |
+| `/agent` | `app/agent/page.tsx` + `components/agent/chat.tsx` | chat with tool-call cards, same endpoint as iMessage |
+
+## Design system
+
+Lemma kinship. Tokens in `src/styles/lemma-tokens.css`, mapped into Tailwind's `@theme` in `src/app/globals.css`.
+Rules that are not negotiable: light only, `border-radius: 0` everywhere, no `box-shadow`, sections separate with
+`1px #D4D4DD` rules, secondary text is `#1D1956` at 65% (never a flat gray), every uppercase string is IBM Plex Mono
+with 0.06 to 0.15em tracking, headings weight 400, and `#755CFE` marks state (clearing price, active path, plate
+strokes), never importance. Bids `#2BC392`, asks `#EE5557`. Primitives in `src/components/ui`; no shadcn.
+
+Britti Sans is licensed and not installed. The sans stack is `brittiSans, Geist, Arial`. IBM Plex Mono is real.
+
+## Conventions
+
+- Prices per share are `px()` (2 decimals, no symbol). Whole-company values are `usd(n, { compact: true })`.
+- `origin` on a book level is `user | treasury | bot | agent`. Treasury rows get the `OWNER` tag.
+- Plate figures use the `JB. x.y` prefix and must encode something real from live data.
+- Any new field the UI needs goes into `packages/contracts/types.ts` with a `docs/DECISIONS.md` entry, not into a component.

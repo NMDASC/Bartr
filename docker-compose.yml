@@ -6,19 +6,21 @@ services:
     ports:
       - "8000:8000"
     environment:
-      ENV: ${ENV:-dev}
-      DEMO_AUTH: ${DEMO_AUTH:-true}
-      # Local mongo by default; point at Atlas by setting MONGODB_URI in .env.
+      # Unset MONGODB_URI to run on the in-memory store instead.
       MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017}
       MONGODB_DB: ${MONGODB_DB:-jb}
+      DEMO_AUTH: ${DEMO_AUTH:-1}
+      SEED: ${SEED:-1}
+      BOTS: ${BOTS:-0}
+      TICK_S: ${TICK_S:-1.0}
       XAI_API_KEY: ${XAI_API_KEY:-}
+      XAI_BASE_URL: ${XAI_BASE_URL:-https://api.x.ai/v1}
       XAI_MODEL: ${XAI_MODEL:-grok-4.6}
       IFM_API_KEY: ${IFM_API_KEY:-}
       IFM_BASE_URL: ${IFM_BASE_URL:-}
       IFM_MODEL: ${IFM_MODEL:-}
       QUERIT_API_KEY: ${QUERIT_API_KEY:-}
       GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
     depends_on:
       - mongo
     restart: unless-stopped

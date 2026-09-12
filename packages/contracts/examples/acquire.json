@@ -1,0 +1,32 @@
+{
+  "acquisition_id": "a_0003",
+  "market_id": "c_tulsa_suds_01",
+  "loi_md": "# Non-Binding Letter of Intent\n\n**Buyer:** Zhi Yuan Guo Liau\n**Seller:** Ray Dunlap, owner of Suds City Coin Laundry\n**Target:** Suds City Coin Laundry, 4417 S Peoria Ave, Tulsa, OK 74105\n**Date:** September 12, 2026\n\n## 1. Proposed consideration\nPurchase price of **$1,041,800** for 100 percent of the assets, derived from the exchange's last clearing price of $104.18 per share across 10,000 shares.\n\n## 2. Structure\nAsset purchase. Buyer acquires the equipment, leasehold improvements, customer lists, and trade name free of liens. Buyer does not assume liabilities except the premises lease, subject to landlord consent.\n\n## 3. Diligence period\n45 days from execution, during which Seller grants access to three years of tax returns, coin and card revenue reports, utility bills, equipment service records, and the premises lease.\n\n## 4. Exclusivity\nSeller agrees not to solicit competing offers for 30 days from execution.\n\n## 5. Non-binding\nThis letter states intent only and creates no obligation to complete a transaction, except sections 4 and 6.\n\n## 6. Confidentiality\nBoth parties keep the existence and terms of this letter confidential.\n\n---\n_Play money. Not legal advice._\n",
+  "checklist": [
+    {
+      "item": "Obtain landlord consent to lease assignment",
+      "why": "A coin laundry's value is tied to the site. An assignment clause that lets the landlord refuse or reset rent can erase the multiple.",
+      "citation": { "url": "https://oklahoma.gov/tax/businesses.html", "title": "Oklahoma Tax Commission, Businesses" },
+      "done": false
+    },
+    {
+      "item": "Run a UCC-1 lien search on the equipment with the Oklahoma County Clerk",
+      "why": "Washers and dryers are commonly financed. Liens survive an asset sale unless released at closing.",
+      "citation": { "url": "https://www.sos.ok.gov/business/ucc.aspx", "title": "Oklahoma Secretary of State, UCC filings" },
+      "done": false
+    },
+    {
+      "item": "Transfer the Oklahoma sales tax permit and confirm no outstanding liability",
+      "why": "Oklahoma can hold a successor liable for the seller's unpaid sales tax. Request a tax clearance letter before funding.",
+      "citation": { "url": "https://oklahoma.gov/tax.html", "title": "Oklahoma Tax Commission" },
+      "done": false
+    },
+    {
+      "item": "Verify water and sewer account history and any municipal backflow inspection",
+      "why": "Water is the largest variable cost. Twelve months of bills validate the claimed utilization and margin.",
+      "citation": { "url": "https://www.cityoftulsa.org/government/departments/water-and-sewer/", "title": "City of Tulsa Water and Sewer" },
+      "done": false
+    }
+  ],
+  "status": "draft"
+}

@@ -1,92 +1,96 @@
-"""FastAPI entry point. Owner: Vir.
+"""JB API. Run: uvicorn app.main:app --reload (from apps/api).
 
-Every route in Plan.md section 7 exists here from hour 0, answering with the
-contract examples, so the frontend and the market pair are never blocked on
-each other. Owners replace bodies inside their own router file.
+Env: SEED=1 loads seeds/companies.json at startup, BOTS=1 runs demo bot traders,
+STATE_FILE=data/state.json persists the in-memory store, DEMO_AUTH=1 accepts X-Demo-User.
 """
+from __future__ import annotations
 
-import logging
+import asyncio
+import json
+import os
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator
+from pathlib import Path
 
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import db as database
-from .config import get_settings
-from .identity import get_current_user
-from .llm import is_configured
-from .routers import acquire, agent, companies, discovery, market, portfolio, surveillance
-from .schemas import Health, UserOut
+from app.deps import STORE_KIND, engine, store
+from app.routers import acquire, agent, companies, discovery, market, portfolio, surveillance
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
+SEED = os.getenv("SEED", "1") == "1"
+BOTS = os.getenv("BOTS", "0") == "1"
+TICK_S = float(os.getenv("TICK_S", "1.0"))
+SEED_FILE = Path(__file__).resolve().parent.parent / "seeds" / "companies.json"
 
-API_PREFIX = "/api/v1"
+
+def load_seeds() -> int:
+    if not SEED_FILE.exists() or store.list_companies():
+        return 0
+    n = 0
+    for c in json.loads(SEED_FILE.read_text()):
+        engine.create_company(c)
+        n += 1
+    return n
+
+
+async def scheduler(stop: asyncio.Event):
+    bots = None
+    if BOTS:
+        from app.services.market.bots import Bots
+        bots = Bots(engine)
+    i = 0
+    while not stop.is_set():
+        try:
+            engine.tick()
+            if bots and i % 3 == 0:
+                bots.step()
+        except Exception as e:  # keep the loop alive during the demo
+            print("scheduler error:", repr(e))
+        i += 1
+        await asyncio.sleep(TICK_S)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    # Connectivity check only. Indexes and seed documents belong to
-    # migrations/ (docs/DECISIONS.md 006), so startup never touches schema.
-    await database.ping()
+async def lifespan(app: FastAPI):
+    n = load_seeds() if SEED else 0
+    print(f"seeded {n} companies; markets: {len(store.list_markets())}; bots: {BOTS}")
+    stop = asyncio.Event()
+    task = asyncio.create_task(scheduler(stop))
     yield
-    await database.close_client()
+    stop.set()
+    task.cancel()
 
 
-settings = get_settings()
+app = FastAPI(title="JB API", version="0.1.0", lifespan=lifespan)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-app = FastAPI(
-    title="JB API",
-    version="0.1.0",
-    description="Discovery engine and exchange for small businesses (HackCMU 2026).",
-    lifespan=lifespan,
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origin_list,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-for r in (discovery, companies, market, portfolio, acquire, agent, surveillance):
-    app.include_router(r.router, prefix=API_PREFIX)
-
-# WebSocket lives outside the versioned REST prefix (section 7: /ws/markets/{id}).
-app.include_router(market.ws_router)
+API = "/api/v1"
+app.include_router(companies.router, prefix=API)
+app.include_router(market.router, prefix=API)
+app.include_router(portfolio.router, prefix=API)
+app.include_router(surveillance.router, prefix=API)
+app.include_router(discovery.router, prefix=API)
+app.include_router(acquire.router, prefix=API)
+app.include_router(agent.router, prefix=API)
 
 
-@app.get("/health", response_model=Health, tags=["platform"])
-async def health() -> Health:
-    return Health(
-        status="ok",
-        env=settings.env,
-        database=database.is_reachable(),
-        demo_auth=settings.demo_auth,
-    )
+@app.get("/health")
+def health():
+    return {"ok": True, "companies": len(store.list_companies()), "markets": len(store.list_markets())}
 
 
-@app.get("/readiness", tags=["platform"])
-async def readiness() -> dict[str, Any]:
-    """What is actually wired up. Useful during key collection."""
-    s = get_settings()
+@app.get("/readiness")
+def readiness():
+    """What is actually wired up. Useful while keys are still being collected."""
+    from app.llm import is_configured
+
+    ok = store.ping() if hasattr(store, "ping") else True
     return {
-        "database": await database.ping(),
+        "store": STORE_KIND,
+        "store_ok": ok,
         "llm_xai": is_configured("xai"),
         "llm_ifm": is_configured("ifm"),
-        "querit": bool(s.querit_api_key),
-        "google_places": bool(s.google_places_api_key),
-        "auth0": False,  # not wired yet, see docs/DECISIONS.md 002
+        "querit": bool(os.getenv("QUERIT_API_KEY")),
+        "google_places": bool(os.getenv("GOOGLE_PLACES_API_KEY")),
+        "auth0": False,  # not wired, see docs/DECISIONS.md 008
     }
-
-
-@app.get(f"{API_PREFIX}/me", response_model=UserOut, tags=["platform"])
-async def me(user: dict[str, Any] = Depends(get_current_user)) -> UserOut:
-    return UserOut(
-        id=str(user["_id"]),
-        name=user.get("display_name") or user.get("name", ""),
-        email=user.get("email"),
-        cash=user.get("cash", 0.0),
-        auth_provider=user.get("auth_provider", "demo"),
-    )

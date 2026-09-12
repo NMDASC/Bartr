@@ -1,14 +1,18 @@
 .env
-.env.local
+.env.*
+!.env.example
 __pycache__/
 *.pyc
-.venv/
-venv/
 .pytest_cache/
-.ruff_cache/
+.venv/
 node_modules/
 .next/
-dist/
 .DS_Store
-apps/api/seeds/*.json
-!apps/api/seeds/.gitkeep
+apps/api/seeds/cache/
+
+# web
+frontend/.next/
+dist/
+*.log
+
+.atlas_password

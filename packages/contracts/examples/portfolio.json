@@ -1,22 +1,8 @@
 {
-  "cash": 87600.0,
-  "pnl": 1240.0,
+  "cash": 71482.55,
+  "pnl": { "realized": 1204.10, "unrealized": -318.75, "total": 885.35 },
   "positions": [
-    {
-      "market_id": "cmp_okc_suds",
-      "company_name": "Sudsy's Coin Laundry",
-      "qty": 160,
-      "avg_cost": 60.15,
-      "last": 62.4,
-      "unrealized": 360.0
-    },
-    {
-      "market_id": "cmp_tulsa_spin",
-      "company_name": "Spin City Wash & Fold",
-      "qty": 100,
-      "avg_cost": 40.6,
-      "last": 38.8,
-      "unrealized": -180.0
-    }
+    { "market_id": "c_tulsa_suds_01", "name": "Suds City Coin Laundry", "qty": 180, "avg_cost": 103.40, "last": 104.18, "value": 18752.40, "pnl": 140.40 },
+    { "market_id": "c_okc_spinzone_03", "name": "Spin Zone Laundry OKC", "qty": 52, "avg_cost": 183.10, "last": 174.25, "value": 9061.00, "pnl": -460.20 }
   ]
 }

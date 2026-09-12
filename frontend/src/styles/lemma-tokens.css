@@ -1,0 +1,265 @@
+/* Lemma design tokens
+   Extracted from uselemma.ai on 2026-09-11.
+   Sources: uselemma.ai/brand, lemma-brand-guidelines.pdf, live production CSS.
+   Light only. Lemma ships no dark theme. */
+
+:root {
+  /* Type */
+  --font-britti-sans: "brittiSans", Arial, sans-serif;   /* licensed, self-host only */
+  --font-ibm-plex-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --type-display: 64px;
+  --type-h1:      48px;
+  --type-h2:      32px;
+  --type-h3:      24px;
+  --type-body-l:  18px;
+  --type-body-m:  16px;
+  --type-body-s:  14px;
+  --type-label:   12px;
+
+  --leading-heading: 1.1;
+  --leading-h2:      1.2;
+  --leading-prose:   1.6;
+  --leading-body:    1.3;
+
+  --tracking-heading: -0.01em;
+  --tracking-display: -0.02em;
+  --tracking-body:     0.02em;   /* production, not the PDF spec. See DISCREPANCY 2 */
+  --tracking-label:    0.1em;    /* ladder: 0.06 0.08 0.1 0.12 0.14 0.15 */
+
+  --weight-regular:  400;
+  --weight-medium:   500;        /* large-format display only */
+  --weight-semibold: 600;        /* exists in the family, unused on web */
+
+  /* Core palette */
+  --lemma-whitething:  #f2f2f2;
+  --lemma-light-gray:  #d5d5d5;
+  --lemma-teal:        #58e4b6;
+  --lemma-lady-blue:   #755cfe;
+  --lemma-bluepurple:  #322c8a;
+  --lemma-admiral:     #1d1956;
+
+  /* Neutral extensions */
+  --lemma-gray-hint:      #e6e6e6;
+  --lemma-new-gray:       #a4a4a4;
+  --lemma-power-gray:     #717171;
+  --lemma-carbon-fiber:   #262626;
+  --lemma-shocking-black: #111111;
+
+  /* Semantic, as named in production */
+  --color-background:        #f2f2f2;
+  --color-foreground:        #1d1956;
+  --color-primary:           #1d1956;
+  --color-primary-foreground:#f2f2f2;
+  --color-card:              #ffffff;
+  --color-popover:           #ffffff;
+  --color-secondary:         #e6e6e6;
+  --color-muted:             #e6e6e6;
+  --color-muted-foreground:  #6c6991;
+  --color-brand-purple:      #755cfe;
+  --color-brand-purple-deep: #5d4ee7;
+  --color-brand-navy-light:  #322c8a;
+  --color-line:              #d4d4dd;
+  --color-border:            #d4d4dd;
+  --color-hairline:          #e6e6ef;
+  --color-hairline-soft:     #f3f3fc;
+  --color-input:             #e5e5ee;
+  --color-ring:              #755cfe;
+  --color-accent-light:      #d5d5d5;
+
+  /* Indigo-tinted grays. Use these, not neutral grays */
+  --color-gray-tint-300: #d3d3e5;
+  --color-gray-tint-400: #a1a0b8;
+  --color-gray-tint-500: #706e8b;
+  --color-gray-tint-600: #52506f;
+
+  /* Interactive neutral surface pair */
+  --surface-neutral:       #e8e8e8;
+  --surface-neutral-hover: #e0e0e0;
+
+  /* State */
+  --state-regression: #ee5557;
+  --state-healthy:    #2bc392;
+  --state-positive:   #58e4b6;
+  --chart-neutral:    #a6a9b3;
+
+  /* Shape. There is exactly one value */
+  --radius: 0;
+
+  /* Motion */
+  --duration-fast:   150ms;
+  --duration-medium: 300ms;
+  --duration-slow:   400ms;
+  --ease-out:    cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-draw:   cubic-bezier(0.33, 1, 0.68, 1);
+
+  /* Layout */
+  --container-content: 80rem;   /* max-w-7xl */
+  --container-reading: 1040px;
+  --container-prose:   72ch;
+  --spacing-subhead:   0.5rem;
+  --breakpoint-3xl:    120rem;
+}
+
+html { background: var(--color-background); color-scheme: light; }
+
+body {
+  font-family: var(--font-britti-sans);
+  font-size: var(--type-body-m);
+  font-weight: var(--weight-regular);
+  line-height: 1.5;
+  letter-spacing: var(--tracking-body);
+  color: var(--color-foreground);
+  background: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--tracking-heading);
+  line-height: var(--leading-heading);
+  color: var(--color-foreground);
+  text-wrap: balance;
+}
+
+h1 { font-size: clamp(33px, 4vw, var(--type-h1)); }
+h2 { font-size: clamp(30px, 3vw, var(--type-h2)); line-height: var(--leading-h2); }
+h3 { font-size: var(--type-h3); line-height: 1.15; }
+
+.lemma-secondary-text { color: rgb(29 25 86 / 0.65); }   /* never a flat gray */
+
+.lemma-label {
+  font-family: var(--font-ibm-plex-mono);
+  font-size: 10px;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+.lemma-section { border-top: 1px solid var(--color-line); padding-block: 5rem 7rem; }
+
+.lemma-measure {
+  max-width: var(--container-content);
+  margin-inline: auto;
+}
+@media (min-width: 80rem) {
+  .lemma-measure {
+    border-left: 1px solid var(--color-line);
+    border-right: 1px solid var(--color-line);
+  }
+}
+
+/* Buttons */
+.lemma-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: var(--radius);
+  font-family: var(--font-ibm-plex-mono);
+  font-size: 11px;
+  font-weight: var(--weight-regular);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out),
+              background-color var(--duration-fast) var(--ease-out),
+              scale var(--duration-fast) var(--ease-out);
+}
+.lemma-btn:active { scale: 0.96; }
+.lemma-btn:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+@media (min-width: 120rem) { .lemma-btn { font-size: 13px; } }
+
+.lemma-btn--primary { background: var(--color-primary); color: #fff; }
+.lemma-btn--primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(135deg, #322c8a 0%, #5d4ee7 50%, #1d1956 100%);
+  transition: opacity var(--duration-medium) var(--ease-out);
+}
+.lemma-btn--primary:hover::before { opacity: 1; }
+.lemma-btn--primary > * { position: relative; z-index: 10; }
+
+.lemma-btn--secondary { background: var(--surface-neutral); color: var(--color-primary); }
+.lemma-btn--secondary:hover { background: var(--surface-neutral-hover); }
+
+/* Interactive list row */
+.lemma-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem 0.75rem 0.75rem;
+  background: var(--surface-neutral);
+  border-radius: var(--radius);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+.lemma-row:hover { background: var(--surface-neutral-hover); }
+
+/* State chip */
+.lemma-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid rgb(238 85 87 / 0.4);
+  background: rgb(238 85 87 / 0.08);
+  color: var(--state-regression);
+  font-family: var(--font-ibm-plex-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  border-radius: var(--radius);
+}
+
+/* Plate figure */
+.lemma-plate { display: flex; flex-direction: column; }
+.lemma-plate__caption {
+  display: flex;
+  align-items: center;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--color-brand-purple);
+  font-family: var(--font-ibm-plex-mono);
+  font-size: 10px;
+  color: var(--color-brand-purple);
+}
+.lemma-plate__body {
+  border-left: 0.5px solid var(--color-brand-purple);
+  border-right: 0.5px solid var(--color-brand-purple);
+  border-bottom: 0.5px solid var(--color-brand-purple);
+}
+.lemma-plate svg { stroke: var(--color-brand-purple); fill: none; opacity: 0.7; }
+
+/* Shine sweep */
+.lemma-shine {
+  --shine-base: var(--color-brand-purple-deep);
+  --shine-glint: #c9c2ff;
+  color: var(--shine-base);
+  background-image: linear-gradient(100deg,
+    var(--shine-base) 0%, var(--shine-base) 46%,
+    var(--shine-glint) 50%,
+    var(--shine-base) 54%, var(--shine-base) 100%);
+  background-size: 250% 100%;
+  background-position: 100% 0;
+  background-repeat: no-repeat;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@keyframes lemma-shine { to { background-position: -150% 0; } }
+.lemma-shine-host:hover .lemma-shine {
+  animation: lemma-shine 0.9s var(--ease-draw) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lemma-shine-host:hover .lemma-shine,
+  .lemma-plate svg { animation: none !important; }
+  .lemma-btn { transition: none; }
+}

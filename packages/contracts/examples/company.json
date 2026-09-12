@@ -1,81 +1,121 @@
 {
-  "id": "cmp_okc_suds",
-  "name": "Sudsy's Coin Laundry",
+  "_id": "c_tulsa_suds_01",
+  "name": "Suds City Coin Laundry",
   "category": "laundromat",
-  "address": "2418 NW 23rd St, Oklahoma City, OK 73107",
-  "city": "Oklahoma City",
+  "naics_guess": "812310",
+  "address": "4417 S Peoria Ave",
+  "city": "Tulsa",
   "state": "OK",
-  "website": "https://sudsyscoinlaundry.example.com",
-  "phone": "+1-405-555-0142",
+  "lat": 36.0912,
+  "lng": -95.9781,
+  "website": "https://sudscitytulsa.com",
+  "phone": "+1 918 555 0142",
   "rating": 4.6,
-  "review_count": 213,
-  "status": "ready",
-  "founded_year": 1998,
-  "owners": ["Marla Whitfield"],
-  "description": "Owner-operated 42-machine coin laundry on NW 23rd, open 6am-10pm, card and coin, attended weekends. Wash-and-fold service added 2021.",
+  "review_count": 214,
+  "founded_year": 2009,
+  "owners": [
+    "Ray Dunlap"
+  ],
+  "description": "Owner-operated 48-machine coin laundry on South Peoria with attended hours, card and coin payment, and a wash-dry-fold counter service.",
   "financials": {
-    "revenue_est": 412000,
-    "sde_est": 156000,
-    "margin_est": 0.38,
-    "employees_est": 3,
-    "confidence": 0.62,
-    "method": "proxy"
+    "revenue_est": 612000,
+    "sde_est": 231000,
+    "margin_est": 0.377,
+    "employees_est": 4,
+    "confidence": 0.71,
+    "method": "extracted"
   },
   "valuation": {
-    "v0": 624000,
-    "sigma": 0.38,
-    "low": 453000,
-    "high": 859000,
-    "method": "ensemble",
-    "disagreement": 0.39,
+    "v0": 1039500,
+    "sigma": 0.324,
+    "low": 792000,
+    "high": 1364000,
+    "method": "income+llm+base_rate",
+    "disagreement": 0.19,
     "estimates": [
       {
         "name": "income",
-        "value": 624000,
+        "value": 1062000,
         "sigma": 0.25,
-        "note": "4.0x SDE of $156k, within the 3x to 5x single store laundromat range"
-      },
-      {
-        "name": "base_rate",
-        "value": 520000,
-        "sigma": 0.45,
-        "note": "category median asking price, haircut to observed sold prices"
-      },
-      {
-        "name": "proxy",
-        "value": 288000,
-        "sigma": 0.55,
-        "note": "0.7x revenue of $412k; low because revenue itself is inferred from 42 machines"
+        "note": "4.0x asking multiple x 0.88 sold haircut x SDE $231k, +4% for 4.6 stars on 214 reviews"
       },
       {
         "name": "llm",
-        "value": 680000,
-        "sigma": 0.35,
-        "note": "Grok with web_search, self reported confidence 0.6, cites the Yelp listing and machine count"
+        "value": 1150000,
+        "sigma": 0.42,
+        "note": "Grok $1.2M with web_search; K2 $1.1M. Confidence 0.7"
+      },
+      {
+        "name": "base_rate",
+        "value": 612000,
+        "sigma": 0.7,
+        "note": "laundromat median asking $695k x 0.88, OK price index 0.97"
       }
     ],
-    "as_of": "2026-09-12T01:00:00Z"
-  },
-  "market": {
-    "market_id": "cmp_okc_suds",
-    "bid": 61.8,
-    "ask": 63.4,
-    "last": 62.4,
-    "next_batch_at": "2026-09-12T01:00:10Z",
-    "halted": false
+    "as_of": "2026-09-12T03:14:00Z"
   },
   "sources": [
     {
       "url": "https://www.bizbuysell.com/learning-center/valuation-benchmarks/laundromats-coin-laundry/",
-      "title": "Laundromat valuation benchmarks",
+      "title": "Laundromat & Coin Laundry Valuation Benchmarks",
       "snippet": "Single-store coin laundries typically sell for 3x to 5x SDE with margins near 38%.",
-      "fetched_at": "2026-09-12T00:58:00Z"
+      "fetched_at": "2026-09-12T03:12:41Z"
     },
     {
-      "url": "https://www.yelp.com/biz/sudsys-coin-laundry-oklahoma-city",
-      "title": "Sudsy's Coin Laundry - Oklahoma City, OK",
-      "snippet": "213 reviews, 4.6 stars. Attended on weekends, 42 machines.",
-      "fetched_at": "2026-09-12T00:58:00Z"
+      "url": "https://sudscitytulsa.com/about",
+      "title": "About Suds City Coin Laundry",
+      "snippet": "Family owned since 2009. 48 washers, 40 dryers, open 6am to 11pm daily.",
+      "fetched_at": "2026-09-12T03:12:58Z"
     }
-  ]
+  ],
+  "status": "ready",
+  "created_at": "2026-09-12T03:12:30Z",
+  "market": {
+    "shares_outstanding": 10000,
+    "float": 3000,
+    "retained": 7000,
+    "tick": 0.01,
+    "last_price": 104.18,
+    "ref_price": 103.95,
+    "batch_interval_s": 10,
+    "next_batch_at": "2026-09-12T03:14:10Z",
+    "band_pct": 0.1,
+    "belief": {
+      "mu": 13.854,
+      "sigma": 0.29,
+      "s_m": 0.1,
+      "n_rounds": 45
+    },
+    "treasury": {
+      "unsold_float": 1860,
+      "proceeds": 122964.0,
+      "floor_price": 78.98,
+      "floor_qty": 1000,
+      "bought_back": 0,
+      "ask_ladder": [
+        {
+          "price": 108.24,
+          "qty": 372
+        },
+        {
+          "price": 113.94,
+          "qty": 372
+        },
+        {
+          "price": 120.11,
+          "qty": 372
+        },
+        {
+          "price": 127.03,
+          "qty": 372
+        },
+        {
+          "price": 135.11,
+          "qty": 372
+        }
+      ]
+    },
+    "fees_collected": 614.82,
+    "halted": false
+  }
 }

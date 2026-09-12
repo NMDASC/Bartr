@@ -1,0 +1,22 @@
+[
+  {
+    "company": { "_id": "c_bartlesville_washhouse_02", "name": "The Wash House", "city": "Bartlesville", "state": "OK", "category": "laundromat" },
+    "price": 61.00,
+    "model_value": 62.30,
+    "edge": 0.0211,
+    "sigma": 0.55,
+    "kelly_fraction": 0.0349,
+    "suggested_usd": 2494.00,
+    "why": "Cheapest entry in your state filter, and the model still reads it above the last clearing price. Thin coverage means wide uncertainty, so the size stays small."
+  },
+  {
+    "company": { "_id": "c_okc_spinzone_03", "name": "Spin Zone Laundry OKC", "city": "Oklahoma City", "state": "OK", "category": "laundromat" },
+    "price": 174.25,
+    "model_value": 172.80,
+    "edge": -0.0084,
+    "sigma": 0.22,
+    "kelly_fraction": 0.0,
+    "suggested_usd": 0.0,
+    "why": "Trading slightly above model value with the tightest confidence band in the set. No edge to size, and you already hold it, so this reads as a trim candidate."
+  }
+]

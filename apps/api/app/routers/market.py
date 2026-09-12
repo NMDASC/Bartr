@@ -1,84 +1,82 @@
-"""Market routes. Owner: Nico. STUBS -- replace bodies, keep signatures.
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 
-`place_order` echoes a constructed order so the order ticket round-trips in the
-UI before the engine exists. The WebSocket route is transport only; publish
-into it from the batch scheduler with `hub.publish(...)`.
-"""
+from app.deps import current_user, engine, hub, store
+from app.schemas import BatchOut, BookOut, MarketOut, OrderIn, OrderOut, TradeOut
 
-import uuid
-from datetime import datetime, timezone
-from typing import Any
-
-from fastapi import APIRouter, Depends, Response, WebSocket, WebSocketDisconnect, status
-
-from ..examples import example
-from ..identity import get_current_user
-from ..schemas import Batch, Book, Order, OrderRequest, OrderStatus, Trade
-from ..ws import hub
-
-router = APIRouter(tags=["market"])
-ws_router = APIRouter()
+router = APIRouter(prefix="/markets", tags=["markets"])
 
 
-@router.get("/markets/{market_id}/book", response_model=Book)
-async def get_book(market_id: str) -> dict:
-    # TODO(Nico): aggregate open orders + house quotes into levels.
-    return {**example("book"), "market_id": market_id}
+def _market(mid: str) -> dict:
+    m = store.get_market(mid)
+    if not m:
+        raise HTTPException(404, "no such market")
+    return m
 
 
-@router.post("/markets/{market_id}/orders", response_model=Order, status_code=status.HTTP_201_CREATED)
-async def place_order(
-    market_id: str,
-    body: OrderRequest,
-    user: dict[str, Any] = Depends(get_current_user),
-) -> dict:
-    # TODO(Nico): persist, enforce section 8.5 limits, queue for next batch.
-    return {
-        "id": f"ord_{uuid.uuid4().hex[:12]}",
-        "market_id": market_id,
-        "user_id": str(user["_id"]),
-        "side": body.side,
-        "qty": body.qty,
-        "limit_price": body.limit_price,
-        "status": OrderStatus.open,
-        "filled_qty": 0,
-        "origin": "user",
-        "created_at": datetime.now(timezone.utc),
-    }
+@router.get("/{mid}", response_model=MarketOut)
+def get_market(mid: str):
+    return engine.market_out(_market(mid))
 
 
-@router.delete("/orders/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def cancel_order(
-    order_id: str,
-    user: dict[str, Any] = Depends(get_current_user),
-) -> Response:
-    # TODO(Nico): cancel is an append-only event, not an update (section 8.5).
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+@router.get("/{mid}/book", response_model=BookOut)
+def get_book(mid: str):
+    _market(mid)
+    return engine.book(mid)
 
 
-@router.get("/markets/{market_id}/batches", response_model=list[Batch])
-async def list_batches(market_id: str, limit: int = 50) -> list[dict]:
-    # TODO(Nico): price history for the chart.
-    return [{**b, "market_id": market_id} for b in example("batches")][:limit]
+@router.post("/{mid}/orders", response_model=OrderOut, status_code=201)
+def place_order(mid: str, body: OrderIn, uid: str = Depends(current_user)):
+    _market(mid)
+    o = engine.place_order(uid, mid, body.side, body.qty, body.limit_price)
+    if o["status"] == "rejected":
+        raise HTTPException(422, o["reason"])
+    return o
 
 
-@router.get("/markets/{market_id}/trades", response_model=list[Trade])
-async def list_trades(market_id: str, limit: int = 50) -> list[dict]:
-    # TODO(Nico): the tape.
-    return [{**t, "market_id": market_id} for t in example("trades")][:limit]
+@router.get("/{mid}/orders/mine", response_model=list[OrderOut])
+def my_orders(mid: str, uid: str = Depends(current_user)):
+    return sorted(store.user_orders(uid, mid), key=lambda o: -o["created_at"])[:50]
 
 
-@ws_router.websocket("/ws/markets/{market_id}")
-async def market_socket(websocket: WebSocket, market_id: str) -> None:
-    await hub.join(market_id, websocket)
+@router.delete("/orders/{oid}", response_model=OrderOut)
+def cancel_order(oid: str, uid: str = Depends(current_user)):
     try:
-        await websocket.send_json(
-            {"type": "book", "market_id": market_id, "data": {**example("book"), "market_id": market_id}}
-        )
+        return engine.cancel_order(uid, oid)
+    except KeyError:
+        raise HTTPException(404, "no such order")
+
+
+@router.get("/{mid}/batches", response_model=list[BatchOut])
+def batches(mid: str, limit: int = 50):
+    _market(mid)
+    return store.batches(mid, limit)
+
+
+@router.get("/{mid}/trades", response_model=list[TradeOut])
+def trades(mid: str, limit: int = 50):
+    _market(mid)
+    return store.trades(mid, limit)
+
+
+@router.post("/{mid}/batch/run", response_model=BatchOut)
+def run_batch_now(mid: str):
+    """Force a round to clear now. Demo and test convenience."""
+    _market(mid)
+    return engine.run_batch(mid)
+
+
+@router.websocket("/ws/{mid}")
+async def ws_market(ws: WebSocket, mid: str):
+    if not store.get_market(mid):
+        await ws.close(code=4004)
+        return
+    await ws.accept()
+    hub.subscribe(mid, ws)
+    try:
+        await ws.send_json({"type": "book", "book": engine.book(mid)})
         while True:
-            # Client sends nothing; this keeps the connection open and detects drops.
-            await websocket.receive_text()
+            await ws.receive_text()  # keepalive / ignore client messages
     except WebSocketDisconnect:
         pass
     finally:
-        await hub.leave(market_id, websocket)
+        hub.unsubscribe(mid, ws)

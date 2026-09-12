@@ -1,0 +1,184 @@
+@import "tailwindcss";
+@import "../styles/lemma-tokens.css" layer(base);
+
+/*
+  JB web. Design system: Lemma kinship (see ~/.aside/u/0/skills/user/lemma-design).
+  Light only. Zero radius. No shadows. Hairline rules. One accent, spent on state.
+
+  Font note: Britti Sans is licensed and not installed. The sans stack keeps
+  "brittiSans" first so a machine that has it uses it, then falls to Geist as an
+  honest substitute, then Arial (Lemma's own fallback). IBM Plex Mono is the real thing.
+*/
+
+:root {
+  --font-britti-sans: "brittiSans", var(--font-geist-sans), Arial, sans-serif;
+  --font-ibm-plex-mono: var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+}
+
+@theme {
+  /* type */
+  --font-sans: var(--font-britti-sans);
+  --font-mono: var(--font-ibm-plex-mono);
+
+  /* palette, same values as lemma-tokens.css so Tailwind utilities exist for them */
+  --color-background: #f2f2f2;
+  --color-foreground: #1d1956;
+  --color-primary: #1d1956;
+  --color-primary-foreground: #f2f2f2;
+  --color-card: #ffffff;
+  --color-muted: #e6e6e6;
+  --color-muted-foreground: #6c6991;
+  --color-line: #d4d4dd;
+  --color-hairline: #e6e6ef;
+  --color-hairline-soft: #f3f3fc;
+  --color-input: #e5e5ee;
+  --color-ring: #755cfe;
+  --color-accent: #755cfe;
+  --color-accent-deep: #5d4ee7;
+  --color-navy-light: #322c8a;
+  --color-tint-300: #d3d3e5;
+  --color-tint-400: #a1a0b8;
+  --color-tint-500: #706e8b;
+  --color-tint-600: #52506f;
+  --color-surface: #e8e8e8;
+  --color-surface-hover: #e0e0e0;
+  --color-down: #ee5557;
+  --color-up: #2bc392;
+  --color-teal: #58e4b6;
+  --color-chart-neutral: #a6a9b3;
+
+  /* shape: there is exactly one value */
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+
+  /* elevation: none */
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+
+  /* motion */
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-draw: cubic-bezier(0.33, 1, 0.68, 1);
+
+  /* layout */
+  --breakpoint-3xl: 120rem;
+  --spacing-subhead: 0.5rem;
+  --container-8xl: 96rem;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    background: var(--color-background);
+  }
+  body {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    color: var(--color-foreground);
+    background: var(--color-background);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  * {
+    border-radius: 0;
+  }
+  ::selection {
+    background: rgb(117 92 254 / 0.18);
+  }
+  button, input, select, textarea {
+    font: inherit;
+    letter-spacing: inherit;
+  }
+  input, select, textarea {
+    background: var(--color-input);
+    color: var(--color-foreground);
+    border: 1px solid transparent;
+    outline: none;
+  }
+  input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  input::placeholder {
+    color: rgb(29 25 86 / 0.45);
+  }
+}
+
+@utility secondary {
+  color: rgb(29 25 86 / 0.65);
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* mono label ladder */
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.25;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+@utility label-sm {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.25;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* entrance for streamed rows */
+@keyframes jb-fade-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@utility fade-up {
+  animation: jb-fade-up 400ms var(--ease-out) both;
+}
+
+/* plate stroke draw-in */
+@keyframes jb-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+.jb-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: jb-draw 900ms var(--ease-draw) forwards;
+}
+
+/* the clearing pulse: one 300ms flash on the last price when a batch lands */
+@keyframes jb-clear {
+  0% { background-color: rgb(117 92 254 / 0.18); }
+  100% { background-color: transparent; }
+}
+.jb-clear {
+  animation: jb-clear 600ms var(--ease-out) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-draw, .jb-clear, .fade-up { animation: none !important; }
+  .jb-draw { stroke-dashoffset: 0; }
+  * { transition: none !important; }
+}
