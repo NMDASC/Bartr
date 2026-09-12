@@ -2,7 +2,7 @@
 
 Format: `## NNN  Day HH:MM  author: X  affects: A,B,C,D` then what changed, why, and migration notes. Newest at the bottom. Post the number in the team chat after pushing.
 
-## 001  Fri 21:00  author: Aditya (with Claude)  affects: all
+## 001  Fri 21:00  author: Aditya  affects: all
 Plan.md committed. Track: Optimization (backup Multiplayer). Stack: Next.js 15 + FastAPI + MongoDB Atlas + Auth0 + Vultr + Vercel. LLM via one `llm.py` with xai / ifm switch.
 
 ## 002  Fri 21:30  author: Aditya  affects: C, A
