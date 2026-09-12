@@ -5,11 +5,11 @@
 ## Present
 
 1. `open apps/deck/index.html` in Chrome, press `F` for full screen.
-2. Keys: `→` `space` next (reveals the second beat on slide 2 first), `←` back, `Home`, `End` returns to the public close, `P` presenter clock (starts when you leave slide 1, turns white at 2:50), `R` replays the animation on slide 10 (the clearing scan) or slide 12 (two live rounds), `Esc` leaves full screen. Clicking the right two thirds of the screen also advances.
+2. Keys: `→` `space` next (reveals the second beat on slide 2 first), `←` back, `Home`, `End` returns to the public close, `P` presenter clock (starts when you leave slide 1, turns white at 2:50), `R` replays the animation on slide 9 (the clearing scan) or slide 11 (two live rounds), `Esc` leaves full screen. Clicking the right two thirds of the screen also advances.
 3. `#8` in the URL jumps to a slide. The deck scales to any window (tested 1920x1080 and 1440x900).
-4. Slide 12 plays on its own when you land on it: two rounds, about 30 seconds. Traders quote from their cards, each quote flies into the book, the countdown hits zero, demand and supply draw, the clearing price snaps in, fills flash, the price chart gets a point, the model value updates and the owner requotes the ladder and floor from it. In round 2 a holder sells. It runs the real clearing rule and the real belief update (same constants as `engine.py`) on the real opening book from `scripts/demo_pricing.py`.
+4. Slide 11 plays on its own when you land on it: two rounds, about 30 seconds. Traders quote from their cards, each quote flies into the book, the countdown hits zero, demand and supply draw, the clearing price snaps in, fills flash, the price chart gets a point, the model value updates and the owner requotes the ladder and floor from it. In round 2 a holder sells. It runs the real clearing rule and the real belief update (same constants as `engine.py`) on the real opening book from `scripts/demo_pricing.py`.
 5. The deck ends on the close slide. No appendix.
-6. If Chrome dies, `Bartr.pdf` has the same 19 slides. `Bartr.pptx` is the same as images with the talk track in the notes.
+6. If Chrome dies, `Bartr.pdf` has the same 18 slides. `Bartr.pptx` is the same as images with the talk track in the notes.
 
 Fonts: SF Pro on a Mac, Inter from Google Fonts otherwise. KaTeX loads from cdnjs. Both need network once; after that Chrome caches them. Open the deck once on the venue wifi before we go up.
 
@@ -26,7 +26,6 @@ CH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 | Slide | File | Route |
 |---|---|---|
-| 6 | `assets/search.png` | `/search?q=laundromat+in+pittsburgh` |
 | 6 | `assets/company.png` | `/company/co_squirrel_hill_wash` |
 | 11 (unused now, the slide is an animated card) | `assets/portfolio.png` | `/portfolio` (the portfolio page is server rendered as user `server`; seed positions for that user first, and push a few markets below model value so Suggested stakes is not empty) |
 | 12 | `assets/acquire.png` | `/company/co_squirrel_hill_wash/acquire` |
@@ -44,20 +43,19 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 | 0:16 | 3 80 percent | "And when the owner retires, four out of five that try to sell never find a buyer. They shut down. Most of them are profitable. They close because nobody can write a check for the whole thing, and nobody's allowed to buy part of it." |
 | 0:26 | 4 Half the workforce | "These places employ half the American workforce. This isn't a niche. It's the economy." |
 | 0:32 | 5 Who and what | "We connect buyers and sellers. Owners sell 30 percent and keep running the place. Investors buy 20 shares with a price and a way out. Acquirers get the owner's ear and a letter of intent." |
-| 0:42 | 6 Discover | "Type laundromat in Pittsburgh. Places, Querit, Grok. Every number keeps the sentence it came from. 53 real businesses priced." |
-| 0:50 | 7 How search works | "Our proprietary search helps you discover underground, undervalued companies. Grok reads the brief, Places lists every business in the city, Querit finds and reads the pages, Grok turns them into profiles where every figure keeps its sentence and its URL." |
-| 1:00 | 8 One company | "Squirrel Hill Wash and Fold: $570,768, range 475 to 686 thousand." |
-| 1:06 | 9 Pricing | "Five ways to value it, each with its own typical miss, weighted by one over the miss squared. A range, never a bare number." |
-| 1:16 | 10 The math, part one | "Every ten seconds, one price: the one where the most shares trade. (Let the scan run.) At each price, count what buyers would take and sellers would give, clear at the peak. The buyer who bid 60.50 pays 59.50 like everyone else. Our value listens to what people paid; the owner requotes from it." |
-| 1:34 | 11 The math, part two | "We backed the bidding price and the portfolio construction with industry-tested trading mathematics. Maximize log wealth, the optimum is (pb minus q) over b. Half Kelly in the app, capped at 20 percent." |
-| 1:44 | 12 Live | "Let two rounds run. Everyone paid 58.67, including Jonas who bid 64.20. Round two: the value moved, the owner requoted, Jonas sold part of his stake at the same price the new buyers paid." |
-| 2:10 | 13 Fairness | "One price, no head start. Price check, no self trades, size limits, a 10 percent band, proportional fills, an audit log." |
-| 2:18 | 14 Portfolio | "Every suggestion shows the gap. Kelly sizes the stake. The slider is your risk." |
-| 2:25 | 15 Acquire | "From 20 shares to the whole company: an LOI at the last price and a Pittsburgh checklist with the official forms." |
-| 2:33 | 16 Security | "Rules catch it, two models judge it separately, and Grok tries to beat it as red team." |
-| 2:42 | 17 Grok | "Every company is appraised twice: Grok researches and names a value, K2 names one blind, both go into the price." |
-| 2:50 | 18 Stack | "Next.js, FastAPI, Atlas, Places, Querit, Grok, K2, iMessage. 176 tests." |
-| 2:55 | 19 Close | "Nobody could invest in the laundromat on Murray Avenue until tonight. Buy 20 shares and watch the next round clear." |
+| 0:50 | 6 How search works | "Our proprietary search helps you discover underground, undervalued companies. Grok reads the brief, Places lists every business in the city, Querit finds and reads the pages, Grok turns them into profiles where every figure keeps its sentence and its URL." |
+| 1:00 | 7 One company | "Squirrel Hill Wash and Fold: $570,768, range 475 to 686 thousand." |
+| 1:06 | 8 Pricing | "Five ways to value it, each with its own typical miss, weighted by one over the miss squared. A range, never a bare number." |
+| 1:16 | 9 The math, part one | "Every ten seconds, one price: the one where the most shares trade. (Let the scan run.) At each price, count what buyers would take and sellers would give, clear at the peak. The buyer who bid 60.50 pays 59.50 like everyone else. Our value listens to what people paid; the owner requotes from it." |
+| 1:34 | 10 The math, part two | "We backed the bidding price and the portfolio construction with industry-tested trading mathematics. Maximize log wealth, the optimum is (pb minus q) over b. Half Kelly in the app, capped at 20 percent." |
+| 1:44 | 11 Live | "Let two rounds run. Everyone paid 58.67, including Jonas who bid 64.20. Round two: the value moved, the owner requoted, Jonas sold part of his stake at the same price the new buyers paid." |
+| 2:10 | 12 Fairness | "One price, no head start. Price check, no self trades, size limits, a 10 percent band, proportional fills, an audit log." |
+| 2:18 | 13 Portfolio | "Every suggestion shows the gap. Kelly sizes the stake. The slider is your risk." |
+| 2:25 | 14 Acquire | "From 20 shares to the whole company: an LOI at the last price and a Pittsburgh checklist with the official forms." |
+| 2:33 | 15 Security | "Rules catch it, two models judge it separately, and Grok tries to beat it as red team." |
+| 2:42 | 16 Grok | "Every company is appraised twice: Grok researches and names a value, K2 names one blind, both go into the price." |
+| 2:50 | 17 Stack | "Next.js, FastAPI, Atlas, Places, Querit, Grok, K2, iMessage. 176 tests." |
+| 2:55 | 18 Close | "Nobody could invest in the laundromat on Murray Avenue until tonight. Buy 20 shares and watch the next round clear." |
 
 ## Files
 

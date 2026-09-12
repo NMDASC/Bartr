@@ -8,7 +8,6 @@ const NOTES = [
   'And when the owner retires, four out of five of the ones that try to sell never find a buyer. They shut down. Most of them are profitable. They close because nobody can write a check for the whole thing, and nobody is allowed to buy part of it.',
   'These places employ half the American workforce. So this is not a niche. It is the economy.',
   'We connect buyers and sellers. Owners sell 30 percent and keep running the place. Investors buy 20 shares with a price and a way out. Acquirers get the owner s ear and a letter of intent.',
-  'Type laundromat in Pittsburgh. Places, Querit, Grok. Every number keeps the sentence it came from. 53 real businesses priced.',
   'Our proprietary search helps you discover underground, undervalued companies. Grok reads the brief. Google Places lists every business in the city. Querit finds twelve pages about them and reads the best six. Grok turns pages into profiles where every figure keeps its sentence and its URL.',
   'Squirrel Hill Wash and Fold: 570,768 dollars, range 475 to 686 thousand.',
   'Five ways to value it, each with its own typical miss. Weighted by one over the miss squared. A range, never a bare number.',
@@ -23,14 +22,14 @@ const NOTES = [
   'Next.js, FastAPI, Atlas, Places, Querit, Grok, K2, iMessage. 176 tests.',
   'Nobody could invest in the laundromat on Murray Avenue until tonight. Buy 20 shares and watch the next round clear.',
 ];
-const TOTAL = 19;
+const TOTAL = 18;
 const pptx = new pptxgen();
 pptx.defineLayout({ name: 'W', width: 13.333, height: 7.5 });
 pptx.layout = 'W';
 pptx.title = 'Bartr';
 for (let i = 1; i <= TOTAL; i++) {
   const s = pptx.addSlide();
-  s.background = { color: i <= 8 ? 'FFFFFF' : '000000' };
+  s.background = { color: i <= 7 ? 'FFFFFF' : '000000' };
   s.addImage({ path: path.join(__dirname, '.stills', `s${i}.png`), x: 0, y: 0, w: 13.333, h: 7.5 });
   s.addNotes(NOTES[i - 1]);
 }
