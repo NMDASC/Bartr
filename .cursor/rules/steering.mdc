@@ -1,0 +1,5 @@
+---
+description: JB steering rules (mirror of CLAUDE.md)
+alwaysApply: true
+---
+Read Plan.md sections 7 and 8 and docs/DECISIONS.md before changing any schema, route, shared type, or db collection. Pull before you start. Respect directory ownership (A apps/web, B discovery, C market, D agents/deploy/docs). Contract changes need a DECISIONS.md entry, regenerated openapi.yaml and types.ts, and a commit prefixed "contract:". Grok and K2 are called from the app only, never used to write code. No em dashes in docs or UI copy.

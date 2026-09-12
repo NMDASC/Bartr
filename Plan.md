@@ -18,7 +18,7 @@ This document is the steering doc. Every decision that changes an interface goes
 5. Architecture and network diagram
 6. Data model (MongoDB)
 7. API contract (the thing all four of us build against)
-8. Pricing and market design (batch auction, house market maker, Kelly, anti arbitrage)
+8. Pricing and market design (valuation ensemble, batch auction, owner liquidity, Kelly, anti arbitrage)
 9. Agents, Grok integration, compliance surveillance
 10. Splitting the work four ways
 11. Hour by hour timeline
@@ -83,8 +83,9 @@ Note on the rule "not permitted to start building or designing until the event":
 
 ### 1.3 Market design references we are relying on (well known results, cited so the judges hear them)
 - Frequent batch auctions: Budish, Cramton, Shim (2015), "The High-Frequency Trading Arms Race: Frequent Batch Auctions as a Market Design Response", QJE. Uniform price call auction every T seconds removes latency arbitrage and works with thin books.
-- Market making with inventory risk: Avellaneda and Stoikov (2008), "High-frequency trading in a limit order book". Gives reservation price and spread as functions of volatility and inventory.
-- Logarithmic market scoring rule: Hanson (2003). We borrow the idea of a house liquidity provider with bounded loss.
+- Precision weighted combination of estimates (normal-normal Bayesian update, the same step a Kalman filter takes) for the valuation ensemble and the in market belief update.
+- Hedonic / comparable sales pricing (the method behind real estate AVMs) as the calibration target: scraped listings with asking prices.
+- Avellaneda and Stoikov (2008) and Hanson's LMSR (2003) were considered for a platform run market maker; moved to Backlog.md (see 8.1).
 - Kelly (1956), and fractional Kelly for position sizing. Continuous form f* = mu / sigma^2.
 
 ### 1.4 Not yet verified (check at the venue, first hour)
@@ -101,10 +102,10 @@ Note on the rule "not permitted to start building or designing until the event":
 
 **Primary track: Optimization.** The core of the technical story is optimization at three levels:
 1. The exchange clears each batch at the uniform price that maximizes executed volume (a 1D optimization solved exactly over the order book).
-2. The house market maker sets quotes by minimizing inventory risk (Avellaneda Stoikov).
+2. The initial price is a precision weighted Bayesian ensemble of independent estimators, with uncertainty inflated by their disagreement, calibrated on real listings.
 3. The portfolio builder sizes positions by maximizing expected log growth (Kelly) subject to budget and concentration limits, and matches companies to a user by vector similarity.
 
-50 word track blurb (draft): *Small businesses have no price. We built an exchange that optimizes one: a frequent batch auction that clears each round at the volume maximizing price, a house market maker that minimizes inventory risk in thin markets, and a Kelly optimal portfolio builder that matches buyers to fractional stakes in businesses they discover.*
+50 word track blurb (draft): *Small businesses have no price. We built an exchange that optimizes one: a frequent batch auction that clears each round at the volume maximizing price, a calibrated Bayesian valuation ensemble that sets the opening price and the owner's quotes, and a Kelly optimal portfolio builder that matches buyers to fractional stakes in businesses they discover.*
 
 **Backup track: Multiplayer.** If, at 2 PM Saturday, the Optimization track looks crowded (ask organizers on Discord how many submissions per track), switch to Multiplayer. The exchange is inherently multiplayer; the demo where judges bid from their phones and watch the price clear works for either. Do not change the product; only change the 50 words.
 
@@ -125,7 +126,7 @@ Note on the rule "not permitted to start building or designing until the event":
 
 **Phase 1, Discover.** "I want a laundromat in Oklahoma." The pipeline finds real businesses (Places + Querit), reads about them (Querit contents + Grok web_search), extracts a structured profile (Grok structured output), estimates value with a distribution (section 8.2), and lists them with a bid, an ask, and a confidence. Each company page shows: what it does, founders/owners, location, estimated revenue and SDE with sources, valuation range, the live order book, price history, and an "Acquire" button.
 
-**Phase 2, Trade and Acquire.** Every listed company is split into 10,000 shares. Users place limit orders (fractional allowed, 0.01 share min). A batch auction clears every 10 seconds (demo setting; 30s to 60s in "real" mode). The house market maker guarantees there is always a bid and an ask. "Acquire" opens a flow: a Grok drafted letter of intent and a due diligence checklist specific to the state and business type with citations. A portfolio tab suggests other stakes with Kelly sized amounts. A surveillance panel shows what the compliance agents flagged this session.
+**Phase 2, Trade and Acquire.** Every listed company is split into 10,000 shares. Users place limit orders (fractional allowed, 0.01 share min). A batch auction clears every 10 seconds (demo setting; 30s to 60s in "real" mode). The owner's ask ladder and buyback floor, both derived from the valuation posterior, guarantee there is always a bid and an ask; the platform never trades. "Acquire" opens a flow: a Grok drafted letter of intent and a due diligence checklist specific to the state and business type with citations. A portfolio tab suggests other stakes with Kelly sized amounts. A surveillance panel shows what the compliance agents flagged this session.
 
 ### 3.2 Screens (Next.js routes)
 
@@ -178,14 +179,15 @@ JB/
     app/main.py
     app/llm.py               # provider switch: xai | ifm
     app/routers/{discovery,companies,market,portfolio,acquire,agent,surveillance}.py
-    app/services/discovery/  # querit.py places.py extract.py valuation.py
-    app/services/market/     # book.py auction.py mm.py kelly.py
+    app/services/discovery/  # querit.py places.py extract.py valuation.py benchmarks.py
+    app/services/market/     # auction.py treasury.py kelly.py book.py (persistence)
     app/services/agents/     # compliance.py portfolio_agent.py chat_agent.py
     app/db.py
     seeds/                   # cached discovery results so the demo never waits on the network
     tests/                   # auction and Kelly unit tests (cheap, and judges like seeing them)
   apps/web/                  # Next.js
   scripts/
+    demo_pricing.py          # runs the valuation ensemble + a 6 round auction sim, no keys needed
     imessage_bridge.py       # future: Mac chat.db poller + osascript sender
 ```
 
@@ -264,16 +266,16 @@ users        { _id, auth0_sub, name, cash: 100000, risk_profile: {tolerance, hor
 companies    { _id, name, category, naics_guess, address, city, state, lat, lng, website, phone,
                rating, review_count, founded_year, owners[], description,
                financials: { revenue_est, sde_est, margin_est, employees_est, confidence 0..1, method },
-               valuation: { v0, sigma, low, high, multiple_used, comps[], as_of },
+               valuation: { v0, sigma, low, high, method, disagreement, estimates: [{name, value, sigma, note}], as_of },
                sources[]: { url, title, snippet, fetched_at },
                embedding: [384 floats], status: "stub"|"ready"|"failed", created_at }
 markets      { _id: company_id, shares_outstanding: 10000, float: 3000, retained: 7000, tick: 0.01, last_price, ref_price,
+               belief: { mu, sigma, s_m, n_rounds },
                batch_interval_s: 10, next_batch_at, band_pct: 0.10,
-               treasury: { unsold_float, proceeds },
-               mm: { inventory (signed, borrow from retained when < 0), cash, pnl, gamma, k, sigma, max_depth, cap: 450 },
+               treasury: { unsold_float, proceeds, floor_price, floor_qty, bought_back, ask_ladder: [{price, qty}] },
                fees_collected, halted: false }
 orders       { _id, market_id, user_id, side: "buy"|"sell", qty, limit_price, status: "open"|"filled"|"partial"|"cancelled",
-               filled_qty, created_at, cancelled_at, origin: "user"|"mm"|"treasury"|"bot"|"agent" }
+               filled_qty, created_at, cancelled_at, origin: "user"|"treasury"|"bot"|"agent" }
 batches      { _id, market_id, t, clearing_price, volume, imbalance, n_buy, n_sell, book_snapshot: {bids[], asks[]} }
 trades       { _id, market_id, batch_id, buyer_id, seller_id, qty, price, t }
 positions    { _id, user_id, market_id, qty, avg_cost }
@@ -327,28 +329,52 @@ Pydantic models live in `apps/api/app/schemas.py`; `packages/contracts/openapi.y
 
 ## 8. Pricing and market design
 
-The problem: 56 bidders (or fewer) per asset, no history, no fundamentals on file. A continuous limit order book would be empty most of the time and trivially manipulable. Design principles: one price per batch, always a counterparty, prices anchored to a valuation with an honest uncertainty, and bounded house loss.
+The problem: 56 bidders (or fewer) per asset, no history, no fundamentals on file. A continuous limit order book would be empty most of the time and trivially manipulable. Design principles: one price per batch, always a counterparty (the owner, never the platform), prices anchored to a valuation with an honest uncertainty.
 
-### 8.1 Units, issuance, and the two house accounts
+### 8.1 Units, issuance, and who provides liquidity
 Each company has 10,000 shares. Price per share `p = V / 10000`. Fractional shares to 0.01. Tick 0.01 USD. Users start with 100,000 play dollars.
 
-Two house accounts per market, with different jobs. Keep them separate in code and on screen.
+**The platform never trades.** Liquidity comes from the owner, represented by one house account per market, the **Treasury**:
 
-**Treasury (the issuer). Only sells.** Stands in for the business owner. Holds all 10,000 shares at listing, offers a float of 3,000 for sale, keeps 7,000 as the owner retained stake (not tradable except through the acquisition flow in 9.6). At listing it posts sell orders for the float on a ladder from `0.90 p0` to `1.10 p0`; unsold float stays on the ask side in later rounds. It never places a buy. Its proceeds are "what the owner received" and only go up.
+- **Ask ladder.** At listing the Treasury offers a float of 3,000 shares (30%) for sale across five price levels at the posterior quantiles P55, P61, P68, P74, P80 of the valuation (8.2), 600 shares each. Unsold float stays on the ask side in later rounds. The remaining 7,000 shares are the owner retained stake and only move through the acquisition flow (9.6).
+- **Buyback floor.** A standing bid at the posterior P20 for up to 1,000 shares (10%). "I will buy my company back from you at this price if you want out." It is the guarantee that a player can always exit, and it is the one bid a seller can credibly make on their own business.
 
-**Market maker. Buys and sells (posts both, takes whichever side the round clears against).** Separate cash account, starts with zero inventory. Positive inventory means it bought from players and is holding. Negative inventory means it sold shares borrowed from the Treasury's retained stake and must buy them back (an ordinary short, so it can never sell more than exists). Inventory capped at +/- 15% of the float (450 shares). Its P&L is the bounded liquidity subsidy and can go negative. Quotes come from 8.4.
+Both quotes come straight from the valuation posterior, so an uncertain business has a wide owner spread and a well documented one has a tight one. The gap between ladder and floor is the owner's spread, and the owner keeps it, which is fair because the owner is the one party who is fine being stuck holding shares of their own company. Code: `apps/api/app/services/market/treasury.py`.
 
-Neither account is a profit center. If this were real, platform revenue would be a per fill fee (0.5%), listing fees, and an acquisition success fee; show a fee counter on the surveillance page next to the two P&Ls.
+An automated market maker (Avellaneda Stoikov, platform inventory) was designed and then moved to `Backlog.md`: it adds platform inventory risk and a conflict of interest for a benefit (immediacy in dead rounds) the owner floor and the demo bots already cover. The demo bots (50 fake players with private noisy valuations, half Kelly sized) are what keep the tape alive.
 
-### 8.2 Valuation anchor `V0` and uncertainty `sigma`
-`valuation.py` returns a lognormal belief `ln V ~ N(ln V0, sigma^2)`.
+If this were real, platform revenue would be a per fill fee (0.5%), listing fees, and an acquisition success fee; show a fee counter on the surveillance page next to Treasury proceeds.
 
-1. Grok extracts, with sources: `revenue_est`, `sde_est` (seller's discretionary earnings), `employees_est`, `years_operating`, `rating`, `review_count`, `owner_operated`, and a `confidence` in [0,1]. If financials are absent, Grok estimates from proxies and says so (`method: "proxy"`), using category medians we hard code from BizBuySell (revenue per employee, SDE margin).
-2. Multiple by category (hard coded table, cite BizBuySell): laundromat 4.0x SDE (range 3 to 5), restaurant 2.0x, auto repair 2.5x, car wash 3.5x, manufacturing 3.0x, default 2.7x. Adjust +0.5 for rating >= 4.5 with review_count >= 100, -0.5 if owner operated with no manager mentioned, +/- for years operating.
-3. `V0 = multiple * sde_est`, floor at `0.7 * revenue_est` when SDE is a proxy estimate.
-4. `sigma = 0.15 + 0.6 * (1 - confidence)`, clipped to [0.15, 0.75]. A company with tax returns online is 15% uncertain; a Places stub with no web presence is 75%.
-5. Seed the book: `low = V0 * exp(-sigma)`, `high = V0 * exp(+sigma)` shown as the valuation range; the house market maker's initial bid/ask straddle V0 (8.4).
-6. Belief update after trading: precision weighted blend of the prior and the volume weighted batch prices, `V_post = (V0/s0^2 + sum(w_i p_i)/s_m^2) / (1/s0^2 + 1/s_m^2)`, and `sigma` decays toward realized vol over the last 20 batches. Displayed as "market implied value" next to "model value".
+### 8.2 Initial pricing: a Bayesian ensemble, not one formula
+Code: `apps/api/app/services/discovery/valuation.py`, benchmarks in `benchmarks.py` (BizBuySell 2026 asking multiples, median asking price, median SDE per category; sold prices taken as 0.88 x asking). Run `python scripts/demo_pricing.py` to see it on five examples.
+
+Why not "multiple x SDE" alone: for most businesses we will not find SDE, a single formula either fails or hides a guess inside a confident number, and it gives no principled uncertainty. Instead, every independent piece of evidence becomes an estimator of `ln V` with its own sigma, and they are combined by precision weighting:
+
+| Estimator | Runs when | Estimate | Prior sigma |
+|---|---|---|---|
+| `listing` | the business is actually for sale | asking price x 0.88 | 0.15 |
+| `income` | SDE known, or revenue known (SDE = revenue x category margin) | category asking multiple x 0.88 x SDE, times small quality nudges (reviews, tenure, owner operated) | 0.25 / 0.40 |
+| `proxy` | no financials, but employees, machine count, or review count | revenue from observables x margin x multiple | 0.60 |
+| `llm` | Grok gave a direct value with web_search (K2 optional second opinion) | mean of opinions; sigma widens with low self reported confidence and with Grok/K2 disagreement | 0.35 to 0.70 |
+| `base_rate` | always | category median asking x 0.88 x state price index x quality nudges | 0.70 |
+
+```
+mu    = sum(mu_i / s_i^2) / sum(1 / s_i^2)
+s^2   = 1 / sum(1 / s_i^2)  +  (precision weighted spread of the mu_i around mu)^2
+sigma = clamp(s, 0.12, 0.90)
+V0    = e^mu,   range shown = [P20, P80] = e^(mu -/+ 0.84 sigma)
+```
+
+The second term is the disagreement inflation: if four methods disagree by 2x, the posterior is wide no matter what each one claimed. `base_rate` is the shrinkage anchor for stubs, and `proxy` is skipped whenever real financials exist so a fallback never dilutes real data.
+
+What this gives the rest of the system: `V0` is the opening reference price, the Treasury ladder and floor are quantiles of the same posterior, Kelly uses `sigma`, and the in market belief update (8.2b) treats `(mu, sigma)` as its prior. The company page shows each estimator's number and note, so a user sees *why* the model thinks $526k and how confident it is.
+
+Calibration (role B, Saturday morning): scrape 30 to 60 real listings with asking prices via Querit, hide the price, run the estimators, measure each one's log error std with `valuation.calibrate()`, and replace the prior sigmas with measured ones. Judges hear "our estimators are calibrated on 40 real listings; the median absolute error is X%", which beats any formula.
+
+Sample output (from the demo script): documented laundromat with SDE $140k, 4.6 stars, 180 reviews: $526k, sigma 0.22, P20 $437k, P80 $633k. Same business listed at $575k: $512k, sigma 0.13. A laundromat that is only a Places pin with 23 reviews: $184k, sigma 0.78. A car wash where Grok says $1.9M and K2 says $0.9M: the model opinion's sigma widens to 0.52 and the posterior lands at $1.39M, sigma 0.35.
+
+### 8.2b Belief update after trading
+Prior `ln V ~ N(mu, sigma^2)` from 8.2. Each round's clearing price (x 10,000) is a noisy observation with noise `s_m` (start 0.10, then realized round to round std). Posterior mean is the precision weighted average `m_post = (mu/sigma^2 + sum(w_i ln P_i)/s_m^2) / (1/sigma^2 + sum(w_i)/s_m^2)` with `w_i` = round volume over average volume, and `s_post^2 = 1/(1/sigma^2 + sum(w_i)/s_m^2)`, blended with realized vol over the last 20 rounds so a jumpy market stays wide. A documented business holds its anchor; an unknown one lets the crowd price it. Displayed as "model value" next to "market implied value". The Treasury requotes its ladder and floor from the updated posterior between rounds.
 
 ### 8.3 Frequent batch auction (the exchange)
 Every `T` seconds (10 in demo, configurable per market), take all open limit orders plus the house quotes and compute the uniform clearing price:
@@ -366,20 +392,8 @@ Why this and not a continuous book: with tens of participants the book is sparse
 
 Low volume tuning: `T` grows with sparseness (`T = clamp(10 * 20 / max(n_orders, 1), 10, 60)` seconds), so a dead market clears once a minute and an active one every 10 seconds. The countdown is shown in the UI.
 
-### 8.4 House market maker (there is always a counterparty)
-The house posts a ladder of bids and asks into every batch, generated from Avellaneda Stoikov with the valuation belief:
-
-```
-s      = current mid belief (V_post / 10000)
-q      = house inventory in shares (positive = long)
-gamma  = risk aversion (0.1 demo), k = order arrival intensity (1.5), tau = 1 (one "day" horizon)
-r      = s - q * gamma * sigma_p^2 * tau                 # reservation price, skews against inventory
-delta  = gamma * sigma_p^2 * tau + (2/gamma) * ln(1 + gamma/k)   # total spread
-bid_1  = r - delta/2, ask_1 = r + delta/2
-ladder = 5 levels each side, price step = delta/2, qty at level i = D * exp(-0.5 i) where D = base depth in shares
-```
-
-`q` is the market maker account's signed inventory from 8.1 (negative = borrowed from Treasury). `sigma_p` is the per batch price vol implied by the belief `sigma`. Depth `D` scales with confidence (a well documented business gets deep quotes, a stub gets thin ones). At the inventory cap it quotes only the side that reduces inventory. The market maker can never fill both sides in one round (one clearing price, bid below ask), so spread capture happens across rounds: buy in a round where sellers dominate, sell in a later round where buyers dominate, and it gets price improvement whenever `p*` clears past its quote. It loses in a sustained one directional repricing (adverse selection); the skew slows that and the cap bounds it. Market maker PnL is shown on the surveillance page as "liquidity provider P&L", which is the bound on how much the platform can lose per company (this is the LMSR idea: bounded subsidy in exchange for liquidity).
+### 8.4 Owner requoting between rounds
+Between rounds `treasury.py` recomputes the ask ladder for whatever float is unsold and the buyback floor from the updated posterior (8.2b). The Treasury never bids above its floor and never asks below the P55 level, so it cannot chase the price. Its two numbers on the surveillance page: **proceeds** (float sold, only goes up) and **buyback inventory** (shares repurchased at the floor).
 
 ### 8.5 Anti arbitrage and fairness rules (enforced in `book.py`, tested)
 - Uniform price per batch, no order sees a different price than another in the same round.
@@ -387,7 +401,7 @@ ladder = 5 levels each side, price step = delta/2, qty at level i = D * exp(-0.5
 - Self trade prevention: a user's buys and sells never match each other; the later order is cancelled.
 - Order limits: max qty per order 5% of shares, max open notional per user per market 25% of their cash.
 - Server timestamps only, orders are immutable once placed (cancel creates a new event), everything mirrored to `audit_log`.
-- The market maker never trades against its own quotes and its ladder is recomputed only between batches (no look ahead at the current round's orders). The Treasury never buys, so the account that owns the float cannot bid the price up.
+- The Treasury requotes only between rounds (no look ahead at the current round's orders), never bids above its P20 floor, and never asks below P55, so the account that owns the float cannot bid the price up.
 - Limit prices are clamped to [0.5x, 2x] of the reference so fat fingers do not print absurd prices.
 
 ### 8.6 Kelly sizing for the portfolio builder
@@ -411,7 +425,8 @@ Decided Sep 11: no Black Scholes acquisition options in the hackathon build. Who
 
 ### 8.8 What to unit test (30 minutes, high payoff in judging)
 - Auction: given a hand written book, `p*` and fills match a worked example; pro rata rationing sums correctly; band clamp works.
-- Market maker: skew sign flips with inventory sign; spread grows with sigma.
+- Treasury: floor below median, ladder above it and sorted; ladder shrinks as float sells.
+- Valuation: documented business tight, stub wide, listing dominates, disagreement widens sigma.
 - Kelly: f = 0 when p = v; cap respected.
 
 ---
@@ -470,10 +485,10 @@ Roles, not names; assign at 9 PM based on who wants what. Each owner has a direc
 Hours 0 to 2: Next.js scaffold, Auth0, design tokens, mocked data from `packages/contracts` examples. Hours 2 to 8: search page with streaming results, company page with live order book (WebSocket), order ticket, chart. Hours 8 to 14: portfolio, acquire, surveillance pages. Hours 14 to 19: polish, mobile layout (judges bid from phones), demo rehearsal, Devpost page and screenshots.
 
 **B. Discovery pipeline (owns `services/discovery`, `routers/discovery.py`, `routers/companies.py`, seeds).**
-Hours 0 to 2: Querit + Places clients, intent parser, `CompanyProfile` schema. Hours 2 to 6: extractor with structured output and citations, `valuation.py`, embeddings, Mongo upsert, SSE job endpoint. Hours 6 to 10: run 8 seed queries (laundromats OK, car washes TX, restaurants Pittsburgh, machine shops OH, and so on) and cache 60 companies in `seeds/`. Hours 10 to 19: quality passes on extraction, grok web_search fallback, refresh endpoint, help A with copy.
+Already in the repo: `valuation.py` (ensemble) and `benchmarks.py`. Hours 0 to 2: Querit + Places clients, intent parser, `CompanyProfile` schema mapping onto `valuation.Observables`. Hours 2 to 6: extractor with structured output and citations (must fill `sde`, `revenue`, `asking_price`, `employees`, `llm_estimate`, `llm_confidence`), embeddings, Mongo upsert, SSE job endpoint. Saturday morning: scrape 30 to 60 listings and run `valuation.calibrate()`. Hours 6 to 10: run 8 seed queries (laundromats OK, car washes TX, restaurants Pittsburgh, machine shops OH, and so on) and cache 60 companies in `seeds/`. Hours 10 to 19: quality passes on extraction, grok web_search fallback, refresh endpoint, help A with copy.
 
 **C. Exchange engine (owns `services/market`, `routers/market.py`, WebSocket hub, tests).**
-Hours 0 to 3: `book.py`, `auction.py` with unit tests (pure functions first, no DB). Hours 3 to 6: Mongo persistence, batch scheduler (asyncio task per market), WebSocket hub, order endpoints, demo auth. Hours 6 to 10: market maker (`mm.py`), band and halt rules, belief update. Hours 10 to 14: `kelly.py`, belief update tuning, bot trader script. Hours 14 to 19: load test with a bot script that places random orders as 50 fake users (this is also the demo's "other bidders"), tune `gamma`, `k`, `T`.
+Already in the repo: `auction.py` (clearing, pro rata, band, self trade filter), `treasury.py` (ladder + floor), `kelly.py`, 15 passing tests. Hours 0 to 3: Mongo persistence for orders/batches/trades/positions, batch scheduler (asyncio task per market), order endpoints, demo auth. Hours 3 to 6: WebSocket hub, halt rule, belief update (8.2b) and Treasury requote between rounds. Hours 6 to 10: bot trader script (50 fake users, private noisy valuations, half Kelly, one of them planted as a wash trader for the surveillance demo). Hours 10 to 19: load test, tune `T` and band, help A with the order book UI.
 
 **D. Agents and platform (owns `llm.py`, `services/agents`, `routers/{portfolio,acquire,agent,surveillance}.py`, deploy, coordination).**
 Hours 0 to 1: attend IFM workshop, get keys (xAI, IFM, Querit, Places, Atlas, Auth0, Vultr), write `.env.example`, `docker-compose.yml`, deploy skeleton API to Vultr, `CLAUDE.md` and `docs/`. Hours 1 to 4: `llm.py` with both providers, chat agent with tools (against C's endpoints, mocked until ready). Hours 4 to 9: compliance rules + Grok + K2 reviewers, flags feed. Hours 9 to 13: portfolio matcher (vector search + Kelly from C + narrative), acquisition flow. Hours 13 to 19: Cursor prize checklist, Devpost text, Vultr deploy of final API, iMessage bridge stub if time.
@@ -547,7 +562,7 @@ This is deliberately low tech. A shared markdown log that every agent reads at s
 
 0:00 The problem. "There are 33 million small businesses in the US and none of them has a price. If you wanted to buy a laundromat in Tulsa tonight you could not even find the list."
 0:20 Type "laundromat in Oklahoma". Results stream in with bid, ask, confidence. Point at the Querit and Grok pipeline in one sentence.
-0:50 Click one. Profile with sources, valuation range, the live order book, countdown. "Every ten seconds we run a uniform price auction and clear at the volume maximizing price. There is always a counterparty because the house market maker quotes from the valuation belief with inventory skew."
+0:50 Click one. Profile with sources, the five estimators and their spread, the live order book, countdown. "Every ten seconds we run a uniform price auction and clear at the volume maximizing price. The owner's ask ladder and buyback floor come from the same valuation posterior, so you can always buy while float remains and always exit at the floor. The platform never trades."
 1:20 Judges scan the QR and place bids from phones. Batch clears, price moves, chart ticks. Bot traders keep it alive.
 1:50 Portfolio tab. "Given your profile, here are four stakes sized by half Kelly." One sentence on the math.
 2:10 Acquire. LOI draft and Oklahoma specific diligence checklist with citations.
@@ -563,7 +578,7 @@ This is deliberately low tech. A shared markdown log that every agent reads at s
 | Live discovery is slow (Querit 1 QPS + Grok) | Seed 60 companies at 6 AM; live query only for the demo's one search; SSE streams partial results | Demo from seeds only |
 | Grok credits unavailable | Ask at the table; personal key with $10 cap; grok-4.3 for extraction | Extractor falls back to K2 or a smaller model |
 | IFM endpoint unclear | Get it at the workshop; else run K2-Horizon-7B on a Vultr GPU with vLLM, or drop the second reviewer | Compliance uses Grok only; still pitch IFM at the table honestly |
-| Market looks dead in demo | Bot traders (50 fake users, random walk around V0) started at 1 PM | Manual bids from 4 phones |
+| Market looks dead in demo | Bot traders (50 fake users, private noisy valuations, half Kelly) started at 1 PM; owner ladder and floor always visible | Manual bids from 4 phones |
 | Auth0 eats an hour | Demo auth header from minute one; Auth0 only on the landing page login button | Keep demo auth |
 | Vector search index not building on M0 | Local cosine over 60 embeddings in numpy | Fine at this scale |
 | Acquisition flow too much | LOI is one Grok call; checklist is one more | Keep LOI only |

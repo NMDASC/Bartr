@@ -1,0 +1,21 @@
+[project]
+name = "jb-api"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "pydantic>=2",
+  "motor",
+  "openai",
+  "httpx",
+  "querit",
+  "sentence-transformers",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

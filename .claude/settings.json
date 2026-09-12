@@ -1,0 +1,35 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git pull --rebase --autostash --quiet 2>/dev/null; echo '--- last decisions ---'; tail -n 40 docs/DECISIONS.md"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(cat | python3 -c 'import sys,json; print(json.load(sys.stdin).get(\"tool_input\",{}).get(\"file_path\",\"\"))'); case \"$f\" in *packages/contracts/*|*app/schemas.py*) echo 'CONTRACT FILE CHANGED: add a docs/DECISIONS.md entry, regenerate openapi.yaml and types.ts, prefix the commit with contract:' ;; esac"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git status --short | head -20"
+          }
+        ]
+      }
+    ]
+  }
+}
