@@ -189,9 +189,21 @@ def test_redteam_spoof_is_caught(fake):
 
 def test_acquire_uses_grok_loi_and_cited_checklist(fake):
     with TestClient(app) as c:
+        import time as _t
+        from app.routers import acquire as acq_router
+        acq_router.CHECKLISTS.clear()
         a = c.post(f"/api/v1/acquire/{CID}/start", headers=H).json()
-        assert a["loi_md"].startswith("# Non-Binding Letter of Intent") and "judge9" in a["loi_md"]
-        assert len(a["checklist"]) == 5 and a["checklist"][0]["citation"]["url"].startswith("https://pittsburghpa.gov")
+        assert a["loi_md"].startswith("# Non-Binding Letter of Intent") and "judge9" in a["loi_md"] and a["loi_source"] == "grok"
+        assert a["checklist_source"] == "template" and len(a["checklist"]) >= 10   # instant template first
+        for _ in range(50):                                                       # research lands in the background
+            b = c.get(f"/api/v1/acquire/{a['acquisition_id']}").json()
+            if b["checklist_source"] == "grok":
+                break
+            _t.sleep(0.05)
+        assert b["checklist_source"] == "grok" and len(b["checklist"]) == 5 and b["checklist"][0]["citation"]["url"].startswith("https://pittsburghpa.gov")
+        # second acquisition of the same city/category is instant and cited
+        a2 = c.post(f"/api/v1/acquire/{CID}/start", headers=H).json()
+        assert a2["checklist_source"] == "grok"
 
 
 def test_health_memo(fake):
