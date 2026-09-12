@@ -1,6 +1,7 @@
 import asyncio
 import json
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -8,6 +9,7 @@ from app.services.discovery.intent import parse_intent
 from app.services.discovery.jobs import DiscoveryJobs
 from app.services.discovery.models import DiscoveryRequest, ExtractedCompanies, ExtractedCompany, Evidence, ParsedIntent
 from app.services.discovery.ranking import rank_companies
+from app.services.discovery.querit import ContentsUnavailable, Querit
 from app.services.market.engine import Engine
 from app.store import MemoryStore
 
@@ -52,12 +54,13 @@ def test_city_and_budget_never_relax():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("contents_enabled", [True, False])
 @pytest.mark.parametrize("city,state,alias", [
     ("Pittsburgh", "PA", "Pittsburgh"), ("New York", "NY", "NYC"),
     ("Miami", "FL", "Miami"), ("Chicago", "IL", "Chicago"),
     ("San Francisco", "CA", "San Fransisco"),
 ])
-async def test_retrieval_to_ranked_company_and_source(monkeypatch, city, state, alias):
+async def test_retrieval_to_ranked_company_and_source(monkeypatch, city, state, alias, contents_enabled):
     from app.services.discovery import jobs
     engine = Engine(MemoryStore())
     url = "https://example.org/laundry"
@@ -74,9 +77,11 @@ async def test_retrieval_to_ranked_company_and_source(monkeypatch, city, state, 
             self.calls += 1
             return pages
         async def contents(self, pages):
+            if not contents_enabled:
+                raise ContentsUnavailable("Full page retrieval is not enabled")
             return pages
 
-    async def complete(messages, *, schema):
+    async def complete(messages, *, schema, **options):
         if schema is ParsedIntent:
             return ParsedIntent(**parse_intent(f"laundromat in {alias}"))
         # Include an out-of-city extraction to ensure it does not create a market.
@@ -96,7 +101,9 @@ async def test_retrieval_to_ranked_company_and_source(monkeypatch, city, state, 
     request = DiscoveryRequest(q=f"laundromat in {alias}")
     job = manager.start(request)
     await job.task
-    assert job.status == "done", job.warnings
+    assert job.status == ("done" if contents_enabled else "partial"), job.warnings
+    if not contents_enabled:
+        assert job.warnings == ["Full page retrieval is not enabled; search excerpts were used"]
     assert len(job.results) == 1
     assert len(engine.store.list_companies()) == len(engine.store.list_markets()) == 1
     card = job.results[0]["company"]
@@ -107,11 +114,30 @@ async def test_retrieval_to_ranked_company_and_source(monkeypatch, city, state, 
     assert detail["evidence"][0]["quote"] == quote
     assert detail["sources"][0]["url"] == url
     count = provider.calls
-    assert manager.start(request).id == job.id
+    if contents_enabled:
+        assert manager.start(request).id == job.id
     replay = [event async for _, event in manager.events(job)]
     assert replay[-1]["type"] == "done" and replay[-1]["total"] == 1
     assert provider.calls == count
     await manager.close()
+
+
+@pytest.mark.asyncio
+async def test_contents_subscription_denial_is_not_retried(monkeypatch):
+    calls = []
+
+    def respond(request):
+        calls.append(request.url.path)
+        return httpx.Response(403, json={"error_msg": "No active contents subscription"})
+
+    monkeypatch.setenv("QUERIT_API_KEY", "test-only")
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
+        provider = Querit(client)
+        pages = [{"url": "https://example.org/laundry", "title": "Laundry", "content": "Excerpt"}]
+        for _ in range(2):
+            with pytest.raises(ContentsUnavailable):
+                await provider.contents(pages)
+        assert calls == ["/v1/contents"]
 
 
 @pytest.mark.asyncio

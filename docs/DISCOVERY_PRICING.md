@@ -14,6 +14,8 @@ Default semantic similarity is deterministic token cosine. `DISCOVERY_EMBEDDING_
 
 Financial facts affect discovery pricing only when a supplied source contains the exact quoted passage, the period and USD amount are supported, and the value passes numeric validation. Monthly values are not silently annualized, unsupported currency conversions are rejected, and inferred values remain distinct from reported inputs. These checks establish traceability, not independent verification of seller claims. Missing financial evidence produces a wider, provisional estimate rather than invented revenue.
 
+Querit's full-page contents endpoint requires separate account access. A denied contents request is cached until API restart; both initial discovery and financial enrichment continue from search excerpts, with a visible partial-results warning. Google Places can provide additional sourced business details. Discovery uses low reasoning effort on Grok 4.5/4.6 to limit latency. Initial extraction has a 90-second deadline; optional financial extraction keeps a 35-second deadline and the entire live job remains limited to 180 seconds.
+
 Successful results remain available if a provider fails, with terminal warnings. Identical active/completed-successful jobs reuse work for five minutes. Failed/partial jobs can be retried. Jobs are bounded in-process state, expire after 15 minutes on subsequent activity, and do not survive restart. One API worker remains required. Company evidence and valuation history use the configured Store and therefore follow memory/Mongo persistence.
 
 ## Pricing

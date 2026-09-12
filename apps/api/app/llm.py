@@ -82,6 +82,7 @@ async def complete(
     web_search: bool = False,
     allowed_domains: list[str] | None = None,
     temperature: float = 0.2,
+    reasoning_effort: Literal["low", "medium", "high", "xhigh"] | None = None,
 ) -> str | M | Completion:
     """Chat completion. With `schema`, returns a parsed model instance.
     With `tools`, returns Completion so the caller can run a tool loop."""
@@ -91,6 +92,8 @@ async def complete(
         "messages": messages,
         "temperature": temperature,
     }
+    if reasoning_effort is not None:
+        kwargs["reasoning_effort"] = reasoning_effort
     call_tools = list(tools or [])
     if web_search:
         search: dict[str, Any] = {"type": "web_search"}

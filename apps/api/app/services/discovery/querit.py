@@ -11,6 +11,10 @@ from urllib.parse import urlsplit, urlunsplit
 import httpx
 
 
+class ContentsUnavailable(RuntimeError):
+    """The configured account cannot use Querit's optional contents endpoint."""
+
+
 def public_url(raw: str) -> str | None:
     try:
         parts = urlsplit(raw)
@@ -35,6 +39,7 @@ class Querit:
         self.lock = asyncio.Lock()
         self.last_request = 0.
         self.cache: dict[tuple, tuple[float, dict]] = {}
+        self.contents_unavailable = False
 
     async def request(self, endpoint: str, body: dict) -> dict:
         key = os.getenv("QUERIT_API_KEY", "")
@@ -93,6 +98,14 @@ class Querit:
     async def contents(self, pages: list[dict]) -> list[dict]:
         if not pages:
             return []
-        data = await self.request("contents", {"urls": [p["url"] for p in pages[:6]], "format": "text", "extrasMeta": True})
+        if self.contents_unavailable:
+            raise ContentsUnavailable("Full page retrieval is not enabled")
+        try:
+            data = await self.request("contents", {"urls": [p["url"] for p in pages[:6]], "format": "text", "extrasMeta": True})
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 403:
+                self.contents_unavailable = True
+                raise ContentsUnavailable("Full page retrieval is not enabled") from None
+            raise
         by_url = {public_url(p.get("url", "")): p for p in data.get("results", [])}
         return [{**p, "content": (by_url.get(p["url"], {}).get("content") or p["content"])[:12000]} for p in pages]
