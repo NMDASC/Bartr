@@ -30,7 +30,6 @@ CH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 | 6 | `assets/company.png` | `/company/co_squirrel_hill_wash` |
 | 11 (unused now, the slide is an animated card) | `assets/portfolio.png` | `/portfolio` (the portfolio page is server rendered as user `server`; seed positions for that user first, and push a few markets below model value so Suggested stakes is not empty) |
 | 12 | `assets/acquire.png` | `/company/co_squirrel_hill_wash/acquire` |
-| 16 | `assets/qr.png` | QR of the live site, still a placeholder |
 
 Sponsor logos are in `assets/logos/` (simple-icons, CC0). No xAI, IFM or Querit mark exists there, so those are wordmarks.
 
@@ -56,7 +55,7 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 | 2:26 | 13 Security | "Rules catch it, two models judge it separately, and Grok tries to beat it as red team." |
 | 2:38 | 14 Grok | "Every company is appraised twice: Grok researches and names a value, K2 names one blind, both go into the price." |
 | 2:48 | 15 Stack | "Next.js, FastAPI, Atlas, Places, Querit, Grok, K2, iMessage. 103 tests." |
-| 2:55 | 16 Close | "The laundromat on Murray Avenue has a price. Scan, buy 20 shares, watch the next round." |
+| 2:55 | 16 Close | "The laundromat on Murray Avenue has a price. Buy 20 shares, watch the next round." |
 
 ## Files
 
