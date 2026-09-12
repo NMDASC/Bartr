@@ -609,5 +609,97 @@
    },
    "done": false
   }
+ ],
+ "Waco|TX|car_wash": [
+  {
+   "item": "Certificate of Occupancy (City of Waco)",
+   "why": "A building cannot be occupied or operated without a valid CO after ownership change; skipping risks shutdown, fines, or forced closure until inspections and approval are completed.",
+   "citation": {
+    "url": "https://www.waco-texas.com/Departments/Development-Services/Inspection-Services/Commercial-Construction-Permits/Certificate-of-Occupancy",
+    "title": "Certificate of Occupancy - City of Waco"
+   },
+   "done": false
+  },
+  {
+   "item": "Zoning confirmation (City of Waco Planning Services)",
+   "why": "If the site is not properly zoned for car wash use (e.g., C-3), the buyer cannot legally operate and may face enforcement actions, variances, or relocation costs.",
+   "citation": {
+    "url": "https://www.waco-texas.com/Departments/Development-Services/Planning-Services/Planning-Permits-Licenses",
+    "title": "Planning Permits & Licenses - City of Waco"
+   },
+   "done": false
+  },
+  {
+   "item": "Water/wastewater account transfer and pretreatment compliance (City of Waco)",
+   "why": "Failure to transfer the commercial account, notify WMARSS, or maintain a required grit trap/sand-oil interceptor violates city ordinance, leading to discharge violations, fines, or utility shutoff.",
+   "citation": {
+    "url": "https://www.waco-texas.com/Departments/MyWaco-Central",
+    "title": "MyWaco Central - City of Waco"
+   },
+   "done": false
+  },
+  {
+   "item": "Waco-McLennan County Public Health District environmental health check",
+   "why": "Overlooks septic, grit trap, or wastewater sanitation issues that the Health District regulates; can result in citations, mandatory corrections, or operational restrictions.",
+   "citation": {
+    "url": "https://www.waco-texas.com/cms-healthdepartment",
+    "title": "Waco-McLennan County Public Health District"
+   },
+   "done": false
+  },
+  {
+   "item": "Business Personal Property rendition (McLennan Central Appraisal District)",
+   "why": "Equipment and tangible assets go untaxed or are assessed with penalties/interest; buyer may inherit inaccurate valuations or face back-tax liability.",
+   "citation": {
+    "url": "https://mclennancad.org/",
+    "title": "McLennan Central Appraisal District"
+   },
+   "done": false
+  },
+  {
+   "item": "Sales and Use Tax Permit (Texas Comptroller)",
+   "why": "Car wash services are taxable; operating without a new permit in the buyer\u2019s name risks fines, back taxes, and inability to collect/remit sales tax legally.",
+   "citation": {
+    "url": "https://comptroller.texas.gov/taxes/sales/faq/buy-sell.php",
+    "title": "Buying or Selling a Business - Texas Comptroller"
+   },
+   "done": false
+  },
+  {
+   "item": "Certificate of No Tax Due (Texas Comptroller Form 86-114)",
+   "why": "Buyer can be held liable as successor for seller\u2019s unpaid sales, franchise, or other taxes; the certificate protects against unexpected tax debts after closing.",
+   "citation": {
+    "url": "https://comptroller.texas.gov/taxes/publications/98-117.php",
+    "title": "Texas Comptroller Publication 98-117"
+   },
+   "done": false
+  },
+  {
+   "item": "Certificate of Formation for new LLC (Texas Secretary of State)",
+   "why": "Without forming the new entity and filing Form 205, the buyer lacks legal structure for the purchase, exposing personal assets and invalidating other permits filed under the entity.",
+   "citation": {
+    "url": "https://www.sos.state.tx.us/corp/index.shtml",
+    "title": "Business Services - Texas Secretary of State"
+   },
+   "done": false
+  },
+  {
+   "item": "TCEQ wastewater and backflow prevention compliance (RG-434)",
+   "why": "Missing grit trap maintenance, annual backflow testing, or proper discharge records violates state environmental rules; results in fines, mandatory remediation, or permit actions.",
+   "citation": {
+    "url": "https://www.tceq.texas.gov/assistance/industry/carwash.html",
+    "title": "Environmental Rules for Car Washes - TCEQ"
+   },
+   "done": false
+  },
+  {
+   "item": "UCC lien search and assumed name/DBA filing (Texas Secretary of State)",
+   "why": "Undiscovered liens on equipment or assets can lead to creditor claims post-purchase; operating under an unregistered DBA risks name conflicts or legal challenges.",
+   "citation": {
+    "url": "https://www.sos.state.tx.us/corp/sosda/index.shtml",
+    "title": "SOSDirect - Texas Secretary of State"
+   },
+   "done": false
+  }
  ]
 }
