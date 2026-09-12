@@ -177,7 +177,7 @@ svg.flow.light .lg { filter: none; }
 .gk { border: 1px solid rgba(255,255,255,0.22); border-radius: 14px; padding: 22px 24px; background: rgba(255,255,255,0.035); }
 .gk.acc { border-color: var(--green); background: rgba(48,209,88,0.07); }
 .gk h3 { font-size: 26px; font-weight: 600; margin: 0 0 10px; letter-spacing: -0.015em; }
-.gk p { font-size: 19.5px; line-height: 1.42; margin: 0; color: var(--paper-2); }
+.gk p { font-size: 18.5px; line-height: 1.42; margin: 0; color: var(--paper-2); }
 
 .sponsors { display: flex; justify-content: space-between; align-items: center; }
 .sponsors .sp { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
@@ -403,23 +403,27 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
 <!-- 12 Agentic security panel -->
 <section class="slide" data-theme="dark" id="s12">
   <p class="kicker fu">Security</p>
-  <p class="kicker right muted fu">Last 20 rounds of every market, on demand</p>
+  <p class="kicker right muted fu">Last 20 rounds of every market, plus a Grok red team that attacks it</p>
   <h2 class="hl fu" style="position:absolute; left:140px; top:170px; font-size:68px;">Rules scan every trade. Two models review every flag.</h2>
   <div class="fu" style="position:absolute; left:140px; top:330px;">
     <svg class="flow" data-flow="panel" viewBox="0 0 1640 330" width="1640" height="330"></svg>
   </div>
-  <div style="position:absolute; left:140px; right:140px; top:720px; display:grid; grid-template-columns: 1fr 1fr 1fr; column-gap:60px;">
+  <div style="position:absolute; left:140px; right:140px; top:720px; display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; column-gap:44px;">
     <div class="fu" style="border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
       <p class="label" style="margin:0;"><span style="color:var(--red); font-weight:600;">&#9679;&nbsp; Flagged</span>&nbsp;&nbsp;wash trading, high</p>
-      <p class="label muted" style="margin-top:10px; font-size:21px; line-height:1.45;">Rules: wash_a and wash_b have traded 9 times and only with each other. Volume prints, ownership never changes.</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">Rules: wash_a and wash_b have traded 9 times and only with each other. Volume prints, ownership never changes.</p>
     </div>
-    <div class="fu" style="--d:500ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
+    <div class="fu" style="--d:400ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
       <p class="label" style="margin:0;"><b>Grok</b>&nbsp;&nbsp;explains</p>
-      <p class="label muted" style="margin-top:10px; font-size:21px; line-height:1.45;">"Alternating sides at the clearing price with no other counterparties. No economic purpose; treat as manipulation."</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">"Alternating sides at the clearing price with no other counterparties. No economic purpose; treat as manipulation."</p>
     </div>
-    <div class="fu" style="--d:1000ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
+    <div class="fu" style="--d:800ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
       <p class="label" style="margin:0;"><b>K2</b>&nbsp;&nbsp;agrees, high</p>
-      <p class="label muted" style="margin-top:10px; font-size:21px; line-height:1.45;">If the two models disagree the flag is marked disputed and both opinions show. Every event is in the append only audit log.</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">If the two models disagree the flag is marked disputed and both opinions show. Every event is in the append only audit log.</p>
+    </div>
+    <div class="fu" style="--d:1200ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
+      <p class="label" style="margin:0;"><b>Red team</b>&nbsp;&nbsp;Grok attacks</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">Grok plays the manipulator: it plans a wash, spoof or pump and runs it through bot accounts. The rules and the reviewers must catch it. Every attempt is logged.</p>
     </div>
   </div>
 </section>
@@ -427,17 +431,17 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
 <!-- 13 Grok -->
 <section class="slide" data-theme="dark" id="s13g">
   <p class="kicker fu">Grok inside Bartr</p>
-  <p class="kicker right muted fu">grok-4.6 through the xAI API, one llm.py, K2 can take any seat</p>
-  <h2 class="hl fu" style="position:absolute; left:140px; top:160px; font-size:64px;">Grok reads, judges, and gets a second look.</h2>
+  <p class="kicker right muted fu">grok-4.6 through the xAI API, twelve call sites, one llm.py</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:160px; font-size:64px;">Grok reads, appraises, reviews, attacks, and explains.</h2>
   <div style="position:absolute; left:140px; right:140px; top:330px; display:grid; grid-template-columns: repeat(3, 1fr); gap:28px;">
-    <div class="gk fu"><h3>1. Reads the web</h3><p>Querit fetches pages about each business. Grok returns a structured profile: revenue, earnings, machines, staff, tenure, owner. Every number must carry a source URL and the quote that contains it.</p></div>
+    <div class="gk fu"><h3>1. Reads and appraises</h3><p>Querit fetches pages; Grok returns a structured profile where every number carries a source URL and its quote. The appraiser then researches the business with Grok's web search and returns a value, a confidence and sources; K2 gives an independent number.</p></div>
     <div class="gk fu acc"><h3>2. Kept only if provable</h3><p>Bartr keeps a fact only if the quote appears verbatim in the fetched page. Financial numbers must be in USD, dated, and appear in the quote. A fact Grok marks inferred can never become a financial input. This is what stops a hallucinated revenue from becoming a price.</p></div>
-    <div class="gk fu"><h3>3. Gives an opinion, with doubt</h3><p>Grok's own value estimate is one of five estimators. Its weight comes from its stated confidence: σ = 0.35 + 0.35 (1 − c). If K2 disagrees, σ widens by half the gap between them.</p></div>
-    <div class="gk fu"><h3>4. Reviews every flag</h3><p>Each rule flag goes to Grok and to K2 in separate calls; neither sees the other. Agreement or dispute is recorded with both explanations.</p></div>
-    <div class="gk fu"><h3>5. Runs the agent</h3><p>The chat agent is a Grok tool loop over the same API: search_companies, get_company, get_book, place_order, suggest_portfolio. The iMessage bridge talks to the same agent.</p></div>
-    <div class="gk fu"><h3>Provider swap</h3><p>Every call goes through one function with a provider switch. K2 takes any role Grok has by changing one argument, which is how the second opinion stays independent.</p></div>
+    <div class="gk fu"><h3>3. An opinion with doubt built in</h3><p>The appraisal is one of five estimators. Its weight comes from its stated confidence: σ = 0.35 + 0.35 (1 − c). If K2 disagrees, σ widens by half the gap. A confident wrong number cannot dominate the price.</p></div>
+    <div class="gk fu"><h3>4. Reviews flags and attacks the market</h3><p>Each rule flag goes to Grok and to K2 in separate calls; neither sees the other. As red team, Grok plans a wash, spoof or pump and runs it through bot accounts so the rules are tested against a real adversary.</p></div>
+    <div class="gk fu"><h3>5. Talks to the user</h3><p>Chat agent with tools (search, company, book, place order, suggest); owner persona you can question on a company page; market narrator; portfolio profile parser and the "why" on each suggestion; LOI and diligence checklist drafting; a market health memo. iMessage talks to the same agent.</p></div>
+    <div class="gk fu"><h3>Never a single point of failure</h3><p>Every call goes through one function with a provider switch, so K2 takes any role by changing one argument. Every call has a deterministic fallback, so the demo never hangs on a key. /readiness lists each feature and its recent calls.</p></div>
   </div>
-  <p class="legend fu" style="font-size:20px;">Grok runs inside the product through the API. It did not write the code. Live extraction is behind DISCOVERY_LIVE with Querit and xAI keys; the seeded demo companies carry hand entered model opinions.</p>
+  <p class="legend fu" style="font-size:20px;">Grok runs inside the product through the API; it did not write the code. scripts/grok_smoke.py exercises every call site. Seeded demo companies carry a hand entered opinion until the appraiser is run on them.</p>
 </section>
 
 <!-- 13 Architecture -->
@@ -620,7 +624,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     panel: {
       nodes: [
         { id: 't', x: 0, y: 100, w: 260, h: 110, t: 'Round tape', s: ['orders, fills, cancels,', 'book snapshots'] },
-        { id: 'r', x: 320, y: 100, w: 300, h: 110, t: 'Rules agent', s: ['wash, pump,', 'concentration, band hits'] },
+        { id: 'r', x: 320, y: 100, w: 300, h: 110, t: 'Rules agent', s: ['wash, spoof, pump,', 'concentration, band hits'] },
         { id: 'g', x: 690, y: 0, w: 300, h: 110, t: 'Grok  (xAI)', s: ['reads the flag, explains', 'it in plain words'] },
         { id: 'k', x: 690, y: 200, w: 300, h: 110, t: 'K2  (IFM)', s: ['independent second model,', 'never sees Grok’s answer'] },
         { id: 'v', x: 1060, y: 100, w: 260, h: 110, t: 'Verdict', s: ['agree, or disputed:', 'both opinions shown'] },
