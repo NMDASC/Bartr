@@ -3,6 +3,18 @@ import { usd, pct } from "@/lib/format";
 import { Label } from "@/components/ui/label";
 
 /** Model value vs market-implied value on one ruled scale. */
+/**
+ * The API names estimators with its own enum (income, listing, proxy, llm, base_rate).
+ * Those are internal identifiers, not labels a reader can use, so the UI names the method instead.
+ */
+const ESTIMATOR_LABEL: Record<string, string> = {
+  income: "Income",
+  listing: "Asking price",
+  proxy: "Inferred",
+  llm: "AI estimate",
+  base_rate: "Category median",
+};
+
 export function Valuation({ company, last }: { company: Company; last: number | null }) {
   const v = company.valuation;
   const f = company.financials;
@@ -72,7 +84,7 @@ export function Valuation({ company, last }: { company: Company; last: number | 
           <ol className="flex flex-col gap-2">
             {v.estimates.map((e) => (
               <li key={e.name} className="grid grid-cols-[64px_1fr_auto] gap-x-3 items-baseline">
-                <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-tint-500">{e.name.replace("_", " ")}</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-tint-500">{ESTIMATOR_LABEL[e.name] ?? e.name.replace(/_/g, " ")}</span>
                 <span className="text-[12px] secondary leading-[1.3]">{e.note}</span>
                 <span className="font-mono text-[11px] tabular-nums text-right whitespace-nowrap">
                   {usd(e.value, { compact: true })} <span className="text-tint-400">±{e.sigma.toFixed(2)}</span>
