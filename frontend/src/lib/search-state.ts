@@ -10,10 +10,12 @@ export interface SearchState {
   revision: number;
   /** most recent status lines from the search, newest last */
   activity: { phase: string; message: string; t: number }[];
+  /** live discovery was off for this search (no model or search key); results are what we already had */
+  liveOff: boolean;
 }
 
 export function initialSearchState(): SearchState {
-  return { phase: "streaming", intent: null, cards: new Map(), order: [], error: null, warnings: [], revision: -1, activity: [] };
+  return { phase: "streaming", intent: null, cards: new Map(), order: [], error: null, warnings: [], revision: -1, activity: [], liveOff: false };
 }
 
 function finishCards(cards: Map<string, CompanyCard>) {
@@ -42,11 +44,15 @@ export function reduceDiscovery(state: SearchState, event: DiscoveryEvent | { ty
     }
     case "error": return { ...state, phase: "error", error: event.message, cards: finishCards(state.cards) };
     case "done": {
-      const warnings = [...new Set([...state.warnings, ...(event.warnings ?? [])])];
+      // live discovery being off is a mode, not a failure: keep it as a note, never as "partial"
+      const OFF = new Set(["Live search unavailable", "Live search is paused"]);
+      const all = [...new Set([...state.warnings, ...(event.warnings ?? [])])];
+      const warnings = all.filter((w) => !OFF.has(w));
+      const liveOff = all.some((w) => OFF.has(w));
       const incomplete = [...state.cards.values()].some(c => c.status !== "ready");
       const failed = event.status === "failed" || event.status === "cancelled" || state.phase === "error";
-      return { ...state, warnings, cards: finishCards(state.cards),
-        phase: failed ? "error" : warnings.length || incomplete || event.status === "partial" ? "partial" : "done",
+      return { ...state, warnings, liveOff, cards: finishCards(state.cards),
+        phase: failed ? "error" : warnings.length || incomplete || (event.status === "partial" && !liveOff) ? "partial" : "done",
         error: failed ? state.error ?? "Search could not complete. Try again." : null };
     }
   }

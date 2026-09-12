@@ -172,9 +172,9 @@ export async function suggestPortfolio(userId?: string) {
   return j<Suggestion[]>("/portfolio/suggest", { method: "POST", body: "{}" }, userId);
 }
 
-export async function startAcquisition(companyId: string) {
+export async function startAcquisition(companyId: string, buyerName?: string) {
   if (IS_MOCK) return mock.acquire(companyId);
-  return j<Acquisition>(`/acquire/${companyId}/start`, { method: "POST", body: "{}" });
+  return j<Acquisition>(`/acquire/${companyId}/start`, { method: "POST", body: JSON.stringify(buyerName ? { buyer_name: buyerName } : {}) });
 }
 
 export async function getFlags() {

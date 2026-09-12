@@ -17,6 +17,7 @@ from app.services.market.treasury import SHARES, FLOAT_FRAC, FLOOR_FRAC, ask_lad
 from app.store import Store
 
 STARTING_CASH = 100_000.0
+MIN_REF_VOLUME = 1.0           # shares a round must trade before the print moves last price and the belief
 BAND = 0.10
 MAX_ORDER_FRAC = 0.05          # of shares outstanding
 MAX_NOTIONAL_FRAC = 0.25       # of user cash, open buy notional per market
@@ -254,8 +255,9 @@ class Engine:
                           for (u, sd), q in sorted(fills.items(), key=lambda kv: -kv[1])]
         if res.volume > 0:
             self._apply_fills(m, batch, res)
-            m["last_price"] = res.price
-            self._update_belief(m, res.price, res.volume)
+            if res.volume >= MIN_REF_VOLUME:   # a fraction of a share cannot reprice a company
+                m["last_price"] = res.price
+                self._update_belief(m, res.price, res.volume)
             m["band_hits"] = m["band_hits"] + 1 if res.band_hit else 0
             if m["band_hits"] >= 2:
                 m["halted"] = True

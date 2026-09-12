@@ -165,6 +165,8 @@ export interface CompanyCard {
   bid: number | null;
   ask: number | null;
   last: number | null;
+  /** where the round in progress would clear right now */
+  indicative_price?: number | null;
   v0_per_share: number | null;
   confidence: number | null;
   status: CompanyStatus;

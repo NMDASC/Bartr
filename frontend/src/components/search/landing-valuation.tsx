@@ -46,7 +46,8 @@ function phi(z: number) {
 export function LandingValuation({ valuation, name }: { valuation: Valuation; name: string }) {
   const { v0, sigma, estimates } = valuation;
   const svgRef = useRef<SVGSVGElement>(null);
-  const [mark, setMark] = useState(v0);
+  // start at the 20th percentile so the first thing a reader sees is a real claim (80% odds), not the median
+  const [mark, setMark] = useState(Math.round(v0 * Math.exp(-0.8416 * sigma)));
   const [touched, setTouched] = useState(false);
 
   const lo = v0 * Math.exp(-2.7 * sigma);

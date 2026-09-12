@@ -30,8 +30,9 @@ export function RoundFigure({ batch, modelPrice }: { batch: Batch | null; modelP
   const p = batch.clearing_price;
   const d = batch.demand ?? 0;
   const s = batch.supply ?? 0;
-  const short = d > s ? "sellers" : s > d ? "buyers" : null;
-  const fillPct = short === "buyers" ? (batch.volume / d) * 100 : short === "sellers" ? (batch.volume / s) * 100 : 100;
+  // the longer side is rationed pro rata; the shorter side fills in full
+  const long = d > s ? "buyers" : s > d ? "sellers" : null;
+  const fillPct = long ? (batch.volume / Math.max(d, s)) * 100 : 100;
   const vsModel = modelPrice ? ((p - modelPrice) / modelPrice) * 100 : null;
 
   return (
@@ -50,21 +51,26 @@ export function RoundFigure({ batch, modelPrice }: { batch: Batch | null; modelP
           <text x={geo.x(geo.hi)} y={geo.H - 8} fontSize={9} fill="#6c6991" fontFamily={MONO} textAnchor="end">{geo.hi.toFixed(2)}</text>
           <text x={geo.W - 10} y={geo.mT + 6} fontSize={8.5} fill="#2bc392" fontFamily={MONO} textAnchor="end">demand</text>
           <text x={geo.W - 10} y={geo.mT + 17} fontSize={8.5} fill="#ee5557" fontFamily={MONO} textAnchor="end">supply</text>
+          {geo.clipped ? <text x={geo.W - 10} y={geo.mT + 28} fontSize={8} fill="#6c6991" fontFamily={MONO} textAnchor="end">owner {geo.clipped.side} {geo.clipped.qty.toFixed(0)} @ {geo.clipped.price.toFixed(2)} off scale</text> : null}
         </svg>
       ) : (
         <div className="h-[170px]" />
       )}
       <dl className="grid grid-cols-3 gap-x-3 gap-y-1 px-3 py-2.5 border-t border-line font-mono text-[11px] tabular-nums">
-        <dt className="text-muted-foreground uppercase tracking-[0.08em]">Wanted</dt>
-        <dt className="text-muted-foreground uppercase tracking-[0.08em]">Offered</dt>
-        <dt className="text-muted-foreground uppercase tracking-[0.08em]">Traded</dt>
-        <dd className="text-up">{d.toFixed(0)} sh at or above {p.toFixed(2)}</dd>
-        <dd className="text-down">{s.toFixed(0)} sh at or below {p.toFixed(2)}</dd>
-        <dd className="text-foreground">{batch.volume} sh, one price</dd>
+        <dt className="text-muted-foreground uppercase tracking-[0.08em]">Demand at p*</dt>
+        <dt className="text-muted-foreground uppercase tracking-[0.08em]">Supply at p*</dt>
+        <dt className="text-muted-foreground uppercase tracking-[0.08em]">Volume</dt>
+        <dd className="text-up">{d.toFixed(0)} sh bid at or above {p.toFixed(2)}</dd>
+        <dd className="text-down">{s.toFixed(0)} sh offered at or below {p.toFixed(2)}</dd>
+        <dd className="text-foreground">{batch.volume} sh at one price</dd>
       </dl>
       <p className="px-3 pb-3 text-[13px] leading-[1.5] secondary">
         {p.toFixed(2)} moved more shares than any other price.{" "}
-        {short ? `${short === "buyers" ? "Buyers" : "Sellers"} wanted more than the other side offered, so each was filled ${fillPct.toFixed(0)}% pro rata.` : "Both sides filled in full."}{" "}
+        {long === "buyers"
+          ? `Buyers wanted ${d.toFixed(0)} but sellers offered ${s.toFixed(0)}, so sellers filled in full and each buyer got ${fillPct.toFixed(0)}% of their order.`
+          : long === "sellers"
+            ? `Sellers offered ${s.toFixed(0)} but buyers wanted ${d.toFixed(0)}, so buyers filled in full and each seller sold ${fillPct.toFixed(0)}% of their offer.`
+            : "Both sides filled in full."}{" "}
         {batch.band_hit ? "The 10% band clamped the move; the rest carries to the next round. " : ""}
         {vsModel !== null ? `${vsModel >= 0 ? "+" : ""}${vsModel.toFixed(1)}% against the model value.` : ""}
       </p>

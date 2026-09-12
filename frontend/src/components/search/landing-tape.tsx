@@ -73,7 +73,7 @@ export function LandingTape({ name = "Squirrel Hill Wash and Fold", start = 56.4
   const secs = Math.ceil(left / 1000);
 
   return (
-    <Plate id="Live book" caption={`${String(secs).padStart(2, "0")}s`} className="w-full">
+    <Plate id="How a round works (illustration)" caption={`${String(secs).padStart(2, "0")}s`} className="w-full">
       <div className="flex items-baseline justify-between gap-3 border-b border-hairline px-3 py-2.5">
         <span className="truncate text-[13px]">{name}</span>
         <span

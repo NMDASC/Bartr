@@ -8,6 +8,8 @@ import type { BookLevel } from "@contracts/types";
 export interface FigurePoint { p: number; d: number; s: number; v: number }
 
 export interface Figure {
+  /** y axis was clipped: the largest level (usually the owner floor) sits above the top */
+  clipped: { side: "bid" | "ask"; price: number; qty: number } | null;
   W: number; H: number;
   x: (p: number) => number;
   y: (v: number) => number;
@@ -50,10 +52,18 @@ export function figure(bids: BookLevel[], asks: BookLevel[], anchor: number | nu
   const pad = (hi - lo) * 0.06 || 1;
   const xMin = lo - pad;
   const xMax = hi + pad;
-  const yMax = Math.max(1, ...pts.map((q) => Math.max(q.d, q.s)));
+  // Scale to what people actually trade. One 1,000 share owner floor would otherwise flatten every
+  // real level onto the axis, and the cross (the only thing the picture is for) would be invisible.
+  const fullMax = Math.max(1, ...pts.map((q) => Math.max(q.d, q.s)));
+  const nonOwner = [...bids, ...asks].filter((l) => l.origin !== "treasury");
+  const ownerMax = Math.max(0, ...[...bids, ...asks].filter((l) => l.origin === "treasury").map((l) => l.qty));
+  const tradeScale = Math.max(1, chosen.v * 2.5, ...nonOwner.map((l) => l.qty * 1.6), ...asks.filter((l) => l.origin === "treasury").slice(0, 2).map((l) => l.qty * 1.2));
+  const yMax = fullMax > tradeScale * 1.5 ? tradeScale : fullMax;
+  const big = [...bids, ...asks].find((l) => l.qty === ownerMax && l.origin === "treasury" && ownerMax > yMax);
+  const clipped = big ? { side: bids.includes(big) ? "bid" as const : "ask" as const, price: big.price, qty: big.qty } : null;
   const mL = 8, mR = 8, mT = 12, mB = 22;
   const x = (p: number) => mL + ((p - xMin) / (xMax - xMin)) * (W - mL - mR);
-  const y = (v: number) => H - mB - (v / yMax) * (H - mT - mB);
+  const y = (v: number) => H - mB - (Math.min(v, yMax) / yMax) * (H - mT - mB);
   const demand = [`M ${x(xMin)} ${y(pts[0].d)}`];
   pts.forEach((q, i) => {
     const next = pts[i + 1];
@@ -64,5 +74,5 @@ export function figure(bids: BookLevel[], asks: BookLevel[], anchor: number | nu
   const supply = [`M ${x(xMin)} ${y(0)}`];
   pts.forEach((q) => supply.push(`H ${x(q.p)}`, `V ${y(q.s)}`));
   supply.push(`H ${x(xMax)}`);
-  return { W, H, x, y, demand: demand.join(" "), supply: supply.join(" "), star: chosen, pts, xMin, xMax, lo, hi, yMax, mB, mT };
+  return { clipped, W, H, x, y, demand: demand.join(" "), supply: supply.join(" "), star: chosen, pts, xMin, xMax, lo, hi, yMax, mB, mT };
 }

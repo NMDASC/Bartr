@@ -28,31 +28,31 @@ export function Suggestions({ initial, bankroll }: { initial: Suggestion[]; bank
       <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
         <h2 className="text-[30px] md:text-[36px] 3xl:text-[44px] leading-[1.2]">Suggested stakes</h2>
         <label className="flex items-center gap-3">
-          <Label tracking="tight">Kelly multiplier</Label>
+          <Label tracking="tight">How much of the edge to bet</Label>
           <input type="range" min={0.25} max={1} step={0.05} value={mult} onChange={(e) => setMult(Number(e.target.value))} className="w-40 accent-[#755cfe]" />
           <span className="font-mono text-[12px] tabular-nums w-10">{mult.toFixed(2)}</span>
         </label>
       </div>
 
-      <div className="hidden md:grid grid-cols-[1fr_88px_88px_88px_72px_72px_110px] gap-4 px-3 pb-2 border-b border-line">
+      <div className="hidden md:grid grid-cols-[1fr_88px_88px_88px_96px_96px_110px] gap-4 px-3 pb-2 border-b border-line">
         <Label>Company</Label>
         <Label className="text-right">Price</Label>
         <Label className="text-right">Value</Label>
         <Label className="text-right">Edge</Label>
-        <Label className="text-right">σ</Label>
-        <Label className="text-right">f</Label>
-        <Label className="text-right">Stake</Label>
+        <Label className="text-right">Uncertainty</Label>
+        <Label className="text-right">Of bankroll</Label>
+        <Label className="text-right">Suggested</Label>
       </div>
       <ul>
         {rows.map((r) => (
           <li key={r.company._id} className="border-b border-hairline">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_88px_88px_88px_72px_72px_110px] items-start gap-x-4 gap-y-2 px-3 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_88px_88px_88px_96px_96px_110px] items-start gap-x-4 gap-y-2 px-3 py-4">
               <div>
                 <div className="flex items-center gap-2">
                   <Link href={`/company/${r.company._id}`} className="text-[16px] hover:text-accent-deep">{r.company.name}</Link>
                   {r.edge < 0 ? <Chip tone="down">overpriced</Chip> : r.f === 0 ? <Chip tone="neutral">no edge</Chip> : <Chip tone="up">buy</Chip>}
                 </div>
-                <div className="text-[13px] secondary">{r.company.city}, {r.company.state} · {r.company.category}</div>
+                <div className="text-[13px] secondary">{r.company.city}, {r.company.state} · {r.company.category.replace(/_/g, " ")}</div>
                 <p className="mt-2 text-[14px] secondary max-w-2xl">{r.why}</p>
               </div>
               <div className="font-mono text-[13px] tabular-nums md:text-right">{px(r.price)}</div>

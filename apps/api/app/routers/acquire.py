@@ -15,6 +15,7 @@ from copy import deepcopy
 from threading import RLock
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 from app.deps import current_user, store
 from app.schemas import Acquisition, ChecklistItem

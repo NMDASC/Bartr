@@ -22,9 +22,11 @@ export function OrderTicket({ marketId, book, nextBatchAt, round }: { marketId: 
 
   const bestBid = book?.bids[0]?.price ?? null;
   const bestAsk = book?.asks[0]?.price ?? null;
-  // where the round would clear right now; in a batch auction that is the price you actually pay
-  const expected = book?.indicative_price ?? (side === "buy" ? bestAsk : bestBid);
-  const suggested = expected;
+  // a crossed book has an indicative clearing price; otherwise the marketable limit is the other side's best
+  const crossed = book?.indicative_price != null;
+  const buyAt = crossed ? book!.indicative_price! : bestAsk;
+  const sellAt = crossed ? book!.indicative_price! : bestBid;
+  const suggested = side === "buy" ? buyAt : sellAt;
   const q = Number(qty);
   const l = limit === "" ? suggested : Number(limit);
   const notional = q > 0 && l ? q * l : null;
@@ -92,25 +94,25 @@ export function OrderTicket({ marketId, book, nextBatchAt, round }: { marketId: 
           <dd className="text-right">{book ? `${px(book.band.low)} to ${px(book.band.high)}` : "\u2014"}</dd>
         </dl>
         <div className="grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => { setSide("buy"); setLimit(expected !== null ? px(Math.round(expected * 1.01 * 100) / 100) : ""); }} disabled={expected === null}
+          <button type="button" onClick={() => { setSide("buy"); setLimit(buyAt !== null ? px(buyAt) : ""); }} disabled={buyAt === null}
             className="h-9 border border-line font-mono text-[11px] tabular-nums text-up hover:bg-up/[0.06] disabled:opacity-40 transition-colors duration-150">
-            Buy, expect {expected !== null ? px(expected) : "—"}
+            {crossed ? "Buy at indicative" : "Buy at ask"} {buyAt !== null ? px(buyAt) : "—"}
           </button>
-          <button type="button" onClick={() => { setSide("sell"); setLimit(expected !== null ? px(Math.round(expected * 0.99 * 100) / 100) : ""); }} disabled={expected === null}
+          <button type="button" onClick={() => { setSide("sell"); setLimit(sellAt !== null ? px(sellAt) : ""); }} disabled={sellAt === null}
             className="h-9 border border-line font-mono text-[11px] tabular-nums text-down hover:bg-down/[0.06] disabled:opacity-40 transition-colors duration-150">
-            Sell, expect {expected !== null ? px(expected) : "—"}
+            {crossed ? "Sell at indicative" : "Sell to bid"} {sellAt !== null ? px(sellAt) : "—"}
           </button>
         </div>
         <Button type="submit" variant="primary" size="lg" disabled={disabled} className="w-full">
-          {busy ? "Sealing" : `Seal ${side} order for round ${(round ?? 0) + 1}`}
+          {busy ? "Submitting" : `Submit ${side} for round ${round ?? ""}`}
         </Button>
         <p className="text-[12px] secondary leading-[1.45]">
-          Orders are sealed until the clock hits zero{nextBatchAt ? ` (${Math.ceil(secs)}s)` : ""}. Everyone in the round trades at one price; a limit is the most you will pay or the least you will take, and the round usually clears inside it.
+          Round {round ?? ""} clears in {nextBatchAt ? `${Math.ceil(secs)}s` : "—"}. You trade at the clearing price or not at all: never above your limit when buying, never below it when selling.
         </p>
         {placed ? (
           <Callout tone={placed.side === "buy" ? "up" : "down"}>
             <span className="font-mono text-[11px] tabular-nums">
-              {placed.side} {placed.qty} @ {px(placed.limit_price)} sealed for round {(round ?? 0) + 1}
+              {placed.side} {placed.qty} @ {px(placed.limit_price)} in for round {round ?? ""}
             </span>
           </Callout>
         ) : null}

@@ -36,7 +36,7 @@ function Person({ p, you, filled, price }: { p: Participant; you: boolean; fille
   );
 }
 
-export function Participants({ book, latest, justCleared, pending }: { book: Book | null; latest: Batch | null; justCleared: boolean; pending: number }) {
+export function Participants({ book, latest, justCleared, pending, quietRound = false, round, last }: { book: Book | null; latest: Batch | null; justCleared: boolean; pending: number; quietRound?: boolean; round?: number; last?: number | null }) {
   const you = book?.you ?? null;
   const sealed = book?.participants ?? [];
   const fills = latest?.fills ?? [];
@@ -47,13 +47,18 @@ export function Participants({ book, latest, justCleared, pending }: { book: Boo
   return (
     <section className="bg-card border border-line">
       <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
-        <Label>{showFills ? `Round ${latest?.round ?? ""} traded` : "In this round"}</Label>
+        <Label>{showFills ? `Round ${latest?.round ?? ""} traded` : "Who is in the round"}</Label>
         <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
           {showFills
             ? `${fills.length} filled at ${px(latest?.clearing_price)}`
-            : `${n} ${n === 1 ? "participant" : "participants"} sealed${pending > 0 ? ` · ${pending} more arriving` : ""}`}
+            : `carried over ${n}${pending > 0 ? ` · new this round ${pending}` : ""}`}
         </span>
       </div>
+      {quietRound && !showFills ? (
+        <p className="px-3 pt-2.5 -mb-1 font-mono text-[11px] text-muted-foreground tabular-nums">
+          Round {round ? round - 1 : ""}: no bid met an ask, nothing traded, the price holds at {px(last)}.
+        </p>
+      ) : null}
       {list.length ? (
         <ul className="flex gap-2 overflow-x-auto px-3 py-3">
           {list.slice(0, 14).map((p) => (
@@ -62,7 +67,7 @@ export function Participants({ book, latest, justCleared, pending }: { book: Boo
           {list.length > 14 ? <li className="self-center font-mono text-[10px] text-muted-foreground">+{list.length - 14}</li> : null}
         </ul>
       ) : (
-        <p className="px-3 py-4 text-[13px] secondary">No one has sealed an order yet this round. The owner&rsquo;s quotes are always in.</p>
+        <p className="px-3 py-4 text-[13px] secondary">No orders carried into this round. The owner&rsquo;s quotes are always in.</p>
       )}
     </section>
   );

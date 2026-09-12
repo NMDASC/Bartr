@@ -12,7 +12,7 @@ from app.services.market.treasury import SHARES
 
 
 class Bots:
-    def __init__(self, engine: Engine, n: int = 20, seed: int = 7, noise: float = 0.7, wash: bool = True):
+    def __init__(self, engine: Engine, n: int = 20, seed: int = 7, noise: float = 0.3, wash: bool = True):
         self.e = engine
         self.rng = random.Random(seed)
         self.names = [f"bot{i:02d}" for i in range(n)]
@@ -25,8 +25,9 @@ class Bots:
         if key not in self.private:
             model = math.exp(m["prior"]["mu"]) / SHARES
             self.private[key] = model * math.exp(self.rng.gauss(0, self.noise * m["prior"]["sigma"]))
-        # slow random walk of opinion
-        self.private[key] *= math.exp(self.rng.gauss(0, 0.01))
+        # slow random walk of opinion, pulled gently toward the last print so bots follow the market, not fight it
+        last = m["last_price"] or model
+        self.private[key] = self.private[key] * math.exp(self.rng.gauss(0, 0.006)) * 0.97 + last * 0.03
         return self.private[key]
 
     def step(self, max_markets: int = 8) -> int:
@@ -41,14 +42,24 @@ class Bots:
                 pv = self._pv(bot, m)
                 mu, f = kelly_fraction(ref, pv, m["belief"]["sigma"])
                 held = u["positions"].get(m["id"], {}).get("qty", 0.0)
-                if f > 0 and self.rng.random() < 0.7:
+                lo, hi = ref * 0.96, ref * 1.04   # nobody bids a tenth away from the last print
+                # flow: a quarter of the time a bot trades for its own reasons, near the last print, small size
+                if self.rng.random() < 0.25:
+                    if held >= 2 and self.rng.random() < 0.5:
+                        o = self.e.place_order(bot, m["id"], "sell", max(1, round(held * 0.3)), round(ref * self.rng.uniform(0.985, 1.005), 2), origin="bot")
+                    else:
+                        o = self.e.place_order(bot, m["id"], "buy", self.rng.choice([2, 3, 5, 8]), round(ref * self.rng.uniform(0.995, 1.02), 2), origin="bot")
+                    placed += o["status"] != "rejected"
+                    continue
+                if f > 0 and self.rng.random() < 0.6:
                     usd = min(f * u["cash"] * 0.25, u["cash"] * 0.02)
-                    qty = round(usd / ref, 2)
-                    if qty >= 0.01:
-                        o = self.e.place_order(bot, m["id"], "buy", qty, round(pv * self.rng.uniform(0.98, 1.03), 2), origin="bot")
-                        placed += o["status"] != "rejected"
-                elif held > 0 and pv < ref * 0.98 and self.rng.random() < 0.7:
-                    o = self.e.place_order(bot, m["id"], "sell", round(held * 0.5, 2), round(pv * self.rng.uniform(0.97, 1.0), 2), origin="bot")
+                    qty = max(1, round(usd / ref))
+                    limit = min(hi, max(lo, pv * self.rng.uniform(0.995, 1.01)))
+                    o = self.e.place_order(bot, m["id"], "buy", qty, round(limit, 2), origin="bot")
+                    placed += o["status"] != "rejected"
+                elif held >= 1 and pv < ref * 0.99 and self.rng.random() < 0.6:
+                    limit = min(hi, max(lo, pv * self.rng.uniform(0.99, 1.0)))
+                    o = self.e.place_order(bot, m["id"], "sell", max(1, round(held * 0.5)), round(limit, 2), origin="bot")
                     placed += o["status"] != "rejected"
             # cancel stale bot orders (older than 3 rounds)
             for bot in self.names:

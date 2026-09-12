@@ -105,12 +105,11 @@ export function LandingTrending({ companies }: { companies: CompanyCard[] }) {
 
   return (
     <>
-      <div className="hidden md:grid grid-cols-[1fr_104px_120px_96px_96px_96px_80px] gap-4 px-3 pb-2">
+      <div className="hidden md:grid grid-cols-[1fr_104px_120px_112px_96px_80px] gap-4 px-3 pb-2">
         <Label>Company</Label>
         <Label className="text-right">Trend</Label>
         <Label className="text-right">Value</Label>
-        <Label className="text-right">Bid</Label>
-        <Label className="text-right">Ask</Label>
+        <Label className="text-right">Next clear</Label>
         <Label className="text-right">Last</Label>
         <Label className="text-right">Conf</Label>
       </div>
@@ -122,7 +121,7 @@ export function LandingTrending({ companies }: { companies: CompanyCard[] }) {
             <li key={c._id}>
               <Link
                 href={`/company/${c._id}`}
-                className="group relative grid grid-cols-[1fr_auto] md:grid-cols-[1fr_104px_120px_96px_96px_96px_80px] items-center gap-x-4 gap-y-1 bg-surface px-3 py-3 transition-colors duration-150 ease-out hover:bg-surface-hover"
+                className="group relative grid grid-cols-[1fr_auto] md:grid-cols-[1fr_104px_120px_112px_96px_80px] items-center gap-x-4 gap-y-1 bg-surface px-3 py-3 transition-colors duration-150 ease-out hover:bg-surface-hover"
               >
                 <span
                   aria-hidden
@@ -142,8 +141,7 @@ export function LandingTrending({ companies }: { companies: CompanyCard[] }) {
                 <div className="font-mono text-[13px] tabular-nums text-right">
                   {usd((c.v0_per_share ?? 0) * 10_000, { compact: true })}
                 </div>
-                <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-up">{px(l.bid)}</div>
-                <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-down">{px(l.ask)}</div>
+                <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-accent-deep">{px(c.indicative_price ?? c.ask)}</div>
                 <div
                   key={`${c._id}-${l.v}`}
                   className={`hidden md:block font-mono text-[13px] tabular-nums text-right ${l.dir === "up" ? "bl-tick-up" : l.dir === "down" ? "bl-tick-down" : ""}`}

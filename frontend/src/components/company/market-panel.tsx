@@ -38,6 +38,11 @@ export function MarketPanel({ company }: { company: Company }) {
   const interval = company.market?.batch_interval_s ?? 10;
   const priced = m.batches.filter((b) => b.clearing_price !== null);
   const selectedBatch = (selected ? priced.find((b) => b._id === selected) : null) ?? priced.at(-1) ?? null;
+  // the owner's quotes move with the same clock as everything else: read them from the held book
+  const ownerAsks = m.book?.asks.filter((l) => l.origin === "treasury") ?? [];
+  const ownerBid = m.book?.bids.find((l) => l.origin === "treasury") ?? null;
+  const unsold = ownerAsks.length ? Math.round(ownerAsks.reduce((t, l) => t + l.qty, 0)) : company.market?.treasury ? Math.round(company.market.treasury.unsold_float) : null;
+  const floor = ownerBid?.price ?? company.market?.treasury?.floor_price ?? null;
 
   return (
     <>
@@ -51,18 +56,19 @@ export function MarketPanel({ company }: { company: Company }) {
                 <div
                   key={m.tick}
                   className={cn(
-                    "text-[56px] md:text-[64px] leading-[0.95] tabular-nums px-1 -mx-1",
+                    "text-[56px] md:text-[64px] leading-[0.95] tabular-nums px-1 -mx-1 min-w-[4.2ch]",
                     m.tick > 0 && "bartr-clear",
-                    m.justCleared && (m.dir === "up" ? "text-up" : m.dir === "down" ? "text-down" : ""),
+                    m.flash && (m.dir === "up" ? "text-up" : m.dir === "down" ? "text-down" : ""),
                   )}
                 >
                   {listed ? px(m.last) : px(ref)}
                 </div>
               </div>
-              <div className="pb-1">
+              <div className="pb-1 min-w-[132px]">
                 <Label tracking="tight" className="block mb-1">Since last round</Label>
                 <div className={cn("font-mono text-[16px] tabular-nums", change === null ? "text-muted-foreground" : change >= 0 ? "text-up" : "text-down")}>
                   {change === null ? "—" : signed(change)}
+                  {priced.at(-1) ? <span className="text-muted-foreground"> on {priced.at(-1)!.volume} sh</span> : null}
                 </div>
               </div>
               <div className="pb-1">
@@ -70,13 +76,13 @@ export function MarketPanel({ company }: { company: Company }) {
                 <div className="font-mono text-[16px] tabular-nums">{ref !== null ? px(ref) : "—"}<span className="text-muted-foreground"> · {company.valuation ? usd(company.valuation.v0, { compact: true }) : "—"}</span></div>
               </div>
               <div className="pb-1 hidden sm:block">
-                <Label tracking="tight" className="block mb-1">Market implied</Label>
+                <Label tracking="tight" className="block mb-1">Implied market cap</Label>
                 <div className="font-mono text-[16px] tabular-nums">{m.last !== null ? usd(m.last * shares, { compact: true }) : marketValue ? usd(marketValue, { compact: true }) : "—"}</div>
               </div>
-              <div className="pb-1 hidden lg:block">
+              <div className="pb-1 hidden lg:block min-w-[260px]">
                 <Label tracking="tight" className="block mb-1">Owner</Label>
                 <div className="font-mono text-[16px] tabular-nums">
-                  {company.market?.treasury ? `${Math.round(company.market.treasury.unsold_float)} unsold · floor ${px(company.market.treasury.floor_price)}` : "—"}
+                  {unsold !== null ? `holds ${unsold.toLocaleString()} of 3,000 · buys back at ${px(floor)}` : "—"}
                 </div>
               </div>
             </div>
@@ -109,11 +115,11 @@ export function MarketPanel({ company }: { company: Company }) {
           <div className="flex flex-col gap-4 lg:col-start-1 lg:row-start-1">
             {live ? (
               <>
-                <Participants book={m.book} latest={priced.at(-1) ?? null} justCleared={m.justCleared} pending={m.pending} />
+                <Participants book={m.book} latest={priced.at(-1) ?? null} justCleared={m.justCleared} pending={m.pending} quietRound={m.quietRound} round={m.round} last={m.last} />
                 <PricePath batches={m.batches} refPrice={ref} selected={selected} onSelect={setSelected} />
                 <div className="grid gap-4 md:grid-cols-[1fr_1fr]">
                   <RoundFigure batch={selectedBatch} modelPrice={ref} />
-                  <DepthPlate book={m.book} tick={m.tick} last={m.last} pending={m.pending} />
+                  <DepthPlate book={m.book} tick={m.tick} last={m.last} pending={m.pending} round={m.round} />
                 </div>
                 <OrderBook book={m.book} last={m.last} tick={m.tick} dir={m.dir} changed={m.changed} />
               </>

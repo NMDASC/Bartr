@@ -6,17 +6,18 @@ import { getBatches, getBook, subscribeMarket } from "@/lib/api";
 
 /**
  * A batch auction shows one book per round. Orders arrive continuously, but the page only moves
- * when a round clears: the book you see is the sealed book of the round that just cleared, plus a
- * count of orders waiting in the round in progress. Between clears nothing on the page changes
- * except the clock.
+ * when a round ends: the levels you see are the resting book at the last round boundary, plus a
+ * count of orders that have come in since. A boundary is detected from `next_batch_at` moving
+ * forward on any book frame, so quiet rounds (no trade) advance the clock like any other.
  */
 export interface MarketView {
   book: Book | null;
-  /** live book (next round in progress); only the count is shown */
+  /** orders that arrived since the round boundary (not yet shown in the book) */
   pending: number;
   batches: Batch[];
   last: number | null;
   prev: number | null;
+  /** 1-based number of the round in progress */
   round: number;
   tick: number;
   dir: "up" | "down" | null;
@@ -24,6 +25,10 @@ export interface MarketView {
   ready: boolean;
   /** true for 4s after a round clears: long enough to read who traded */
   justCleared: boolean;
+  /** true for 1s after a clear: the number flash, without hijacking the countdown */
+  flash: boolean;
+  /** the last round boundary passed with no trade */
+  quietRound: boolean;
 }
 
 const levelKey = (side: "b" | "a", price: number) => `${side}${price}`;
@@ -40,6 +45,7 @@ function diffLevels(prev: Book | null, next: Book): Set<string> {
 }
 
 const count = (b: Book | null) => b?.n_open_orders ?? 0;
+const at = (b: Book | null) => (b?.next_batch_at ? Date.parse(b.next_batch_at) : 0);
 
 export function useMarket(id: string, enabled = true): MarketView {
   const [book, setBook] = useState<Book | null>(null);
@@ -49,53 +55,68 @@ export function useMarket(id: string, enabled = true): MarketView {
   const [changed, setChanged] = useState<Set<string>>(new Set());
   const [ready, setReady] = useState(false);
   const [justCleared, setJustCleared] = useState(false);
-  const live = useRef<Book | null>(null);
+  const [flashOn, setFlashOn] = useState(false);
+  const [quietRound, setQuietRound] = useState(false);
+  const [roundsSeen, setRoundsSeen] = useState(0);
+  const lastBatchAt = useRef<number>(0);
+  const held = useRef<Book | null>(null);
+  const you = useRef<string | null>(null);
   const shownAt = useRef<number>(0);
 
   useEffect(() => {
     if (!enabled) return;
     let alive = true;
     let flash: number | undefined;
+    let flash2: number | undefined;
+    const adopt = (b: Book) => {
+      const next = { ...b, you: you.current };
+      setBook((old) => {
+        setChanged(diffLevels(old, next));
+        return next;
+      });
+      held.current = next;
+      shownAt.current = count(next);
+      setPending(0);
+    };
     (async () => {
       const [b, h] = await Promise.all([getBook(id), getBatches(id, 120)]);
       if (!alive) return;
-      live.current = b;
-      shownAt.current = count(b);
-      setBook(b);
-      setPending(0);
+      you.current = b.you ?? null;
+      adopt(b);
       setBatches(h);
+      setRoundsSeen(h.at(-1)?.round ?? h.length);
       setReady(true);
     })();
     const off = subscribeMarket(id, (f) => {
       if (!alive) return;
       if (f.type === "book") {
-        // hold it: the book on screen changes only when the round clears
-        live.current = f.book;
-        setPending(Math.max(0, count(f.book) - shownAt.current));
+        if (at(f.book) > at(held.current)) {
+          // the round boundary passed (with or without a trade): show the new resting book
+          adopt(f.book);
+          setRoundsSeen((r) => r + 1);
+          setQuietRound(Date.now() - lastBatchAt.current > 1500);
+        } else {
+          setPending(Math.max(0, count(f.book) - shownAt.current));
+        }
         return;
       }
       if (f.type === "batch") {
+        lastBatchAt.current = Date.now();
+        setQuietRound(false);
         setBatches((xs) => [...xs.slice(-199), f.batch]);
         setTick((t) => t + 1);
         setJustCleared(true);
+        setFlashOn(true);
         window.clearTimeout(flash);
+        window.clearTimeout(flash2);
         flash = window.setTimeout(() => setJustCleared(false), 4000);
-        // the book frame that follows a batch is the fresh round's opening book
-        window.setTimeout(() => {
-          const next = live.current;
-          if (!next || !alive) return;
-          setBook((old) => {
-            setChanged(diffLevels(old, next));
-            return next;
-          });
-          shownAt.current = count(next);
-          setPending(0);
-        }, 60);
+        flash2 = window.setTimeout(() => setFlashOn(false), 1000);
       }
     });
     return () => {
       alive = false;
       window.clearTimeout(flash);
+      window.clearTimeout(flash2);
       off();
     };
   }, [id, enabled]);
@@ -104,8 +125,8 @@ export function useMarket(id: string, enabled = true): MarketView {
   const last = priced.at(-1)?.clearing_price ?? book?.last ?? null;
   const prev = priced.length >= 2 ? priced[priced.length - 2].clearing_price ?? null : null;
   const dir = last !== null && prev !== null && last !== prev ? (last > prev ? "up" : "down") : null;
-  const round: number = batches.at(-1)?.round ?? batches.length;
-  return { book, pending, batches, last, prev, round, tick, dir, changed, ready, justCleared };
+  const round = Math.max(roundsSeen, batches.at(-1)?.round ?? 0) + 1;
+  return { book, pending, batches, last, prev, round, tick, dir, changed, ready, justCleared, flash: flashOn, quietRound };
 }
 
 /** Seconds until an ISO time, ticking at 10 Hz. */

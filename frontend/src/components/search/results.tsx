@@ -13,7 +13,7 @@ import { initialSearchState, reduceDiscovery } from "@/lib/search-state";
 import { Button } from "@/components/ui/button";
 
 export function Results({ q }: { q: string }) {
-  const [{ phase, intent, cards, order, error, warnings, activity }, dispatch] = useReducer(reduceDiscovery, undefined, initialSearchState);
+  const [{ phase, intent, cards, order, error, warnings, activity, liveOff }, dispatch] = useReducer(reduceDiscovery, undefined, initialSearchState);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState("");
   const [band, setBand] = useState("");
@@ -140,7 +140,7 @@ export function Results({ q }: { q: string }) {
             ))}
           </ul>
         ) : null}
-        {(phase === "error" || phase === "partial") && rows.length === 0 ? (
+        {(phase === "error" || phase === "partial") && rows.length === 0 && !liveOff ? (
           <Button
             size="sm"
             className="mb-4"
@@ -152,13 +152,17 @@ export function Results({ q }: { q: string }) {
             Retry search
           </Button>
         ) : null}
-        {(phase === "done" || phase === "partial") && rows.length === 0 ? <p className="py-4 secondary">{phase === "partial" ? "No saved matches." : "No matching companies."}</p> : null}
+        {liveOff && phase !== "streaming" ? (
+          <p className="mb-3 text-[13px] secondary">
+            Showing {readyCount} {readyCount === 1 ? "business" : "businesses"} already appraised{intent?.city ? ` in ${intent.city}` : intent?.state ? ` in ${intent.state}` : ""}. Live discovery is off until a model key is set.
+          </p>
+        ) : null}
+        {(phase === "done" || phase === "partial") && rows.length === 0 ? <p className="py-4 secondary">{liveOff ? "Nothing appraised here yet." : phase === "partial" ? "No saved matches." : "No matching companies."}</p> : null}
 
-        <div className="hidden md:grid grid-cols-[1fr_110px_88px_88px_88px_120px] gap-4 px-3 pb-2 border-b border-line">
+        <div className="hidden md:grid grid-cols-[1fr_110px_110px_88px_120px] gap-4 px-3 pb-2 border-b border-line">
           <Label>Company</Label>
           <Label className="text-right">Value</Label>
-          <Label className="text-right">Bid</Label>
-          <Label className="text-right">Ask</Label>
+          <Label className="text-right">Next clear</Label>
           <Label className="text-right">Last</Label>
           <Label>Confidence</Label>
         </div>
@@ -168,7 +172,7 @@ export function Results({ q }: { q: string }) {
             <li key={c._id} className="fade-up border-b border-hairline">
               <Link
                 href={`/company/${c._id}`}
-                className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_110px_88px_88px_88px_120px] items-center gap-x-4 gap-y-1 px-3 py-3.5 transition-colors duration-150 ease-out hover:bg-surface"
+                className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_110px_110px_88px_120px] items-center gap-x-4 gap-y-1 px-3 py-3.5 transition-colors duration-150 ease-out hover:bg-surface"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -184,13 +188,12 @@ export function Results({ q }: { q: string }) {
                   {c.v0_per_share !== null ? usd(c.v0_per_share * 10000, { compact: true }) : c.status === "stub" && phase === "streaming" ? <Skeleton className="inline-block h-3 w-14" /> : "—"}
                 </div>
                 {c.listed === false ? (
-                  <div className="hidden md:block md:col-span-3 text-[12px] secondary text-right">
+                  <div className="hidden md:block md:col-span-2 text-[12px] secondary text-right">
                     What we think it is worth · <span className="text-foreground">Make an offer</span>
                   </div>
                 ) : (
                   <>
-                    <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-up">{px(c.bid)}</div>
-                    <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-down">{px(c.ask)}</div>
+                    <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-accent-deep">{px(c.indicative_price ?? c.ask)}</div>
                     <div className="hidden md:block font-mono text-[13px] tabular-nums text-right">{px(c.last)}</div>
                   </>
                 )}

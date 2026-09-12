@@ -47,7 +47,7 @@ export function Valuation({ company, last }: { company: Company; last: number | 
       <div className="p-3">
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div>
-            <Label tracking="tight" className="block mb-1">Model</Label>
+            <Label tracking="tight" className="block mb-1">Model value</Label>
             <div className="text-[24px] leading-none tabular-nums">{usd(v.v0, { compact: true })}</div>
           </div>
           <div>

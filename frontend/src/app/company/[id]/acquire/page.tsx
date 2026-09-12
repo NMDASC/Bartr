@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { getCompany, startAcquisition } from "@/lib/api";
+import { AUTH_COOKIE, readSessionToken } from "@/lib/auth/session";
 import { Label } from "@/components/ui/label";
 import { BackLink } from "@/components/site/back-link";
 import { Loi } from "@/components/acquire/loi";
@@ -11,7 +13,9 @@ export default async function AcquirePage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const company = await getCompany(id);
   if (!company) notFound();
-  const acq = await startAcquisition(id);
+  const session = readSessionToken((await cookies()).get(AUTH_COOKIE)?.value);
+  const buyer = session ? (session.name && session.name !== session.email.split("@")[0] ? session.name : session.email) : undefined;
+  const acq = await startAcquisition(id, buyer);
   return (
     <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
       <div className="pt-8 pb-6">
