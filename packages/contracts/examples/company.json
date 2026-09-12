@@ -1,0 +1,54 @@
+{
+  "id": "cmp_okc_suds",
+  "name": "Sudsy's Coin Laundry",
+  "category": "laundromat",
+  "address": "2418 NW 23rd St, Oklahoma City, OK 73107",
+  "city": "Oklahoma City",
+  "state": "OK",
+  "website": "https://sudsyscoinlaundry.example.com",
+  "phone": "+1-405-555-0142",
+  "rating": 4.6,
+  "review_count": 213,
+  "status": "ready",
+  "founded_year": 1998,
+  "owners": ["Marla Whitfield"],
+  "description": "Owner-operated 42-machine coin laundry on NW 23rd, open 6am-10pm, card and coin, attended weekends. Wash-and-fold service added 2021.",
+  "financials": {
+    "revenue_est": 412000,
+    "sde_est": 156000,
+    "margin_est": 0.38,
+    "employees_est": 3,
+    "confidence": 0.62,
+    "method": "proxy"
+  },
+  "valuation": {
+    "v0": 624000,
+    "sigma": 0.38,
+    "low": 426000,
+    "high": 913000,
+    "multiple_used": 4.0,
+    "as_of": "2026-09-12T01:00:00Z"
+  },
+  "market": {
+    "market_id": "cmp_okc_suds",
+    "bid": 61.8,
+    "ask": 63.4,
+    "last": 62.4,
+    "next_batch_at": "2026-09-12T01:00:10Z",
+    "halted": false
+  },
+  "sources": [
+    {
+      "url": "https://www.bizbuysell.com/learning-center/valuation-benchmarks/laundromats-coin-laundry/",
+      "title": "Laundromat valuation benchmarks",
+      "snippet": "Single-store coin laundries typically sell for 3x to 5x SDE with margins near 38%.",
+      "fetched_at": "2026-09-12T00:58:00Z"
+    },
+    {
+      "url": "https://www.yelp.com/biz/sudsys-coin-laundry-oklahoma-city",
+      "title": "Sudsy's Coin Laundry - Oklahoma City, OK",
+      "snippet": "213 reviews, 4.6 stars. Attended on weekends, 42 machines.",
+      "fetched_at": "2026-09-12T00:58:00Z"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "bat_0007",
+    "market_id": "cmp_okc_suds",
+    "t": "2026-09-12T01:00:00Z",
+    "clearing_price": 62.4,
+    "volume": 144,
+    "imbalance": 12,
+    "n_buy": 9,
+    "n_sell": 7
+  },
+  {
+    "id": "bat_0006",
+    "market_id": "cmp_okc_suds",
+    "t": "2026-09-12T00:59:50Z",
+    "clearing_price": 61.9,
+    "volume": 96,
+    "imbalance": -8,
+    "n_buy": 6,
+    "n_sell": 8
+  },
+  {
+    "id": "bat_0005",
+    "market_id": "cmp_okc_suds",
+    "t": "2026-09-12T00:59:40Z",
+    "clearing_price": 62.7,
+    "volume": 210,
+    "imbalance": 31,
+    "n_buy": 12,
+    "n_sell": 6
+  }
+]

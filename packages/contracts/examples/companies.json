@@ -1,0 +1,80 @@
+[
+  {
+    "id": "cmp_okc_suds",
+    "name": "Sudsy's Coin Laundry",
+    "category": "laundromat",
+    "city": "Oklahoma City",
+    "state": "OK",
+    "rating": 4.6,
+    "review_count": 213,
+    "status": "ready",
+    "valuation": {
+      "v0": 624000,
+      "sigma": 0.38,
+      "low": 426000,
+      "high": 913000,
+      "multiple_used": 4.0,
+      "as_of": "2026-09-12T01:00:00Z"
+    },
+    "market": {
+      "market_id": "cmp_okc_suds",
+      "bid": 61.8,
+      "ask": 63.4,
+      "last": 62.4,
+      "next_batch_at": "2026-09-12T01:00:10Z",
+      "halted": false
+    }
+  },
+  {
+    "id": "cmp_tulsa_spin",
+    "name": "Spin City Wash & Fold",
+    "category": "laundromat",
+    "city": "Tulsa",
+    "state": "OK",
+    "rating": 4.2,
+    "review_count": 88,
+    "status": "ready",
+    "valuation": {
+      "v0": 388000,
+      "sigma": 0.51,
+      "low": 232000,
+      "high": 647000,
+      "multiple_used": 3.5,
+      "as_of": "2026-09-12T01:00:00Z"
+    },
+    "market": {
+      "market_id": "cmp_tulsa_spin",
+      "bid": 37.9,
+      "ask": 39.8,
+      "last": 38.8,
+      "next_batch_at": "2026-09-12T01:00:10Z",
+      "halted": false
+    }
+  },
+  {
+    "id": "cmp_norman_bubble",
+    "name": "Bubble Barn Laundry",
+    "category": "laundromat",
+    "city": "Norman",
+    "state": "OK",
+    "rating": 3.9,
+    "review_count": 31,
+    "status": "stub",
+    "valuation": {
+      "v0": 241000,
+      "sigma": 0.72,
+      "low": 117000,
+      "high": 496000,
+      "multiple_used": 3.0,
+      "as_of": "2026-09-12T01:00:00Z"
+    },
+    "market": {
+      "market_id": "cmp_norman_bubble",
+      "bid": 22.4,
+      "ask": 26.1,
+      "last": 24.1,
+      "next_batch_at": "2026-09-12T01:00:10Z",
+      "halted": false
+    }
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "category": "laundromat",
+  "naics_guess": "812310",
+  "state": "OK",
+  "city": null,
+  "min_value": null,
+  "max_value": 2000000,
+  "must_have": ["coin operated"]
+}

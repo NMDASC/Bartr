@@ -1,0 +1,28 @@
+---
+alwaysApply: true
+---
+
+# JB (HackCMU 2026)
+
+Read `docs/STEERING.md` once per session, and `docs/DECISIONS.md` before changing a schema, route, or shared type.
+
+## Ownership
+
+- `app/services/market/` + `app/routers/market.py` + `compliance.py` + `portfolio_agent.py` = **Nico & Aditya** (market pair)
+- `apps/web/` + `packages/contracts/` + `app/services/discovery/` + `db.py` + `llm.py` + `identity.py` + deploy = **Vir & Zhiyuan** (platform pair)
+
+Do not edit the other pair's directory; append a request to `docs/DECISIONS.md` instead. Inside a pair, see `Plan.md` section 10.
+
+## Contract changes
+
+Changing `packages/contracts/`, `apps/api/app/schemas.py`, or a Mongo collection requires a `docs/DECISIONS.md` entry, regenerated `openapi.yaml` and `types.ts` (`./scripts/gen_contract.sh`), and a commit prefixed `contract:`.
+
+## Conventions
+
+- Every route in `Plan.md` section 7 exists as a stub returning `packages/contracts/examples/*.json`. Replace the body, keep the signature. Stubs are marked `TODO(owner)`.
+- Prices are floats in the contract, `Decimal` inside the matching engine.
+- All model calls go through `app/llm.py`. Nothing else imports `openai`.
+- Every row referencing a person uses `users._id`, never a subject string. Auth is demo-only; do not branch on provider outside `app/identity.py`.
+- One uvicorn worker only: the WebSocket hub and batch scheduler are in-process singletons.
+- Branch prefixes `nico/`, `aditya/`, `vir/`, `zhiyuan/`. Never force-push `main`.
+- Keys live in `.env`, never committed.

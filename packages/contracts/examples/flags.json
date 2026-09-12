@@ -1,0 +1,35 @@
+[
+  {
+    "id": "flg_0004",
+    "market_id": "cmp_okc_suds",
+    "batch_id": "bat_0007",
+    "rule": "wash_trade",
+    "severity": "high",
+    "subjects": ["usr_bot_17", "usr_bot_22"],
+    "explanation": "Accounts usr_bot_17 and usr_bot_22 crossed 80 shares in batch 0007 and have traded only with each other across the last six batches, moving no net inventory while printing volume. Consistent with wash trading to manufacture the appearance of liquidity.",
+    "reviewer": "grok",
+    "t": "2026-09-12T01:00:01Z"
+  },
+  {
+    "id": "flg_0003",
+    "market_id": "cmp_tulsa_spin",
+    "batch_id": "bat_0006",
+    "rule": "layering",
+    "severity": "medium",
+    "subjects": ["usr_bot_09"],
+    "explanation": "Four sell orders placed 6% above mid and cancelled before two consecutive batches while the same account bought at the clearing price. Pattern matches layering, though the size is small enough to also be a mis-tuned bot.",
+    "reviewer": "k2",
+    "t": "2026-09-12T00:59:51Z"
+  },
+  {
+    "id": "flg_0002",
+    "market_id": "cmp_okc_suds",
+    "batch_id": "bat_0005",
+    "rule": "concentration",
+    "severity": "low",
+    "subjects": ["usr_demo_judge3"],
+    "explanation": "Single holder reached 41% of outstanding shares, just over the 40% threshold. No manipulation indicated; disclosed for transparency.",
+    "reviewer": "rules",
+    "t": "2026-09-12T00:59:41Z"
+  }
+]

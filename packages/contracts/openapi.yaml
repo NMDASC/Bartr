@@ -1,0 +1,1512 @@
+openapi: 3.1.0
+info:
+  title: JB API
+  description: Discovery engine and exchange for small businesses (HackCMU 2026).
+  version: 0.1.0
+paths:
+  /api/v1/discovery/search:
+    post:
+      tags:
+      - discovery
+      summary: Start Search
+      operationId: start_search_api_v1_discovery_search_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+        required: true
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchAccepted'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/discovery/jobs/{job_id}:
+    get:
+      tags:
+      - discovery
+      summary: Job Stream
+      operationId: job_stream_api_v1_discovery_jobs__job_id__get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/companies:
+    get:
+      tags:
+      - companies
+      summary: List Companies
+      operationId: list_companies_api_v1_companies_get
+      parameters:
+      - name: state
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+      - name: category
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Category
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Q
+      - name: sort
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sort
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompanyCard'
+                title: Response List Companies Api V1 Companies Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/companies/{company_id}:
+    get:
+      tags:
+      - companies
+      summary: Get Company
+      operationId: get_company_api_v1_companies__company_id__get
+      parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Company Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/companies/{company_id}/refresh:
+    post:
+      tags:
+      - companies
+      summary: Refresh Company
+      operationId: refresh_company_api_v1_companies__company_id__refresh_post
+      parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Company Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/markets/{market_id}/book:
+    get:
+      tags:
+      - market
+      summary: Get Book
+      operationId: get_book_api_v1_markets__market_id__book_get
+      parameters:
+      - name: market_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Market Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/markets/{market_id}/orders:
+    post:
+      tags:
+      - market
+      summary: Place Order
+      operationId: place_order_api_v1_markets__market_id__orders_post
+      parameters:
+      - name: market_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Market Id
+      - name: X-Demo-User
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/orders/{order_id}:
+    delete:
+      tags:
+      - market
+      summary: Cancel Order
+      operationId: cancel_order_api_v1_orders__order_id__delete
+      parameters:
+      - name: order_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Order Id
+      - name: X-Demo-User
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/markets/{market_id}/batches:
+    get:
+      tags:
+      - market
+      summary: List Batches
+      operationId: list_batches_api_v1_markets__market_id__batches_get
+      parameters:
+      - name: market_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Market Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Batch'
+                title: Response List Batches Api V1 Markets  Market Id  Batches Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/markets/{market_id}/trades:
+    get:
+      tags:
+      - market
+      summary: List Trades
+      operationId: list_trades_api_v1_markets__market_id__trades_get
+      parameters:
+      - name: market_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Market Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trade'
+                title: Response List Trades Api V1 Markets  Market Id  Trades Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/portfolio:
+    get:
+      tags:
+      - portfolio
+      summary: Get Portfolio
+      operationId: get_portfolio_api_v1_portfolio_get
+      parameters:
+      - name: X-Demo-User
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/portfolio/profile:
+    put:
+      tags:
+      - portfolio
+      summary: Put Profile
+      operationId: put_profile_api_v1_portfolio_profile_put
+      parameters:
+      - name: X-Demo-User
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskProfile'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskProfile'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/portfolio/suggest:
+    post:
+      tags:
+      - portfolio
+      summary: Suggest
+      operationId: suggest_api_v1_portfolio_suggest_post
+      parameters:
+      - name: X-Demo-User
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Suggestion'
+                title: Response Suggest Api V1 Portfolio Suggest Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/acquire/{company_id}/start:
+    post:
+      tags:
+      - acquire
+      summary: Start
+      operationId: start_api_v1_acquire__company_id__start_post
+      parameters:
+      - name: company_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Company Id
+      - name: X-Demo-User
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcquisitionStart'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/acquire/{acquisition_id}/chat:
+    post:
+      tags:
+      - acquire
+      summary: Chat
+      operationId: chat_api_v1_acquire__acquisition_id__chat_post
+      parameters:
+      - name: acquisition_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Acquisition Id
+      - name: X-Demo-User
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/agent/chat:
+    post:
+      tags:
+      - agent
+      summary: Chat
+      operationId: chat_api_v1_agent_chat_post
+      parameters:
+      - name: X-Demo-User
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/surveillance/flags:
+    get:
+      tags:
+      - surveillance
+      summary: Flags
+      operationId: flags_api_v1_surveillance_flags_get
+      parameters:
+      - name: since
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Since
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Flag'
+                title: Response Flags Api V1 Surveillance Flags Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/surveillance/audit:
+    get:
+      tags:
+      - surveillance
+      summary: Audit
+      operationId: audit_api_v1_surveillance_audit_get
+      parameters:
+      - name: actor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Actor
+      - name: since
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Since
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditEntry'
+                title: Response Audit Api V1 Surveillance Audit Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /health:
+    get:
+      tags:
+      - platform
+      summary: Health
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+  /readiness:
+    get:
+      tags:
+      - platform
+      summary: Readiness
+      description: What is actually wired up. Useful during key collection.
+      operationId: readiness_readiness_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Readiness Readiness Get
+  /api/v1/me:
+    get:
+      tags:
+      - platform
+      summary: Me
+      operationId: me_api_v1_me_get
+      parameters:
+      - name: X-Demo-User
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    AcquisitionStart:
+      properties:
+        acquisition_id:
+          type: string
+          title: Acquisition Id
+        loi_md:
+          type: string
+          title: Loi Md
+        checklist:
+          items:
+            $ref: '#/components/schemas/ChecklistItem'
+          type: array
+          title: Checklist
+          default: []
+      type: object
+      required:
+      - acquisition_id
+      - loi_md
+      title: AcquisitionStart
+    AuditEntry:
+      properties:
+        id:
+          type: string
+          title: Id
+        t:
+          type: string
+          format: date-time
+          title: T
+        actor:
+          type: string
+          title: Actor
+        action:
+          type: string
+          title: Action
+        payload_hash:
+          type: string
+          title: Payload Hash
+      type: object
+      required:
+      - id
+      - t
+      - actor
+      - action
+      - payload_hash
+      title: AuditEntry
+    Batch:
+      properties:
+        id:
+          type: string
+          title: Id
+        market_id:
+          type: string
+          title: Market Id
+        t:
+          type: string
+          format: date-time
+          title: T
+        clearing_price:
+          type: number
+          title: Clearing Price
+        volume:
+          type: number
+          title: Volume
+        imbalance:
+          type: number
+          title: Imbalance
+          default: 0
+        n_buy:
+          type: integer
+          title: N Buy
+          default: 0
+        n_sell:
+          type: integer
+          title: N Sell
+          default: 0
+      type: object
+      required:
+      - id
+      - market_id
+      - t
+      - clearing_price
+      - volume
+      title: Batch
+    Book:
+      properties:
+        market_id:
+          type: string
+          title: Market Id
+        bids:
+          items:
+            $ref: '#/components/schemas/BookLevel'
+          type: array
+          title: Bids
+          default: []
+        asks:
+          items:
+            $ref: '#/components/schemas/BookLevel'
+          type: array
+          title: Asks
+          default: []
+        last:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Last
+        ref:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Ref
+        next_batch_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Next Batch At
+        band:
+          type: number
+          title: Band
+          default: 0.1
+      type: object
+      required:
+      - market_id
+      title: Book
+    BookLevel:
+      properties:
+        price:
+          type: number
+          title: Price
+        qty:
+          type: number
+          title: Qty
+      type: object
+      required:
+      - price
+      - qty
+      title: BookLevel
+    ChatRequest:
+      properties:
+        message:
+          type: string
+          title: Message
+        session_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Session Id
+      type: object
+      required:
+      - message
+      title: ChatRequest
+    ChecklistItem:
+      properties:
+        item:
+          type: string
+          title: Item
+        why:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Why
+        source:
+          anyOf:
+          - $ref: '#/components/schemas/Source'
+          - type: 'null'
+        done:
+          type: boolean
+          title: Done
+          default: false
+      type: object
+      required:
+      - item
+      title: ChecklistItem
+    Company:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        category:
+          type: string
+          title: Category
+        city:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City
+        state:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+        rating:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rating
+        review_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Review Count
+        status:
+          $ref: '#/components/schemas/CompanyStatus'
+          default: stub
+        valuation:
+          anyOf:
+          - $ref: '#/components/schemas/Valuation'
+          - type: 'null'
+        market:
+          anyOf:
+          - $ref: '#/components/schemas/MarketSummary'
+          - type: 'null'
+        address:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Address
+        website:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Website
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        owners:
+          items:
+            type: string
+          type: array
+          title: Owners
+          default: []
+        founded_year:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Founded Year
+        financials:
+          anyOf:
+          - $ref: '#/components/schemas/Financials'
+          - type: 'null'
+        sources:
+          items:
+            $ref: '#/components/schemas/Source'
+          type: array
+          title: Sources
+          default: []
+      type: object
+      required:
+      - id
+      - name
+      - category
+      title: Company
+    CompanyCard:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        category:
+          type: string
+          title: Category
+        city:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City
+        state:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+        rating:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rating
+        review_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Review Count
+        status:
+          $ref: '#/components/schemas/CompanyStatus'
+          default: stub
+        valuation:
+          anyOf:
+          - $ref: '#/components/schemas/Valuation'
+          - type: 'null'
+        market:
+          anyOf:
+          - $ref: '#/components/schemas/MarketSummary'
+          - type: 'null'
+      type: object
+      required:
+      - id
+      - name
+      - category
+      title: CompanyCard
+    CompanyStatus:
+      type: string
+      enum:
+      - stub
+      - ready
+      - failed
+      title: CompanyStatus
+    Financials:
+      properties:
+        revenue_est:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Revenue Est
+        sde_est:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Sde Est
+        margin_est:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Margin Est
+        employees_est:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Employees Est
+        confidence:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Confidence
+          default: 0.5
+        method:
+          type: string
+          title: Method
+          default: proxy
+      type: object
+      title: Financials
+    Flag:
+      properties:
+        id:
+          type: string
+          title: Id
+        market_id:
+          type: string
+          title: Market Id
+        batch_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Batch Id
+        rule:
+          type: string
+          title: Rule
+        severity:
+          type: string
+          title: Severity
+        subjects:
+          items:
+            type: string
+          type: array
+          title: Subjects
+          default: []
+        explanation:
+          type: string
+          title: Explanation
+        reviewer:
+          type: string
+          title: Reviewer
+        t:
+          type: string
+          format: date-time
+          title: T
+      type: object
+      required:
+      - id
+      - market_id
+      - rule
+      - severity
+      - explanation
+      - reviewer
+      - t
+      title: Flag
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    Health:
+      properties:
+        status:
+          type: string
+          title: Status
+          default: ok
+        env:
+          type: string
+          title: Env
+        database:
+          type: boolean
+          title: Database
+        demo_auth:
+          type: boolean
+          title: Demo Auth
+      type: object
+      required:
+      - env
+      - database
+      - demo_auth
+      title: Health
+    Intent:
+      properties:
+        category:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Category
+        naics_guess:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Naics Guess
+        state:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: State
+        city:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City
+        min_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Min Value
+        max_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Max Value
+        must_have:
+          items:
+            type: string
+          type: array
+          title: Must Have
+          default: []
+      type: object
+      title: Intent
+    MarketSummary:
+      properties:
+        market_id:
+          type: string
+          title: Market Id
+        bid:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Bid
+        ask:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Ask
+        last:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Last
+        next_batch_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Next Batch At
+        halted:
+          type: boolean
+          title: Halted
+          default: false
+      type: object
+      required:
+      - market_id
+      title: MarketSummary
+    Order:
+      properties:
+        id:
+          type: string
+          title: Id
+        market_id:
+          type: string
+          title: Market Id
+        user_id:
+          type: string
+          title: User Id
+        side:
+          $ref: '#/components/schemas/Side'
+        qty:
+          type: number
+          title: Qty
+        limit_price:
+          type: number
+          title: Limit Price
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+          default: open
+        filled_qty:
+          type: number
+          title: Filled Qty
+          default: 0
+        origin:
+          $ref: '#/components/schemas/OrderOrigin'
+          default: user
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - market_id
+      - user_id
+      - side
+      - qty
+      - limit_price
+      - created_at
+      title: Order
+    OrderOrigin:
+      type: string
+      enum:
+      - user
+      - mm
+      - agent
+      title: OrderOrigin
+    OrderRequest:
+      properties:
+        side:
+          $ref: '#/components/schemas/Side'
+        qty:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Qty
+        limit_price:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Limit Price
+      type: object
+      required:
+      - side
+      - qty
+      - limit_price
+      title: OrderRequest
+    OrderStatus:
+      type: string
+      enum:
+      - open
+      - filled
+      - partial
+      - cancelled
+      title: OrderStatus
+    Portfolio:
+      properties:
+        cash:
+          type: number
+          title: Cash
+        positions:
+          items:
+            $ref: '#/components/schemas/Position'
+          type: array
+          title: Positions
+          default: []
+        pnl:
+          type: number
+          title: Pnl
+          default: 0
+      type: object
+      required:
+      - cash
+      title: Portfolio
+    Position:
+      properties:
+        market_id:
+          type: string
+          title: Market Id
+        company_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Company Name
+        qty:
+          type: number
+          title: Qty
+        avg_cost:
+          type: number
+          title: Avg Cost
+        last:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Last
+        unrealized:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Unrealized
+      type: object
+      required:
+      - market_id
+      - qty
+      - avg_cost
+      title: Position
+    RiskProfile:
+      properties:
+        tolerance:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Tolerance
+          default: 0.5
+        horizon:
+          type: string
+          title: Horizon
+          default: medium
+        sectors:
+          items:
+            type: string
+          type: array
+          title: Sectors
+          default: []
+        states:
+          items:
+            type: string
+          type: array
+          title: States
+          default: []
+        budget:
+          type: number
+          title: Budget
+          default: 100000
+      type: object
+      title: RiskProfile
+    SearchAccepted:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        intent:
+          $ref: '#/components/schemas/Intent'
+      type: object
+      required:
+      - job_id
+      - intent
+      title: SearchAccepted
+    SearchRequest:
+      properties:
+        q:
+          type: string
+          title: Q
+      type: object
+      required:
+      - q
+      title: SearchRequest
+    Side:
+      type: string
+      enum:
+      - buy
+      - sell
+      title: Side
+    Source:
+      properties:
+        url:
+          type: string
+          title: Url
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        snippet:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Snippet
+        fetched_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Fetched At
+      type: object
+      required:
+      - url
+      title: Source
+    Suggestion:
+      properties:
+        company:
+          $ref: '#/components/schemas/CompanyCard'
+        edge:
+          type: number
+          title: Edge
+        sigma:
+          type: number
+          title: Sigma
+        kelly_fraction:
+          type: number
+          title: Kelly Fraction
+        suggested_usd:
+          type: number
+          title: Suggested Usd
+        why:
+          type: string
+          title: Why
+      type: object
+      required:
+      - company
+      - edge
+      - sigma
+      - kelly_fraction
+      - suggested_usd
+      - why
+      title: Suggestion
+    Trade:
+      properties:
+        id:
+          type: string
+          title: Id
+        market_id:
+          type: string
+          title: Market Id
+        batch_id:
+          type: string
+          title: Batch Id
+        qty:
+          type: number
+          title: Qty
+        price:
+          type: number
+          title: Price
+        t:
+          type: string
+          format: date-time
+          title: T
+      type: object
+      required:
+      - id
+      - market_id
+      - batch_id
+      - qty
+      - price
+      - t
+      title: Trade
+    UserOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+        cash:
+          type: number
+          title: Cash
+        auth_provider:
+          type: string
+          title: Auth Provider
+      type: object
+      required:
+      - id
+      - name
+      - cash
+      - auth_provider
+      title: UserOut
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    Valuation:
+      properties:
+        v0:
+          type: number
+          title: V0
+        sigma:
+          type: number
+          title: Sigma
+        low:
+          type: number
+          title: Low
+        high:
+          type: number
+          title: High
+        multiple_used:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Multiple Used
+        as_of:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: As Of
+      type: object
+      required:
+      - v0
+      - sigma
+      - low
+      - high
+      title: Valuation

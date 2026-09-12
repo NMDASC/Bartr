@@ -1,0 +1,13 @@
+{
+  "name": "@jb/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Frozen API contract: openapi.yaml exported from FastAPI, types.ts generated from it, examples/ served by the API stubs.",
+  "types": "types.ts",
+  "scripts": {
+    "gen": "openapi-typescript openapi.yaml -o types.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.4.0"
+  }
+}
