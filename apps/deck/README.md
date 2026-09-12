@@ -5,11 +5,11 @@
 ## Present
 
 1. `open apps/deck/index.html` in Chrome, press `F` for full screen.
-2. Keys: `→` `space` next (reveals the second beat on slide 2 first), `←` back, `Home`, `End` returns to the public close, `Q` jumps to the internal Q&A appendix, `P` presenter clock (starts when you leave slide 1, turns white at 2:50), `R` replays the two rounds on slide 9, `Esc` leaves full screen. Clicking the right two thirds of the screen also advances.
+2. Keys: `→` `space` next (reveals the second beat on slide 2 first), `←` back, `Home`, `End` returns to the public close, `Q` jumps to the math appendix, `P` presenter clock (starts when you leave slide 1, turns white at 2:50), `R` replays the two rounds on slide 9, `Esc` leaves full screen. Clicking the right two thirds of the screen also advances.
 3. `#8` in the URL jumps to a slide. The deck scales to any window (tested 1920x1080 and 1440x900).
 4. Slide 9 plays on its own when you land on it: two rounds, about 30 seconds. Traders quote from their cards, each quote flies into the book, the countdown hits zero, demand and supply draw, the clearing price snaps in, fills flash, the price chart gets a point, the model value updates and the owner requotes the ladder and floor from it. In round 2 a holder sells. It runs the real clearing rule and the real belief update (same constants as `engine.py`) on the real opening book from `scripts/demo_pricing.py`.
-5. Stop the public presentation on the close slide (`End`). Slides after that are an internal Q&A appendix covering market, owners, competition, valuation, the Kelly paper, liquidity, regulation, investor rights, business model, technical truth and security. Press `Q` from any slide to open it.
-6. If Chrome dies, `Bartr.pdf` has the 16 public slides followed by the 12-slide Q&A appendix. `Bartr.pptx` is the same as images with the talk track and Q&A prompts in the notes.
+5. Stop the public presentation on the close slide (`End`). After it: two math slides, the Kelly derivation paper and the clearing rule, belief update and stake in full. Press `Q` from any slide to open them.
+6. If Chrome dies, `Bartr.pdf` has the 19 public slides followed by the two math slides. `Bartr.pptx` is the same as images with the talk track in the notes.
 
 Fonts: SF Pro on a Mac, Inter from Google Fonts otherwise. KaTeX loads from cdnjs. Both need network once; after that Chrome caches them. Open the deck once on the venue wifi before we go up.
 
@@ -57,7 +57,7 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 | 2:26 | 16 Security | "Rules catch it, two models judge it separately, and Grok tries to beat it as red team." |
 | 2:38 | 17 Grok | "Every company is appraised twice: Grok researches and names a value, K2 names one blind, both go into the price." |
 | 2:48 | 18 Stack | "Next.js, FastAPI, Atlas, Places, Querit, Grok, K2, iMessage. 103 tests." |
-| 2:55 | 19 Close | "The laundromat on Murray Avenue has a price. Buy 20 shares, watch the next round." |
+| 2:55 | 19 Close | "Nobody could invest in the laundromat on Murray Avenue until tonight. Buy 20 shares and watch the next round clear." |
 
 ## Files
 

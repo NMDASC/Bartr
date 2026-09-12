@@ -21,22 +21,11 @@ const NOTES = [
   'Rules catch it, two models judge it separately, and Grok tries to beat it as red team.',
   'Every company is appraised twice: Grok researches and names a value, K2 names one blind, both go into the price.',
   'Next.js, FastAPI, Atlas, Places, Querit, Grok, K2, iMessage. 103 tests.',
-  'The laundromat on Murray Avenue has a price. Buy 20 shares, watch the next round.',
-  'Internal Q&A appendix. Stop the public presentation on the close slide. Press Q from anywhere to jump here.',
-  'Market: distinguish the 36.2 million business context from the initial reachable market. Lead with aging owners and demonstrated buyer demand.',
-  'Users and consent: the first wedge is acquisition search. Unclaimed pages need clear attribution, correction, opt-out and no trading before owner acceptance.',
-  'Competition: Google finds locations, BizBuySell begins after a sale decision, and crowdfunding focuses on issuance. The code alone is not the moat.',
-  'Valuation: call the pre-owner number an estimate with a range. The calibration path exists, but production accuracy has not yet been proven.',
-  'Kelly paper: scroll the derivation. f star is (pb minus q) over b. We use half Kelly, cap 20 percent.',
-  'Market design: production cannot promise liquidity. The owner bid is finite, and thin markets remain vulnerable even with rules and halts.',
-  'Regulation: the interests are securities. Production issuance and secondary execution require licensed partners and an offering exemption.',
-  'Investor rights: the demo models economic units. Production documents must define voting, distributions, dilution, information rights and transfers.',
-  'Business model: paid acquisition intelligence is the first hypothesis. Validate owner conversion and transaction economics before claiming a large revenue market.',
-  'Technical truth: name the real API and engine, then name seeded data, bots, cached research, demo balances and demo identity without hesitation.',
-  'Security: rules create flags and models review them. The current audit log is application append-only, not cryptographically immutable.',
-  'Hard questions: owner trust is the core assumption. State the tests that could validate or disprove the exchange thesis.',
+  'Nobody could invest in the laundromat on Murray Avenue until tonight. Buy 20 shares and watch the next round clear.',
+  'Kelly derivation, the paper. f star is (pb minus q) over b. Half Kelly in the app, capped at 20 percent.',
+  'The clearing rule, the belief update, the owner quotes and the stake, with the same constants as engine.py.',
 ];
-const TOTAL = 32;
+const TOTAL = 21;
 const pptx = new pptxgen();
 pptx.defineLayout({ name: 'W', width: 13.333, height: 7.5 });
 pptx.layout = 'W';
