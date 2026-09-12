@@ -152,3 +152,20 @@ Evaluation on Atlas found N+1 query paths that were invisible on the in-memory s
 
 ## 024  Sat 05:45  author: Aditya  affects: all
 The xAI team is out of credits (every call returns 403 "used all available credits or reached its monthly spending limit"). The Atlas appraisal batch stopped at 11 of 66. Everything still answers through the fallbacks (verified on Atlas: search, chat, acquire, persona, flags). `grok.py` now remembers a credits/spend-limit/429 reply and marks the provider blocked for 5 minutes (`GROK_BLOCK_S`), and `llm.is_configured` honors that, so no request waits on a dead key; `/readiness.grok.blocked_s` shows it. Whoever owns the xAI console: add credits or raise the monthly limit, then rerun `scripts/appraise_seeds.py --store` for the remaining 55.
+## 025  Sat  author: Zhiyuan (A)  affects: all lanes using mock mode
+`packages/contracts/examples/company-cards.json` now carries all twelve companies from
+`apps/api/seeds/companies.json` rather than four. Additive only: the four Pittsburgh demo cards keep
+their ids, values and file order, so the demo path and every existing fixture reference are
+unchanged. The eight appended are the rest of the seeds, which means mock mode and the live API now
+return the same set instead of diverging after the first four.
+
+Market numbers for the appended cards are derived, not invented: `v0_per_share` is the seed's
+`llm_estimate` over 10,000 shares, `confidence` is the seed's `llm_confidence`, and the bid/ask
+spread is 25% of (1 - confidence), which is the ratio the two existing priced fixtures already
+implied (Squirrel Hill 6.9% at conf 0.71, Bloomfield 16% at conf 0.38). Seeds with no
+`llm_estimate` become `status: "stub"` with null prices, matching how Steel City Express was
+already represented.
+
+Consequence for other lanes: `listCompanies()` in mock mode returns 12, not 4, and a bare category
+search returns more rows than before. City-filtered searches are unaffected. The landing page picks
+its five trending markets by explicit id, all of which exist in both the fixtures and the seeds.

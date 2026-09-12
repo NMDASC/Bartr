@@ -21,11 +21,12 @@ function series(id: string, n = 28) {
   return out;
 }
 
-function Spark({ id, up }: { id: string; up: boolean }) {
+function Spark({ id, delay = 0 }: { id: string; delay?: number }) {
   const pts = useMemo(() => series(id), [id]);
-  const d = pts
-    .map((p, i) => `${i === 0 ? "M" : "L"}${(i / (pts.length - 1)) * 96} ${22 - p * 18}`)
-    .join(" ");
+  const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${(i / (pts.length - 1)) * 96} ${22 - p * 18}`).join(" ");
+  // the line is coloured by its own shape, not by the last tick, so what you
+  // read matches what you see
+  const up = pts[pts.length - 1] >= pts[0];
   return (
     <svg viewBox="0 0 96 24" className="h-6 w-24 overflow-visible" aria-hidden>
       <path
@@ -34,7 +35,7 @@ function Spark({ id, up }: { id: string; up: boolean }) {
         strokeWidth="1"
         stroke={up ? "#2BC392" : "#EE5557"}
         className="bl-draw"
-        style={{ strokeDasharray: 260, strokeDashoffset: 260 }}
+        style={{ strokeDasharray: 260, strokeDashoffset: 260, animationDelay: `${delay}ms` }}
       />
     </svg>
   );
@@ -115,7 +116,7 @@ export function LandingTrending({ companies }: { companies: CompanyCard[] }) {
       </div>
 
       <ul className="flex flex-col gap-px">
-        {companies.map((c) => {
+        {companies.map((c, i) => {
           const l = live[c._id] ?? { bid: c.bid ?? 0, ask: c.ask ?? 0, last: c.last ?? 0, dir: null, v: 0 };
           return (
             <li key={c._id}>
@@ -134,8 +135,8 @@ export function LandingTrending({ companies }: { companies: CompanyCard[] }) {
                   </div>
                 </div>
 
-                <div className="hidden md:flex justify-end opacity-0 transition-opacity duration-150 ease-out group-hover:opacity-100">
-                  <Spark id={c._id} up={l.dir !== "down"} />
+                <div className="hidden justify-end md:flex">
+                  <Spark id={c._id} delay={i * 90} />
                 </div>
 
                 <div className="font-mono text-[13px] tabular-nums text-right">

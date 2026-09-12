@@ -11,8 +11,24 @@ import { listCompanies } from "@/lib/api";
 /** Three, because a fourth wraps the hero column onto a second line. */
 const examples = ["laundromat in Pittsburgh", "car wash on Minneapolis", "machine shop in McKees Rocks"];
 
+/**
+ * Curated, and deliberately not all one city. Five markets across four cities
+ * and five categories, so the row above the fold does not read as a Pittsburgh
+ * demo. Every id exists in both the fixtures and the API seeds.
+ */
+const TRENDING = [
+  "co_squirrel_hill_wash",
+  "co_sudsy_tulsa",
+  "co_lonestar_wash",
+  "co_mon_valley_auto",
+  "co_three_rivers_hvac",
+];
+
 export default async function Home() {
-  const trending = (await listCompanies().catch(() => [])).filter((c) => c.status === "ready").slice(0, 6);
+  const all = await listCompanies().catch(() => []);
+  const trending = TRENDING.map((id) => all.find((c) => c._id === id)).filter((c) => c && c.status === "ready");
+  // if the API ever returns a different set, fall back to whatever is priced
+  const rows = (trending.length >= 5 ? trending : all.filter((c) => c.status === "ready")).slice(0, 5) as typeof all;
 
   return (
     <>
@@ -73,7 +89,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <LandingTrending companies={trending} />
+          <LandingTrending companies={rows} />
         </div>
       </section>
 
