@@ -69,3 +69,11 @@ def test_tiebreak_closest_to_last():
 def test_interval_grows_when_sparse():
     assert next_interval(40) == 10
     assert next_interval(2) == 60
+
+
+def test_opening_trade_anchors_on_reference_not_midpoint():
+    orders = [Order("x", "u1", "buy", 10, 55.42, 1), Order("y", "treasury", "sell", 600, 54.42, 2)]
+    r = clear(orders, last_price=None, anchor=52.59)
+    assert r.price == 54.42
+    r2 = clear(orders, last_price=None)          # no anchor at all: midpoint
+    assert r2.price == 54.92
