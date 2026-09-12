@@ -29,7 +29,6 @@ export function Footer() {
                 <>
                   <li><Link className="text-muted-foreground hover:text-foreground" href="/overview">Overview</Link></li>
                   <li><Link className="text-muted-foreground hover:text-foreground" href="/search?q=laundromat%20in%20Pittsburgh">Discover</Link></li>
-                  <li><Link className="text-muted-foreground hover:text-foreground" href="/portfolio">Portfolio</Link></li>
                   <li><Link className="text-muted-foreground hover:text-foreground" href="/agent">Agent</Link></li>
                   {session.role === "admin" ? <li><Link className="text-muted-foreground hover:text-foreground" href="/admin">Admin</Link></li> : null}
                 </>

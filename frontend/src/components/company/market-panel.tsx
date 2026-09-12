@@ -77,7 +77,7 @@ export function MarketPanel({ company }: { company: Company }) {
               <Button variant="primary" size="lg" href={`/company/${company._id}/acquire`} className="flex-1">
                 Acquire
               </Button>
-              <Button size="lg" href="/portfolio" className="flex-1">
+              <Button size="lg" href="/overview" className="flex-1">
                 Portfolio
               </Button>
             </div>

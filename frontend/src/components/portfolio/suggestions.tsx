@@ -26,7 +26,7 @@ export function Suggestions({ initial, bankroll }: { initial: Suggestion[]; bank
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-        <h2 className="text-[30px] md:text-[32px] leading-[1.2]">Suggested stakes</h2>
+        <h2 className="text-[30px] md:text-[36px] 3xl:text-[44px] leading-[1.2]">Suggested stakes</h2>
         <label className="flex items-center gap-3">
           <Label tracking="tight">Kelly multiplier</Label>
           <input type="range" min={0.25} max={1} step={0.05} value={mult} onChange={(e) => setMult(Number(e.target.value))} className="w-40 accent-[#755cfe]" />
