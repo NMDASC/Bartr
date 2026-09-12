@@ -1,67 +1,77 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 
-import portfolioFixture from "@contracts/examples/portfolio.json";
-import suggestionsFixture from "@contracts/examples/suggest.json";
+import type { Portfolio, Suggestion } from "@contracts/types";
+
+import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Label } from "@/components/ui/label";
-import { Plate } from "@/components/ui/plate";
 import { AUTH_COOKIE, readSessionToken } from "@/lib/auth/session";
-import { signed, usd } from "@/lib/format";
+import { getPortfolio, suggestPortfolio } from "@/lib/api";
+import { px, signed, usd } from "@/lib/format";
 
-const activity = [
-  { action: "Search completed", detail: "12 Pittsburgh laundromats ranked", time: "2m" },
-  { action: "Portfolio reviewed", detail: "Two positions remain inside risk limits", time: "18m" },
-  { action: "Market watched", detail: "Squirrel Hill Wash and Fold", time: "41m" },
-];
+export const dynamic = "force-dynamic";
 
-const requests = [
-  "laundromats in Pittsburgh",
-  "owner-operated businesses under $750K",
-  "stable cash flow near universities",
-];
+const STARTERS = ["laundromat in Pittsburgh", "car wash in Waco", "machine shop in McKees Rocks"];
+
+/** Header bar for a ruled panel. Panels hold records; plates hold figures. */
+function PanelHead({ title, meta }: { title: string; meta?: string }) {
+  return (
+    <div className="flex h-8 shrink-0 items-center justify-between gap-3 border-b border-line px-4">
+      <Label tracking="normal">{title}</Label>
+      {meta ? <span className="font-mono text-[10px] uppercase tracking-[0.1em] tabular-nums text-tint-400">{meta}</span> : null}
+    </div>
+  );
+}
 
 export default async function OverviewPage() {
   const cookieStore = await cookies();
   const session = readSessionToken(cookieStore.get(AUTH_COOKIE)?.value);
-  const portfolio = portfolioFixture;
-  const recommendations = suggestionsFixture;
-  const equity = portfolio.positions.reduce((sum, position) => sum + position.value, 0);
+
+  // through lib/api, like every other screen, so this page follows
+  // NEXT_PUBLIC_API_URL instead of serving fixtures forever
+  const empty: Portfolio = { cash: 0, pnl: { realized: 0, unrealized: 0, total: 0 }, positions: [] };
+  const [portfolio, recommendations] = await Promise.all([
+    getPortfolio(session?.email).catch(() => empty),
+    suggestPortfolio(session?.email).catch((): Suggestion[] => []),
+  ]);
+
+  const equity = portfolio.positions.reduce((sum, p) => sum + p.value, 0);
+  const basis = portfolio.positions.reduce((sum, p) => sum + p.qty * p.avg_cost, 0);
+
+  const stats: [string, string, "up" | "down" | null][] = [
+    ["Cash", usd(portfolio.cash), null],
+    ["Equity", usd(equity), null],
+    ["Total P&L", signed(portfolio.pnl.total), portfolio.pnl.total >= 0 ? "up" : "down"],
+    ["Positions", String(portfolio.positions.length), null],
+  ];
+
+  const ledger: [string, string, "up" | "down" | null][] = [
+    ["Cost basis", usd(basis), null],
+    ["Market value", usd(equity), null],
+    ["Unrealized", signed(portfolio.pnl.unrealized), portfolio.pnl.unrealized >= 0 ? "up" : "down"],
+    ["Realized", signed(portfolio.pnl.realized), portfolio.pnl.realized >= 0 ? "up" : "down"],
+  ];
 
   return (
     <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 pb-20 sm:px-6 xl:border-l xl:border-r xl:border-line">
       <div className="flex items-end justify-between gap-6 pt-10 pb-6">
         <div>
           <Label className="mb-2 block">Account overview</Label>
-          <h1 className="text-[30px] leading-[1.1] md:text-[40px]">
-            {session?.name || "Investor"}
-          </h1>
+          <h1 className="text-[33px] leading-[1.1] tracking-[-0.01em] md:text-[40px] 3xl:text-[48px]">{session?.name || "Investor"}</h1>
         </div>
-        <Label tracking="tight">{session?.email}</Label>
+        {/* an address is data, not a label, so it keeps its own case */}
+        {session?.email ? <span className="font-mono text-[11px] text-tint-500">{session.email}</span> : null}
       </div>
 
-      <div className="grid grid-cols-2 border-y border-line md:grid-cols-4 md:divide-x md:divide-line">
-        {[
-          ["Cash", usd(portfolio.cash)],
-          ["Equity", usd(equity)],
-          ["Total P&L", signed(portfolio.pnl.total)],
-          ["Positions", String(portfolio.positions.length)],
-        ].map(([label, value], index) => (
-          <div
-            key={label}
-            className="border-b border-line px-4 py-4 even:border-l md:border-b-0 md:border-l-0"
-          >
+      <div className="grid grid-cols-2 gap-px border-y border-line bg-line md:grid-cols-4">
+        {stats.map(([label, value, tone]) => (
+          <div key={label} className="bg-background px-4 py-4">
             <Label tracking="tight" className="mb-1 block">
               {label}
             </Label>
             <div
-              className={
-                index === 2
-                  ? `text-[24px] leading-none tabular-nums ${
-                      value.startsWith("-") ? "text-down" : "text-up"
-                    }`
-                  : "text-[24px] leading-none tabular-nums"
-              }
+              className={`text-[24px] leading-none tabular-nums ${tone === "up" ? "text-up" : tone === "down" ? "text-down" : ""}`}
             >
               {value}
             </div>
@@ -69,27 +79,26 @@ export default async function OverviewPage() {
         ))}
       </div>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-        <Plate id="Portfolio" caption={`${portfolio.positions.length} positions`}>
-          <ul>
+      <div className="mt-8 grid items-stretch gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+        <section className="flex flex-col border border-line bg-background">
+          <PanelHead title="Positions" meta={`${portfolio.positions.length} held`} />
+          <ul className="flex-1 divide-y divide-line">
             {portfolio.positions.map((position) => (
-              <li key={position.market_id} className="border-b border-hairline last:border-b-0">
+              <li key={position.market_id}>
                 <Link
                   href={`/company/${position.market_id}`}
-                  className="grid grid-cols-[1fr_auto] gap-4 px-4 py-4 transition-colors hover:bg-surface"
+                  className="grid grid-cols-[1fr_auto] items-center gap-4 px-4 py-4 transition-colors duration-150 ease-out hover:bg-surface"
                 >
-                  <div>
-                    <div className="text-[15px]">{position.name}</div>
-                    <Label tracking="tight">{position.qty} shares</Label>
+                  <div className="min-w-0">
+                    <div className="truncate text-[16px]">{position.name}</div>
+                    <div className="text-[13px] secondary tabular-nums">
+                      {position.qty} shares at {px(position.avg_cost)}
+                    </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-mono text-[13px] tabular-nums">
-                      {usd(position.value)}
-                    </div>
+                    <div className="font-mono text-[13px] tabular-nums">{usd(position.value)}</div>
                     <div
-                      className={`font-mono text-[11px] tabular-nums ${
-                        position.pnl >= 0 ? "text-up" : "text-down"
-                      }`}
+                      className={`font-mono text-[11px] tabular-nums ${position.pnl >= 0 ? "text-up" : "text-down"}`}
                     >
                       {signed(position.pnl)}
                     </div>
@@ -97,92 +106,91 @@ export default async function OverviewPage() {
                 </Link>
               </li>
             ))}
+            {portfolio.positions.length === 0 ? (
+              <li className="px-4 py-4 text-[14px] secondary">No positions yet.</li>
+            ) : null}
           </ul>
-          <div className="border-t border-line px-4 py-3">
+          <div className="mt-auto border-t border-line px-4 py-3">
             <Link
               href="/portfolio"
-              className="font-mono text-[10px] uppercase tracking-[0.1em] text-accent-deep"
+              className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground transition-colors duration-150 ease-out hover:text-accent"
             >
               View portfolio
             </Link>
           </div>
-        </Plate>
+        </section>
 
-        <Plate id="Agent activity" caption="Recent">
-          <ol>
-            {activity.map((item) => (
-              <li
-                key={`${item.action}-${item.time}`}
-                className="grid grid-cols-[1fr_auto] gap-4 border-b border-hairline px-4 py-4 last:border-b-0"
-              >
-                <div>
-                  <div className="text-[14px]">{item.action}</div>
-                  <p className="mt-0.5 text-[13px] text-muted-foreground">{item.detail}</p>
-                </div>
-                <Label tracking="tight">{item.time}</Label>
-              </li>
+        <section className="flex flex-col border border-line bg-background">
+          <PanelHead title="Profit and loss" />
+          <dl className="flex-1 divide-y divide-line">
+            {ledger.map(([label, value, tone]) => (
+              <div key={label} className="flex items-baseline justify-between gap-4 px-4 py-4">
+                <dt className="text-[14px] secondary">{label}</dt>
+                <dd
+                  className={`font-mono text-[14px] tabular-nums ${tone === "up" ? "text-up" : tone === "down" ? "text-down" : ""}`}
+                >
+                  {value}
+                </dd>
+              </div>
             ))}
-          </ol>
-          <div className="border-t border-line px-4 py-3">
+          </dl>
+          <div className="mt-auto border-t border-line px-4 py-3">
             <Link
               href="/agent"
-              className="font-mono text-[10px] uppercase tracking-[0.1em] text-accent-deep"
+              className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground transition-colors duration-150 ease-out hover:text-accent"
             >
               Open agent
             </Link>
           </div>
-        </Plate>
+        </section>
       </div>
 
       <section className="mt-8">
         <div className="mb-3 flex items-center justify-between">
           <Label>Recommended</Label>
           <Link
-            href="/search"
-            className="font-mono text-[10px] uppercase tracking-[0.1em] text-accent-deep"
+            href="/search?q=laundromat%20in%20Pittsburgh"
+            className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground transition-colors duration-150 ease-out hover:text-accent"
           >
             Discover
           </Link>
         </div>
-        <div className="grid gap-px bg-line md:grid-cols-2">
+        <div className="grid gap-px border-y border-line bg-line md:grid-cols-2">
           {recommendations.map((suggestion) => (
             <Link
               key={suggestion.company._id}
               href={`/company/${suggestion.company._id}`}
-              className="bg-background p-5 transition-colors hover:bg-surface"
+              className="bg-background p-5 transition-colors duration-150 ease-out hover:bg-surface"
             >
               <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-[18px]">{suggestion.company.name}</h2>
-                  <Label tracking="tight">
+                <div className="min-w-0">
+                  <h2 className="truncate text-[18px]">{suggestion.company.name}</h2>
+                  <div className="text-[13px] secondary">
                     {suggestion.company.city}, {suggestion.company.state}
-                  </Label>
+                  </div>
                 </div>
-                <Chip tone="accent">
-                  {suggestion.suggested_usd > 0
-                    ? usd(suggestion.suggested_usd, { cents: false })
-                    : "Watch"}
-                </Chip>
+                {/* a size is a number; watch is a state, so only one of them is a chip */}
+                {suggestion.suggested_usd > 0 ? (
+                  <span className="shrink-0 font-mono text-[13px] tabular-nums">
+                    {usd(suggestion.suggested_usd, { cents: false })}
+                  </span>
+                ) : (
+                  <Chip>Watch</Chip>
+                )}
               </div>
-              <p className="mt-4 text-[14px] leading-[1.45] text-muted-foreground">
-                {suggestion.why}
-              </p>
+              <p className="mt-4 text-[14px] leading-[1.45] secondary">{suggestion.why}</p>
             </Link>
           ))}
         </div>
       </section>
 
       <section className="mt-8 border-t border-line pt-6">
-        <Label className="mb-3 block">Previous requests</Label>
+        <Label className="mb-3 block">Start a search</Label>
         <div className="flex flex-wrap gap-2">
-          {requests.map((request) => (
-            <Link
-              key={request}
-              href={`/search?q=${encodeURIComponent(request)}`}
-              className="bg-surface px-3 py-2 font-mono text-[11px] text-foreground transition-colors hover:bg-surface-hover"
-            >
-              {request}
-            </Link>
+          {STARTERS.map((q) => (
+            <Button key={q} size="sm" href={`/search?q=${encodeURIComponent(q)}`}>
+              {q}
+            </Button>
           ))}
         </div>
       </section>
