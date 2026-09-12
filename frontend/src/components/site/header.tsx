@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 
 const nav = [
-  { href: "/search?q=laundromat%20in%20Oklahoma", label: "Discover", match: "/search" },
+  { href: "/search?q=laundromat%20in%20Pittsburgh", label: "Discover", match: "/search" },
   { href: "/portfolio", label: "Portfolio", match: "/portfolio" },
   { href: "/surveillance", label: "Surveillance", match: "/surveillance" },
   { href: "/agent", label: "Agent", match: "/agent" },
@@ -39,7 +39,7 @@ export function Header() {
           <Button variant="secondary" size="sm" href="/portfolio">
             Login
           </Button>
-          <Button variant="primary" size="sm" href="/search?q=laundromat%20in%20Oklahoma">
+          <Button variant="primary" size="sm" href="/search?q=laundromat%20in%20Pittsburgh">
             Start trading
           </Button>
         </div>

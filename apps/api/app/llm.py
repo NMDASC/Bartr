@@ -7,10 +7,11 @@ what lets K2 take any role Grok has by passing provider="ifm".
     from app.llm import complete
     profile = await complete(messages, schema=CompanyProfile)
 """
-
 from __future__ import annotations
 
+import json
 import os
+from dataclasses import dataclass, field
 from typing import Any, Literal, TypeVar
 
 from openai import AsyncOpenAI
@@ -29,6 +30,19 @@ _CONFIG = {
 
 class LLMNotConfigured(RuntimeError):
     pass
+
+
+@dataclass
+class ToolCall:
+    id: str
+    name: str
+    arguments: dict[str, Any]
+
+
+@dataclass
+class Completion:
+    content: str
+    tool_calls: list[ToolCall] = field(default_factory=list)
 
 
 def default_model(provider: Provider) -> str:
@@ -65,17 +79,26 @@ async def complete(
     model: str | None = None,
     schema: type[M] | None = None,
     tools: list[dict[str, Any]] | None = None,
+    web_search: bool = False,
+    allowed_domains: list[str] | None = None,
     temperature: float = 0.2,
-) -> str | M:
-    """Chat completion. With `schema`, returns a parsed model instance."""
+) -> str | M | Completion:
+    """Chat completion. With `schema`, returns a parsed model instance.
+    With `tools`, returns Completion so the caller can run a tool loop."""
     c = client(provider)
     kwargs: dict[str, Any] = {
         "model": model or default_model(provider),
         "messages": messages,
         "temperature": temperature,
     }
-    if tools:
-        kwargs["tools"] = tools
+    call_tools = list(tools or [])
+    if web_search:
+        search: dict[str, Any] = {"type": "web_search"}
+        if allowed_domains:
+            search["filters"] = {"allowed_domains": allowed_domains[:5]}
+        call_tools.append(search)
+    if call_tools:
+        kwargs["tools"] = call_tools
 
     if schema is not None:
         parsed = await c.beta.chat.completions.parse(response_format=schema, **kwargs)
@@ -85,4 +108,15 @@ async def complete(
         return out
 
     resp = await c.chat.completions.create(**kwargs)
-    return resp.choices[0].message.content or ""
+    msg = resp.choices[0].message
+    if tools:
+        calls = []
+        for tc in msg.tool_calls or []:
+            fn = tc.function
+            try:
+                args = json.loads(fn.arguments or "{}")
+            except json.JSONDecodeError:
+                args = {}
+            calls.append(ToolCall(id=tc.id, name=fn.name, arguments=args if isinstance(args, dict) else {}))
+        return Completion(content=msg.content or "", tool_calls=calls)
+    return msg.content or ""

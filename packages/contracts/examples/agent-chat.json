@@ -1,20 +1,20 @@
 {
   "session_id": "+14124754173",
   "messages": [
-    { "role": "user", "content": "find me a laundromat in oklahoma under 1.2m" },
+    { "role": "user", "content": "find me a laundromat in pittsburgh" },
     {
       "role": "assistant",
-      "content": "Three in range.\n\nSuds City Coin Laundry, Tulsa. $1.04M, last $104.18/share. Confidence 71%.\nThe Wash House, Bartlesville. $623K, last $61.00. Confidence 44%.\nSpin Zone, OKC. $1.73M, over your cap.\n\nSuds City is the cleanest read. Want the order book?",
+      "content": "Three in Pittsburgh.\n\nSquirrel Hill Wash and Fold. $558K, last $56.40/share.\nButler Street Laundromat. Listed, 56 machines.\nBloomfield Coin Laundry. Thin file, wide range.\n\nSquirrel Hill is the cleanest read. Want the order book?",
       "tool_calls": [
-        { "name": "search_companies", "args": { "q": "laundromat in Oklahoma", "max_value": 1200000 }, "result_count": 4 }
+        { "name": "search_companies", "args": { "q": "laundromat in Pittsburgh" }, "result_count": 3 }
       ]
     },
-    { "role": "user", "content": "buy 50 shares of suds city at 104" },
+    { "role": "user", "content": "buy 50 shares of squirrel hill wash at 56" },
     {
       "role": "assistant",
-      "content": "Placed. Buy 50 @ $104.00 limit on Suds City.\n\nCurrent bid $102.40, ask $106.10. Next batch clears in 6 seconds. You will fill if the uniform price lands at or below $104.00.",
+      "content": "Placed. Buy 50 @ $56.00 limit on Squirrel Hill Wash and Fold.\n\nCurrent bid $54.20, ask $58.10. Next batch clears in 6 seconds. You will fill if the uniform price lands at or below $56.00.",
       "tool_calls": [
-        { "name": "place_order", "args": { "market_id": "c_tulsa_suds_01", "side": "buy", "qty": 50, "limit_price": 104.0 }, "result_count": 1 }
+        { "name": "place_order", "args": { "market_id": "co_squirrel_hill_wash", "side": "buy", "qty": 50, "limit_price": 56.0 }, "result_count": 1 }
       ]
     }
   ]

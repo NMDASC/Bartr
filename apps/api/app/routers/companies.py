@@ -3,7 +3,6 @@ from fastapi import APIRouter, HTTPException, Query
 from app import views
 from app.deps import engine, store
 from app.schemas import Company, CompanyCard, CompanyIn, Valuation
-from app.services.discovery.valuation import Observables, value as run_valuation
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
@@ -43,7 +42,8 @@ def get_company(cid: str):
 @router.post("/valuation/preview", response_model=Valuation)
 def preview_valuation(body: CompanyIn):
     """Run the ensemble without creating anything. Handy for the UI and for calibration."""
-    fields = Observables.__dataclass_fields__.keys()
-    v = run_valuation(Observables(**{k: getattr(body, k) for k in fields}))
-    import time
-    return views.valuation(engine._val_dict(v), time.time())
+    from app.services.discovery.pricing import preview
+    try:
+        return preview(body.model_dump())
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc

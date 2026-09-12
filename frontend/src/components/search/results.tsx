@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
 
-type Phase = "idle" | "streaming" | "done";
+type Phase = "idle" | "streaming" | "done" | "error";
 
 export function Results({ q }: { q: string }) {
   const [phase, setPhase] = useState<Phase>(q ? "streaming" : "idle");
@@ -20,18 +20,24 @@ export function Results({ q }: { q: string }) {
   const [order, setOrder] = useState<string[]>([]);
   const [state, setState] = useState("");
   const [band, setBand] = useState("");
-  const [sort, setSort] = useState<"conf" | "value" | "name">("conf");
+  const [sort, setSort] = useState<"relevance" | "conf" | "value" | "name">("relevance");
+  const [error, setError] = useState<string | null>(null);
 
   // page.tsx mounts this with key={q}, so a new query is a fresh component; no reset needed here
   useEffect(() => {
     if (!q) return;
     const stop = streamSearch(q, (e) => {
       if (e.type === "intent") setIntent(e.intent);
+      if (e.type === "ranking") {
+        setCards(new Map(e.companies.map(c => [c._id, c])));
+        setOrder(e.companies.map(c => c._id));
+      }
+      if (e.type === "error") { setError(e.message); setPhase("error"); }
       if (e.type === "company_stub" || e.type === "company_ready") {
         setCards((m) => new Map(m).set(e.company._id, e.company));
         setOrder((o) => (o.includes(e.company._id) ? o : [...o, e.company._id]));
       }
-      if (e.type === "done") setPhase("done");
+      if (e.type === "done") setPhase(e.status === "failed" ? "error" : "done");
     });
     return stop;
   }, [q]);
@@ -51,6 +57,7 @@ export function Results({ q }: { q: string }) {
     const ready = filtered.filter((c) => c.status === "ready");
     const stubs = filtered.filter((c) => c.status !== "ready");
     ready.sort((a, b) => {
+      if (sort === "relevance") return (a.relevance?.rank ?? order.indexOf(a._id)) - (b.relevance?.rank ?? order.indexOf(b._id));
       if (sort === "conf") return (b.confidence ?? 0) - (a.confidence ?? 0);
       if (sort === "value") return (b.v0_per_share ?? 0) - (a.v0_per_share ?? 0);
       return a.name.localeCompare(b.name);
@@ -107,6 +114,7 @@ export function Results({ q }: { q: string }) {
         <div>
           <Label as="div" className="mb-2">Sort</Label>
           <Select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} aria-label="Sort">
+            <option value="relevance">Relevance</option>
             <option value="conf">Confidence</option>
             <option value="value">Value</option>
             <option value="name">Name</option>
@@ -120,9 +128,12 @@ export function Results({ q }: { q: string }) {
             {readyCount} priced · {rows.length - readyCount} reading
           </Label>
           <span className={cn("font-mono text-[10px] uppercase tracking-[0.1em]", phase === "done" ? "text-muted-foreground" : "text-accent")}>
-            {phase === "done" ? "Complete" : "Streaming"}
+            {phase === "error" ? "Unavailable" : phase === "done" ? "Complete" : "Streaming"}
           </span>
         </div>
+
+        {error ? <p role="alert" className="py-4 text-down">{error}</p> : null}
+        {phase === "done" && rows.length === 0 ? <p className="py-4 secondary">No matching companies.</p> : null}
 
         <div className="hidden md:grid grid-cols-[1fr_110px_88px_88px_88px_120px] gap-4 px-3 pb-2 border-b border-line">
           <Label>Company</Label>

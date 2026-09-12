@@ -47,6 +47,14 @@ def test_kelly_zero_at_fair_and_capped():
     assert port[0]["usd"] == 20_000 and 5_000 < port[1]["usd"] < 7_000
 
 
+def test_observables_reject_nonpositive_revenue():
+    try:
+        Observables(category="laundromat", revenue=0)
+        raise AssertionError("expected ValueError")
+    except ValueError as e:
+        assert "revenue" in str(e)
+
+
 def test_calibrate_runs():
     cases = [(Observables(category="laundromat", sde=140_000, asking_price=520_000), 520_000),
              (Observables(category="laundromat", sde=90_000, asking_price=400_000), 400_000)]

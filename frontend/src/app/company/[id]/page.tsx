@@ -16,7 +16,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ id: st
     <>
       <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
         <div className="pt-8 pb-6">
-          <BackLink fallback="/search?q=laundromat%20in%20Oklahoma" />
+          <BackLink fallback="/search?q=laundromat%20in%20Pittsburgh" />
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <Label>
               {company.category}

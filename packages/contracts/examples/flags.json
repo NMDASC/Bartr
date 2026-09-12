@@ -1,7 +1,7 @@
 [
   {
     "_id": "f_0007",
-    "market_id": "c_tulsa_suds_01",
+    "market_id": "co_squirrel_hill_wash",
     "batch_id": "b_0044",
     "rule": "wash_trading",
     "severity": "high",
@@ -18,7 +18,7 @@
   },
   {
     "_id": "f_0008",
-    "market_id": "c_tulsa_suds_01",
+    "market_id": "co_squirrel_hill_wash",
     "batch_id": "b_0044",
     "rule": "pump",
     "severity": "medium",

@@ -97,11 +97,15 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
 
 
 @router.get("/flags", response_model=list[Flag], response_model_by_alias=True)
-def flags(market_id: str | None = None):
+async def flags(market_id: str | None = None):
     mids = [market_id] if market_id else [m["id"] for m in store.list_markets()]
     out = []
     for mid in mids:
         if store.get_market(mid):
             out.extend(_rule_flags(mid))
     out.sort(key=lambda f: -f["t"])
+    from app.llm import is_configured
+    if is_configured("xai") or is_configured("ifm"):
+        from app.services.agents.compliance import review_flags
+        out = await review_flags(out)
     return [views.flag(f) for f in out]

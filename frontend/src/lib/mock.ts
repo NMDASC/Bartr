@@ -150,13 +150,15 @@ export async function getCompany(id: string): Promise<Company | null> {
 export function streamSearch(q: string, onEvent: (e: DiscoveryEvent) => void): () => void {
   const timers: number[] = [];
   const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms));
-  const state = /\b(ok|oklahoma)\b/i.test(q) ? "OK" : null;
+  const city = /\bpittsburgh\b/i.test(q) ? "Pittsburgh" : /\btulsa\b/i.test(q) ? "Tulsa" : null;
+  const state = /\b(pa|pennsylvania|pittsburgh)\b/i.test(q) ? "PA" : /\b(ok|oklahoma|tulsa)\b/i.test(q) ? "OK" : null;
   at(250, () =>
     onEvent({
       type: "intent",
-      intent: { category: "laundromat", naics_guess: "812310", state, city: null, min_value: null, max_value: null, must_have: [] },
+      intent: { category: "laundromat", naics_guess: "812310", state, city, min_value: null, max_value: null, must_have: [] },
     }),
   );
+  at(400, () => onEvent({ type: "ranking", revision: 1, companies: CARDS }));
   CARDS.forEach((c, i) => {
     const stub: CompanyCard = { ...c, bid: null, ask: null, last: null, v0_per_share: null, confidence: null, status: "stub" };
     at(600 + i * 350, () => onEvent({ type: "company_stub", company: stub }));

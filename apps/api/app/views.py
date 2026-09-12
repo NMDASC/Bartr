@@ -17,7 +17,7 @@ def confidence_from_sigma(sigma: float) -> float:
 
 
 def valuation(v: dict, created_at: float) -> dict:
-    return {**v, "as_of": iso(created_at)}
+    return {**v, "as_of": v.get("as_of") or iso(created_at)}
 
 
 def financials(c: dict) -> dict:
@@ -31,6 +31,8 @@ def financials(c: dict) -> dict:
 
 
 def sources(c: dict) -> list[dict]:
+    if c.get("source_documents"):
+        return c["source_documents"]
     return [{"url": u, "title": u.split("/")[2] if "//" in u else u, "snippet": "", "fetched_at": iso(c["created_at"])}
             for u in c["observables"].get("sources", [])]
 

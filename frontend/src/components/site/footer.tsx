@@ -20,7 +20,7 @@ export function Footer() {
               Product
             </Label>
             <ul className="space-y-2 text-[14px]">
-              <li><Link className="text-muted-foreground hover:text-foreground" href="/search?q=laundromat%20in%20Oklahoma">Discover</Link></li>
+              <li><Link className="text-muted-foreground hover:text-foreground" href="/search?q=laundromat%20in%20Pittsburgh">Discover</Link></li>
               <li><Link className="text-muted-foreground hover:text-foreground" href="/portfolio">Portfolio</Link></li>
               <li><Link className="text-muted-foreground hover:text-foreground" href="/surveillance">Surveillance</Link></li>
             </ul>

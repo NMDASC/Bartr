@@ -50,6 +50,12 @@ export interface Estimate {
 }
 
 export interface Valuation {
+  version?: string;
+  calibration_version?: string | null;
+  benchmark_version?: string;
+  benchmark_status?: string;
+  opening_price?: number;
+  warnings?: string[];
   /** Posterior median, USD, whole company. Divide by shares_outstanding for per share. */
   v0: number;
   /** Posterior log sigma after disagreement inflation. 0.12 .. 0.90. */
@@ -128,6 +134,8 @@ export interface Company {
 
 /** Row shape for /search and /companies. Nulls are expected while status is "stub". */
 export interface CompanyCard {
+  /** Query-specific; unrelated to financial confidence. */
+  relevance?: Relevance;
   _id: string;
   name: string;
   category: string;
@@ -160,11 +168,26 @@ export interface SearchJobAccepted {
 
 /** SSE frames on GET /discovery/jobs/{id}. */
 export type DiscoveryEvent =
+  | { type: "ranking"; revision: number; companies: CompanyCard[] }
+  | { type: "error"; message: string }
   | { type: "intent"; intent: SearchIntent }
   | { type: "company_stub"; company: CompanyCard }
   | { type: "company_ready"; company: CompanyCard }
   | { type: "company_failed"; company_id: string; reason: string }
-  | { type: "done"; total: number };
+  | { type: "done"; total: number; warnings?: string[]; status?: string };
+
+export interface Relevance {
+  rank: number;
+  score: number;
+  semantic: number;
+  keyword: number;
+  preference: number;
+  evidence: number;
+  matched: string[];
+  unknown: string[];
+  version: string;
+  semantic_method: string;
+}
 
 // ---------------------------------------------------------------- market
 

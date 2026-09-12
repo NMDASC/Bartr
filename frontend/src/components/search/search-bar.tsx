@@ -28,7 +28,7 @@ export function SearchBar({ initial = "", className, autoFocus }: { initial?: st
         autoFocus={autoFocus}
         autoComplete="off"
         onChange={(e) => setQ(e.target.value)}
-        placeholder="laundromat in Oklahoma under 1.2M"
+        placeholder="laundromat in Pittsburgh under 1.2M"
         className="h-11 text-[16px]"
       />
       <Button type="submit" variant="primary" size="lg" className="h-11 shrink-0">

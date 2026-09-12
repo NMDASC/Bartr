@@ -1,55 +1,55 @@
 {
-  "_id": "c_tulsa_suds_01",
-  "name": "Suds City Coin Laundry",
+  "_id": "co_squirrel_hill_wash",
+  "name": "Squirrel Hill Wash and Fold",
   "category": "laundromat",
   "naics_guess": "812310",
-  "address": "4417 S Peoria Ave",
-  "city": "Tulsa",
-  "state": "OK",
-  "lat": 36.0912,
-  "lng": -95.9781,
-  "website": "https://sudscitytulsa.com",
-  "phone": "+1 918 555 0142",
+  "address": "2020 Murray Ave, Pittsburgh, PA 15217",
+  "city": "Pittsburgh",
+  "state": "PA",
+  "lat": 40.4374,
+  "lng": -79.9229,
+  "website": "https://squirrelhillwash.com",
+  "phone": "+1 412 555 0142",
   "rating": 4.6,
   "review_count": 214,
-  "founded_year": 2009,
+  "founded_year": 2011,
   "owners": [
-    "Ray Dunlap"
+    "Rita Kalinowski"
   ],
-  "description": "Owner-operated 48-machine coin laundry on South Peoria with attended hours, card and coin payment, and a wash-dry-fold counter service.",
+  "description": "Attended laundromat on Murray Avenue with 42 machines, wash and fold, and a student delivery route to Oakland. Same owner since 2011.",
   "financials": {
-    "revenue_est": 612000,
-    "sde_est": 231000,
-    "margin_est": 0.377,
-    "employees_est": 4,
+    "revenue_est": 410000,
+    "sde_est": 152000,
+    "margin_est": 0.371,
+    "employees_est": 3,
     "confidence": 0.71,
     "method": "extracted"
   },
   "valuation": {
-    "v0": 1039500,
-    "sigma": 0.324,
-    "low": 792000,
-    "high": 1364000,
+    "v0": 558000,
+    "sigma": 0.29,
+    "low": 438000,
+    "high": 711000,
     "method": "income+llm+base_rate",
-    "disagreement": 0.19,
+    "disagreement": 0.17,
     "estimates": [
       {
         "name": "income",
-        "value": 1062000,
+        "value": 562000,
         "sigma": 0.25,
-        "note": "4.0x asking multiple x 0.88 sold haircut x SDE $231k, +4% for 4.6 stars on 214 reviews"
+        "note": "4.0x asking multiple x 0.88 sold haircut x SDE $152k, +4% for 4.6 stars on 214 reviews"
       },
       {
         "name": "llm",
-        "value": 1150000,
+        "value": 560000,
         "sigma": 0.42,
-        "note": "Grok $1.2M with web_search; K2 $1.1M. Confidence 0.7"
+        "note": "Grok $560k with web_search. Confidence 0.7"
       },
       {
         "name": "base_rate",
         "value": 612000,
         "sigma": 0.7,
-        "note": "laundromat median asking $695k x 0.88, OK price index 0.97"
+        "note": "laundromat median asking x 0.88, PA price index"
       }
     ],
     "as_of": "2026-09-12T03:14:00Z"
@@ -57,14 +57,14 @@
   "sources": [
     {
       "url": "https://www.bizbuysell.com/learning-center/valuation-benchmarks/laundromats-coin-laundry/",
-      "title": "Laundromat & Coin Laundry Valuation Benchmarks",
+      "title": "Laundromat and Coin Laundry Valuation Benchmarks",
       "snippet": "Single-store coin laundries typically sell for 3x to 5x SDE with margins near 38%.",
       "fetched_at": "2026-09-12T03:12:41Z"
     },
     {
-      "url": "https://sudscitytulsa.com/about",
-      "title": "About Suds City Coin Laundry",
-      "snippet": "Family owned since 2009. 48 washers, 40 dryers, open 6am to 11pm daily.",
+      "url": "https://squirrelhillwash.com/about",
+      "title": "About Squirrel Hill Wash and Fold",
+      "snippet": "Family owned since 2011. 42 washers and dryers, wash and fold, open 6am to 11pm daily.",
       "fetched_at": "2026-09-12T03:12:58Z"
     }
   ],
@@ -75,47 +75,32 @@
     "float": 3000,
     "retained": 7000,
     "tick": 0.01,
-    "last_price": 104.18,
-    "ref_price": 103.95,
+    "last_price": 56.40,
+    "ref_price": 55.80,
     "batch_interval_s": 10,
     "next_batch_at": "2026-09-12T03:14:10Z",
     "band_pct": 0.1,
     "belief": {
-      "mu": 13.854,
-      "sigma": 0.29,
+      "mu": 13.232,
+      "sigma": 0.26,
       "s_m": 0.1,
       "n_rounds": 45
     },
     "treasury": {
       "unsold_float": 1860,
-      "proceeds": 122964.0,
-      "floor_price": 78.98,
+      "proceeds": 66420.0,
+      "floor_price": 42.40,
       "floor_qty": 1000,
       "bought_back": 0,
       "ask_ladder": [
-        {
-          "price": 108.24,
-          "qty": 372
-        },
-        {
-          "price": 113.94,
-          "qty": 372
-        },
-        {
-          "price": 120.11,
-          "qty": 372
-        },
-        {
-          "price": 127.03,
-          "qty": 372
-        },
-        {
-          "price": 135.11,
-          "qty": 372
-        }
+        { "price": 58.10, "qty": 372 },
+        { "price": 61.20, "qty": 372 },
+        { "price": 64.50, "qty": 372 },
+        { "price": 68.20, "qty": 372 },
+        { "price": 72.50, "qty": 372 }
       ]
     },
-    "fees_collected": 614.82,
+    "fees_collected": 332.10,
     "halted": false
   }
 }

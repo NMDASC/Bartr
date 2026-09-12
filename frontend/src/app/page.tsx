@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { listCompanies } from "@/lib/api";
 import { px, usd, pct } from "@/lib/format";
 
-const examples = ["laundromat in Oklahoma", "car wash in Texas under 2M", "machine shop in Ohio", "restaurant in Pittsburgh"];
+const examples = ["laundromat in Pittsburgh", "car wash on McKnight Road", "machine shop in McKees Rocks", "restaurant on the South Side"];
 
 export default async function Home() {
   const trending = (await listCompanies()).filter((c) => c.status === "ready").slice(0, 6);
@@ -41,7 +41,7 @@ export default async function Home() {
               <Label className="mb-2 block">Trending</Label>
               <h2 className="text-[30px] md:text-[32px] leading-[1.2]">Markets clearing right now.</h2>
             </div>
-            <Link href="/search?q=laundromat%20in%20Oklahoma" className="hidden sm:inline font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-accent">
+            <Link href="/search?q=laundromat%20in%20Pittsburgh" className="hidden sm:inline font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-accent">
               All markets
             </Link>
           </div>

@@ -47,6 +47,20 @@ class Observables:
     machines: int | None = None           # laundromat specific: washers + dryers
     sources: list[str] = field(default_factory=list)
 
+    def __post_init__(self):
+        for name in ("revenue", "sde", "asking_price", "llm_estimate", "llm2_estimate"):
+            val = getattr(self, name)
+            if val is not None and (not math.isfinite(val) or val <= 0):
+                raise ValueError(f"{name} must be finite and positive")
+        for name in ("employees", "review_count", "years_operating", "machines"):
+            val = getattr(self, name)
+            if val is not None and (not math.isfinite(val) or val < 0 or int(val) != val):
+                raise ValueError(f"{name} must be a nonnegative integer")
+        for name, high in (("rating", 5), ("llm_confidence", 1)):
+            val = getattr(self, name)
+            if val is not None and (not math.isfinite(val) or not 0 <= val <= high):
+                raise ValueError(f"{name} must be between 0 and {high}")
+
 
 @dataclass
 class Estimate:
@@ -189,8 +203,25 @@ def est_llm(o: Observables) -> Estimate | None:
 ESTIMATORS = (est_listing, est_income, est_proxy, est_llm, est_base_rate)
 
 
-def value(o: Observables) -> Valuation:
+def value(o: Observables, *, calibration: dict | None = None, benchmark: dict | None = None) -> Valuation:
     ests = [e for e in (f(o) for f in ESTIMATORS) if e is not None]
+    if benchmark:
+        asking_multiple, median_asking, *_ = bm.get(o.category)
+        adjusted = []
+        for e in ests:
+            if e.name in ("income", "proxy"):
+                ratio = benchmark["sold_sde_multiple"] / (asking_multiple * bm.ASK_TO_SOLD)
+                e = Estimate(e.name, e.mu + math.log(ratio), e.sigma,
+                             f"{benchmark['sold_sde_multiple']}x historical sold SDE multiple; quality/proxy adjustments provisional")
+            elif e.name == "base_rate":
+                ratio = benchmark["median_sold_price"] / (median_asking * bm.ASK_TO_SOLD * bm.state_index(o.state))
+                e = Estimate(e.name, e.mu + math.log(ratio), e.sigma, "historical national median sold price; quality adjustments provisional")
+            adjusted.append(e)
+        ests = adjusted
+    if calibration:
+        ests = [Estimate(e.name, e.mu - calibration[e.name]["bias"],
+                         max(SIGMA_FLOOR, calibration[e.name]["sigma"]), e.note + "; calibrated")
+                if e.name in calibration else e for e in ests]
     if not ests:
         raise ValueError("no estimator could run")
     prec = [1 / e.sigma ** 2 for e in ests]
@@ -229,3 +260,28 @@ def calibrate(cases: list[tuple[Observables, float]]) -> dict[str, float]:
         m = sum(es) / len(es)
         out[name] = math.sqrt(sum((x - m) ** 2 for x in es) / max(len(es) - 1, 1))
     return out
+
+
+def fit_calibration(cases: list[tuple[Observables, float]], *, version: str, target: str = "sale", benchmark: dict | None = None) -> dict:
+    """Fit on training cases only; prices must have the declared basis, without a haircut.
+
+    Excludes asking prices AND model opinions to prevent label leakage. Held-out
+    evaluation must use different businesses and remove target prices from source text.
+    """
+    if target not in ("sale", "asking"):
+        raise ValueError("target must be sale or asking")
+    errors: dict[str, list[float]] = {}
+    for obs, actual in cases:
+        if not math.isfinite(actual) or actual <= 0:
+            raise ValueError("calibration labels must be finite and positive")
+        blinded = Observables(**{**obs.__dict__, "asking_price": None, "llm_estimate": None, "llm2_estimate": None})
+        for estimate in value(blinded, benchmark=benchmark).estimates:
+            errors.setdefault(estimate.name, []).append(estimate.mu - math.log(actual))
+    fitted = {}
+    for name, values in errors.items():
+        if len(values) < 2:
+            continue
+        bias = sum(values) / len(values)
+        sigma = math.sqrt(sum((v-bias)**2 for v in values)/(len(values)-1))
+        fitted[name] = {"bias": bias, "sigma": max(SIGMA_FLOOR, sigma), "count": len(values)}
+    return {"version": version, "target": target, "benchmark_version": benchmark["version"] if benchmark else "legacy-priors-2026-09-11", "estimators": fitted}

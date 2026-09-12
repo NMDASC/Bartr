@@ -16,18 +16,18 @@ CompanyStatus = Literal["stub", "ready", "failed"]
 class ObservablesIn(BaseModel):
     category: str = "default"
     state: str | None = None
-    revenue: float | None = None
-    sde: float | None = None
-    asking_price: float | None = None
-    employees: int | None = None
-    rating: float | None = None
-    review_count: int | None = None
-    years_operating: int | None = None
+    revenue: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    sde: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    asking_price: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    employees: int | None = Field(default=None, ge=0)
+    rating: float | None = Field(default=None, ge=0, le=5, allow_inf_nan=False)
+    review_count: int | None = Field(default=None, ge=0)
+    years_operating: int | None = Field(default=None, ge=0)
     owner_operated: bool | None = None
-    llm_estimate: float | None = None
-    llm_confidence: float | None = None
-    llm2_estimate: float | None = None
-    machines: int | None = None
+    llm_estimate: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    llm_confidence: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
+    llm2_estimate: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    machines: int | None = Field(default=None, ge=0)
     sources: list[str] = Field(default_factory=list)
 
 
@@ -90,6 +90,12 @@ class Estimate(BaseModel):
 
 
 class Valuation(BaseModel):
+    version: str | None = None
+    calibration_version: str | None = None
+    benchmark_version: str | None = None
+    benchmark_status: str = "provisional"
+    opening_price: float | None = None
+    warnings: list[str] = Field(default_factory=list)
     v0: float
     sigma: float
     low: float

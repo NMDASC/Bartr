@@ -28,12 +28,13 @@ Env: `SEED=1` loads `seeds/companies.json` (default on). `BOTS=1` runs 20 demo t
 | GET | /markets/{id}/trades | tape |
 | POST | /markets/{id}/batch/run | clear a round now (demo) |
 | WS | **/ws/markets/{id}** (app root, not under /api/v1) | frames `book`, `batch`, `halt` |
-| POST | /discovery/search | `{q}` -> 202 `{job_id, intent}` (local keyword parser until B lands Grok) |
+| POST | /discovery/search | `{q}` -> 202 `{job_id, intent}`; ranks seeds, live pipeline if `DISCOVERY_LIVE=1` |
 | GET | /discovery/jobs/{id} | SSE: `intent`, `company_stub`, `company_ready`, `done` |
 | GET | /portfolio | cash, positions, equity, pnl {realized, unrealized, total} |
 | POST | /portfolio/suggest | half Kelly over markets; `own_values` overrides the model value per market |
-| POST | /acquire/{company_id}/start | LOI markdown + state/category checklist (templated until D lands Grok) |
-| GET | /surveillance/flags?market_id= | rules layer flags (wash, pump, concentration, band); D adds Grok/K2 reviews |
+| POST | /acquire/{company_id}/start | LOI markdown + state/category checklist with PA/Pittsburgh citations |
+| GET | /surveillance/flags?market_id= | rules flags; Grok and K2 reviews attach when those keys are set |
+| POST | /agent/chat | JSON `{content, tool_calls?}`; searches, orders, Kelly when asked |
 | GET | /surveillance/audit?actor= | append only log |
 | GET | /surveillance/treasury | owner proceeds and buybacks per market |
 

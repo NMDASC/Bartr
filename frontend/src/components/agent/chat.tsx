@@ -61,7 +61,7 @@ export function Chat() {
     }
   }
 
-  const starters = ["find me a laundromat in oklahoma under 1.2m", "buy 50 shares of suds city at 104", "what should i hold with 10k"];
+  const starters = ["find me a laundromat in pittsburgh", "buy 50 shares of squirrel hill wash at 56", "what should i hold with 10k"];
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_280px] pb-20">

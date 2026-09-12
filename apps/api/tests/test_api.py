@@ -43,8 +43,11 @@ def test_end_to_end():
         # acquire
         a = c.post(f"/api/v1/acquire/{cid}/start", headers=H).json()
         assert a["loi_md"].startswith("# Non-Binding Letter of Intent") and "Play money" not in a["loi_md"] and any("Pittsburgh" in i["item"] for i in a["checklist"]) and any("Allegheny" in i["item"] for i in a["checklist"])
+        assert any(i.get("citation") and "pittsburghpa.gov" in (i["citation"] or {}).get("url", "") for i in a["checklist"])
         # flags endpoint exists and validates
         assert c.get("/api/v1/surveillance/flags").status_code == 200
+        chat = c.post("/api/v1/agent/chat", json={"session_id": "t", "message": "laundromat in Pittsburgh"}, headers=H)
+        assert chat.status_code == 200 and "Wash" in chat.json()["content"]
         pv = c.post("/api/v1/companies/valuation/preview", json={"name": "x", "category": "car_wash", "employees": 9}).json()
         assert pv["sigma"] > 0.3
         assert c.get("/api/v1/surveillance/treasury").json()[0]["proceeds"] >= 0

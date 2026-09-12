@@ -1,8 +1,7 @@
 """Acquire: POST /acquire/{company_id}/start -> Acquisition {loi_md, checklist}.
 
-LOCAL implementation: a templated LOI and a state/category checklist with no citations, so the
-frontend page works today. Role D replaces `draft_loi` and `checklist_for` with Grok + web_search
-(Plan.md 9.6) and keeps the shapes.
+Templated LOI plus a state/category checklist. PA and Pittsburgh items carry
+official citations so the acquire demo does not wait on a model call.
 """
 from __future__ import annotations
 
@@ -94,9 +93,30 @@ Both parties keep the existence and terms of this letter confidential.
 """
 
 
+def citation_for(item: str) -> dict | None:
+    key = item.lower()
+    if "rev-181" in key or "bulk sale" in key:
+        return {"url": "https://www.revenue.pa.gov/", "title": "Pennsylvania Department of Revenue"}
+    if "mypath" in key or "sales tax license" in key:
+        return {"url": "https://www.pa.gov/agencies/revenue/resources/mypath.html", "title": "PA myPATH sales tax"}
+    if "fictitious name" in key or "department of state" in key:
+        return {"url": "https://www.dos.pa.gov/BusinessCharities/Business/Pages/default.aspx", "title": "PA Department of State"}
+    if "city of pittsburgh" in key:
+        return {"url": "https://pittsburghpa.gov/finance/", "title": "City of Pittsburgh Finance"}
+    if "allegheny county" in key:
+        return {"url": "https://www.alleghenycounty.us/Services/Health-Department", "title": "Allegheny County Health Department"}
+    if "ucc" in key:
+        return {"url": "https://www.dos.pa.gov/BusinessCharities/UCC/Pages/default.aspx", "title": "Pennsylvania UCC search"}
+    if "oklahoma sales tax" in key or "otc" in key:
+        return {"url": "https://oklahoma.gov/tax.html", "title": "Oklahoma Tax Commission"}
+    if "texas comptroller" in key:
+        return {"url": "https://comptroller.texas.gov/taxes/sales/", "title": "Texas Comptroller, sales tax"}
+    return None
+
+
 def checklist_for(c: dict) -> list[dict]:
     items = GENERIC + BY_CATEGORY.get(c["category"], []) + BY_STATE.get((c.get("state") or "").upper(), []) + BY_CITY.get(c.get("city") or "", [])
-    return [{"item": i, "why": w, "citation": None, "done": False} for i, w in items]
+    return [{"item": i, "why": w, "citation": citation_for(i), "done": False} for i, w in items]
 
 
 @router.post("/{cid}/start", response_model=Acquisition, status_code=201)
