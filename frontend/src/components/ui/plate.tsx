@@ -2,7 +2,9 @@ import { cn } from "@/lib/cn";
 
 /**
  * Plate figure. Caption bar fused to the top edge, half-pixel strokes on the body.
- * Prefix is BTR., never LEM. A plate must encode something real.
+ * `id` is a short label naming what the figure shows, never a figure number: there is no document
+ * to cross-reference, so "BTR. 1.1" carries no meaning and two plates already collided on it.
+ * A plate must encode something real.
  */
 export function Plate({
   id,
