@@ -70,7 +70,9 @@ def self_trade_filter(orders: list[Order]) -> list[Order]:
     return [o for o in orders if o.id not in drop]
 
 
-def clearing_price(orders: list[Order], last_price: float | None, band: float = 0.10) -> tuple[float | None, list, bool]:
+def clearing_price(orders: list[Order], last_price: float | None, band: float = 0.10, anchor: float | None = None) -> tuple[float | None, list, bool]:
+    """anchor: tiebreak reference when there is no last price yet (the model reference price),
+    so an opening trade clears at the candidate nearest the valuation rather than a midpoint."""
     prices = sorted({o.limit for o in orders})
     if not prices:
         return None, [], False
@@ -82,9 +84,10 @@ def clearing_price(orders: list[Order], last_price: float | None, band: float = 
     if len(tied) > 1:
         min_imb = min(abs(d - s) for _, d, s in tied)
         tied = [(p, d, s) for p, d, s in tied if abs(d - s) == min_imb]
-    if len(tied) > 1 and last_price is not None:
-        closest = min(abs(p - last_price) for p, _, _ in tied)
-        tied = [(p, d, s) for p, d, s in tied if abs(p - last_price) == closest]
+    tie_ref = last_price if last_price is not None else anchor
+    if len(tied) > 1 and tie_ref is not None:
+        closest = min(abs(p - tie_ref) for p, _, _ in tied)
+        tied = [(p, d, s) for p, d, s in tied if abs(p - tie_ref) == closest]
     p_star = tied[0][0] if len(tied) == 1 else (tied[0][0] + tied[-1][0]) / 2
     band_hit = False
     if last_price is not None:
@@ -96,9 +99,9 @@ def clearing_price(orders: list[Order], last_price: float | None, band: float = 
     return round(p_star, 2), cands, band_hit
 
 
-def clear(orders: list[Order], last_price: float | None, band: float = 0.10) -> BatchResult:
+def clear(orders: list[Order], last_price: float | None, band: float = 0.10, anchor: float | None = None) -> BatchResult:
     orders = self_trade_filter(orders)
-    p, cands, band_hit = clearing_price(orders, last_price, band)
+    p, cands, band_hit = clearing_price(orders, last_price, band, anchor)
     if p is None:
         return BatchResult(price=None, volume=0.0, candidates=cands)
     buys = sorted([o for o in orders if o.side == "buy" and o.limit >= p], key=lambda o: o.seq)
