@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { AuthDialog } from "./auth-dialog";
 import type { AuthMode, AuthSession } from "@/lib/auth/types";
+import { accountId } from "@/lib/auth/account";
 
 interface AuthContextValue {
   session: AuthSession | null;
@@ -37,8 +38,12 @@ export function AuthProvider({
   const [mode, setMode] = useState<AuthMode | null>(null);
   const [nextPath, setNextPath] = useState<string | null>(null);
 
+  // `demoUser()` reads this, and it is the identity every client component
+  // falls back to. It must be the same value the iMessage bridge produces for
+  // this person, or a texted order opens a second account.
   useEffect(() => {
-    if (session) window.localStorage.setItem("bartr:user", session.email);
+    const uid = accountId(session);
+    if (uid) window.localStorage.setItem("bartr:user", uid);
   }, [session]);
 
   const openAuth = useCallback((nextMode: AuthMode, requestedNext?: string | null) => {

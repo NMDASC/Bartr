@@ -57,7 +57,12 @@ export function readSessionToken(token: string | undefined): AuthSession | null 
     ) {
       return null;
     }
-    return { name: parsed.name, email: parsed.email, role: parsed.role };
+    return {
+      name: parsed.name,
+      email: parsed.email,
+      role: parsed.role,
+      phone: parsed.phone ?? null,
+    };
   } catch {
     return null;
   }

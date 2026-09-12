@@ -3,27 +3,25 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ChannelStatus } from "@contracts/types";
 import { API_URL, IS_MOCK, demoUser } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/cn";
+import { displayPhone } from "@/lib/auth/account";
 
 /**
- * The same conversation over a phone line. `connected` is the API's own reading
- * (a bridge heartbeat inside the last 120s), never this component's guess, so a
- * dead bridge reads offline rather than optimistic.
+ * Two numbers, and they are not the same thing: the line you text, and the
+ * number you text from. The second one is the account identity, because the
+ * bridge can only report a sender's number, so pairing it is what makes a
+ * texted order land on this account instead of a second one.
  *
- * Poll is shorter than the API's 120s window, so the chip turns over within one
- * interval of the line dropping.
+ * `connected` is the API's own reading (a bridge heartbeat inside the last
+ * 120s), never this component's guess, so a dead bridge reads offline rather
+ * than optimistic. Poll is shorter than that window, so the chip turns over
+ * within one interval of the line dropping.
  */
 const POLL_MS = 15_000;
-
-/** +16282894567 -> +1 (628) 289-4567. Leaves anything it cannot parse alone. */
-function formatE164(raw: string): string {
-  const digits = raw.replace(/\D/g, "");
-  const local = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
-  if (local.length !== 10) return raw;
-  return `+1 (${local.slice(0, 3)}) ${local.slice(3, 6)}-${local.slice(6)}`;
-}
 
 function age(iso: string | null, now: number): string | null {
   if (!iso) return null;
@@ -45,10 +43,21 @@ const OFFLINE: ChannelStatus = {
   identity_kind: "name",
 };
 
-export function ChannelStatusBar({ className }: { className?: string }) {
+export function ChannelStatusBar({
+  className,
+  userId,
+  pairedPhone,
+}: {
+  className?: string;
+  userId?: string;
+  pairedPhone?: string | null;
+}) {
   const [status, setStatus] = useState<ChannelStatus>(OFFLINE);
   const [now, setNow] = useState(() => Date.now());
   const [copied, setCopied] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (IS_MOCK) return;
@@ -56,7 +65,7 @@ export function ChannelStatusBar({ className }: { className?: string }) {
     const read = async () => {
       try {
         const res = await fetch(`${API_URL}/api/v1/agent/channel`, {
-          headers: { "x-demo-user": demoUser() },
+          headers: { "x-demo-user": userId || demoUser() },
           cache: "no-store",
         });
         if (!res.ok) throw new Error(String(res.status));
@@ -67,15 +76,18 @@ export function ChannelStatusBar({ className }: { className?: string }) {
         if (alive) setStatus(OFFLINE);
       }
     };
-    void read();
+    // Deferred rather than called in the effect body, so the first read is a
+    // callback into an external system and not a synchronous cascading render.
+    const first = setTimeout(() => void read(), 0);
     const poll = setInterval(read, POLL_MS);
     const tick = setInterval(() => alive && setNow(Date.now()), 1000);
     return () => {
       alive = false;
+      clearTimeout(first);
       clearInterval(poll);
       clearInterval(tick);
     };
-  }, []);
+  }, [userId]);
 
   const copy = useCallback(async () => {
     if (!status.phone_number) return;
@@ -87,6 +99,27 @@ export function ChannelStatusBar({ className }: { className?: string }) {
       setCopied(false);
     }
   }, [status.phone_number]);
+
+  async function pair(value: string) {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/phone", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ phone: value }),
+      });
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error ?? "Could not pair that number.");
+      }
+      // The identity is read server side on this route, so re-render from the server.
+      window.location.reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not pair that number.");
+      setBusy(false);
+    }
+  }
 
   const live = status.connected;
   const seen = age(status.last_seen, now);
@@ -100,10 +133,10 @@ export function ChannelStatusBar({ className }: { className?: string }) {
             <button
               type="button"
               onClick={copy}
-              aria-label={`Copy ${formatE164(status.phone_number)}`}
+              aria-label={`Copy ${displayPhone(status.phone_number)}`}
               className="font-mono text-[15px] tabular-nums transition-colors duration-150 ease-out hover:text-accent"
             >
-              {formatE164(status.phone_number)}
+              {displayPhone(status.phone_number)}
             </button>
           ) : (
             <span className="font-mono text-[15px] text-tint-500">&mdash;</span>
@@ -120,6 +153,50 @@ export function ChannelStatusBar({ className }: { className?: string }) {
           ) : null}
           <Chip tone={live ? "accent" : "neutral"}>{live ? "Live" : "Offline"}</Chip>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t border-line py-4">
+        <div className="flex items-baseline gap-3">
+          <Label>your number</Label>
+          {pairedPhone ? (
+            <span className="font-mono text-[15px] tabular-nums">{displayPhone(pairedPhone)}</span>
+          ) : (
+            <span className="font-mono text-[15px] text-tint-500">&mdash;</span>
+          )}
+        </div>
+
+        {pairedPhone ? (
+          <Button type="button" variant="ghost" disabled={busy} onClick={() => void pair("")}>
+            Unpair
+          </Button>
+        ) : (
+          <form
+            className="flex items-center gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (draft.trim()) void pair(draft);
+            }}
+          >
+            {error ? (
+              <span role="alert" className="font-mono text-[11px] text-down">
+                {error}
+              </span>
+            ) : null}
+            <Input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="+1 (412) 475-4173"
+              aria-label="Your iMessage number"
+              className="w-[190px]"
+            />
+            <Button type="submit" variant="primary" disabled={busy || !draft.trim()}>
+              Pair
+            </Button>
+          </form>
+        )}
       </div>
     </div>
   );

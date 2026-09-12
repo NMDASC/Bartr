@@ -5,6 +5,7 @@ import type { Portfolio, Suggestion } from "@contracts/types";
 import { Label } from "@/components/ui/label";
 import { Suggestions } from "@/components/portfolio/suggestions";
 import { AUTH_COOKIE, readSessionToken } from "@/lib/auth/session";
+import { accountId } from "@/lib/auth/account";
 import { getPortfolio, suggestPortfolio } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { px, signed, usd } from "@/lib/format";
@@ -31,9 +32,12 @@ export default async function OverviewPage() {
   const session = readSessionToken(cookieStore.get(AUTH_COOKIE)?.value);
 
   const empty: Portfolio = { cash: 0, pnl: { realized: 0, unrealized: 0, total: 0 }, positions: [] };
+  // The paired iMessage number wins over the email, because it is the only
+  // identity the bridge can produce. One account across both transports.
+  const uid = accountId(session);
   const [portfolio, suggestions] = await Promise.all([
-    getPortfolio(session?.email).catch(() => empty),
-    suggestPortfolio(session?.email).catch((): Suggestion[] => []),
+    getPortfolio(uid).catch(() => empty),
+    suggestPortfolio(uid).catch((): Suggestion[] => []),
   ]);
 
   const holdings = portfolio.positions.reduce((sum, p) => sum + p.value, 0);

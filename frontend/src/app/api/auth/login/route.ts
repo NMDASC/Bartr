@@ -8,11 +8,12 @@ import {
   sessionCookie,
 } from "@/lib/auth/session";
 import type { AuthSession } from "@/lib/auth/types";
+import { normalizePhone } from "@/lib/auth/account";
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export async function POST(request: Request) {
-  let body: { email?: string; password?: string };
+  let body: { email?: string; password?: string; phone?: string };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -34,9 +35,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
+  const phone = normalizePhone(body.phone);
+  if ((body.phone ?? "").trim() && !phone) {
+    return NextResponse.json({ error: "Enter a valid mobile number." }, { status: 400 });
+  }
+
   const session: AuthSession = isAdmin
-    ? { name: "Admin", email, role: "admin" }
-    : { name: email.split("@")[0], email, role: "user" };
+    ? { name: "Admin", email, role: "admin", phone }
+    : { name: email.split("@")[0], email, role: "user", phone };
 
   const response = NextResponse.json({ user: session });
   response.cookies.set(AUTH_COOKIE, createSessionToken(session), sessionCookie);

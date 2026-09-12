@@ -7,11 +7,12 @@ import {
   sessionCookie,
 } from "@/lib/auth/session";
 import type { AuthSession } from "@/lib/auth/types";
+import { normalizePhone } from "@/lib/auth/account";
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 export async function POST(request: Request) {
-  let body: { name?: string; email?: string; password?: string };
+  let body: { name?: string; email?: string; password?: string; phone?: string };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -35,7 +36,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Use login for this account." }, { status: 409 });
   }
 
-  const session: AuthSession = { name, email, role: "user" };
+  // Optional, and only rejected when something was actually typed. An account
+  // without a number still works on the web; it just has no iMessage half.
+  const phone = normalizePhone(body.phone);
+  if ((body.phone ?? "").trim() && !phone) {
+    return NextResponse.json({ error: "Enter a valid mobile number." }, { status: 400 });
+  }
+
+  const session: AuthSession = { name, email, role: "user", phone };
   const response = NextResponse.json({ user: session });
   response.cookies.set(AUTH_COOKIE, createSessionToken(session), sessionCookie);
   return response;

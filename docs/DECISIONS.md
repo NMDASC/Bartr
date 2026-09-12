@@ -215,5 +215,47 @@ runs on someone's machine. And nothing links to `/agent`: the header carries Ove
 and Admin only, and `components/site/*` is frozen, so a judge cannot reach the assistant without
 typing the URL. D: that second one is a one-line nav entry if you want it.
 
+## 027  Sat 14:40  author: Zhiyuan (A)  affects: A, all frontend lanes
+An iMessage order now lands on the user's own account. It did not before, and nothing in the
+stack could have made it: the bridge sends the sender's number, `identity.normalize` turns that
+into an E.164 uid, and `Engine.user` opens a fresh account on it with its own starting cash.
+A web session sent its email, so it was a different uid. `identity.claim` cannot join the two
+because it resolves by email and a phone identity carries none. The bridge README's advice to
+"use the same phone number in the web session selector" predates decision 023, which replaced
+the selector with email and password login.
+
+Fixed on the web side only. No API, contract or collection change. When a session knows its
+number, every web request sends the number as `X-Demo-User`, so both transports normalize to one
+uid and there is one account. `lib/auth/account.ts` holds `normalizePhone` (a mirror of the phone
+branch of `identity.py`, so `(412) 475-4173` here and `+14124754173` from the gateway agree),
+`displayPhone`, and `accountId(session)`, which prefers the number over the email.
+
+`AuthSession` gains `phone`. Signup and login accept an optional number; `POST /api/auth/phone`
+pairs or clears one on an existing session, so a user who signed up without a number is not stuck.
+Pairing is on `/agent` under the line itself: two numbers, the line you text and the number you
+text from, which is the one that decides the account. There is no possession check on the number,
+the same demo posture as decision 023.
+
+Two consequences outside lane 4, both one line, flagged because they are not my files.
+`overview/page.tsx` reads `accountId(session)` instead of `session.email`. And
+`auth-provider.tsx` seeds `localStorage["bartr:user"]` with `accountId(session)` rather than the
+email, which matters because `demoUser()` reads that key and it is the fallback identity for every
+client component, `search/page.tsx` included, so this keeps the whole app on one uid without
+touching other lanes.
+
+Also fixed: `/agent` rendered `<Chat />` with no `userId`, so the web assistant was talking to a
+throwaway `guest-` account while the rest of the page used the session.
+
+Live now, not on reload. `chat.tsx` treats `/agent/messages` as the truth and polls it every 4s,
+so a turn texted to the line appears in the web transcript tagged `· imessage`, with its tool
+call cards. New `agent/live-positions.tsx` polls `/portfolio` on the same interval and marks a
+row whose share count changed, the cause being a fill rather than a revaluation.
+
+Verified against a stateful stand-in for the API, since FastAPI cannot boot in this environment.
+An order sent over the bridge as `+1 (412) 475-4173` and a web read as `4124754173` resolved to
+one uid with one order. With the page open and never reloaded, a second bridge order appeared in
+the table and the transcript inside one poll, and `/overview` showed the same cash, holdings and
+both positions. `tsc` clean, full repo `eslint` clean, `auth-session` tests 2 of 2.
+
 ## 028  Sat 13:00  author: A  affects: A, C
 Demo bots no longer trade every market at boot. `Bots.activate(engine, market_id)` is called from `GET /markets/{id}/book` and `WS /ws/markets/{id}`, and only `co_squirrel_hill_wash` is eligible. `engine.tick` skips that market until it is activated, then `activate` gives it a fresh 10s clock and cancels leftover bot orders. The bid UI session-scopes the tape so Mongo history from earlier runs does not print as round 16. No contract or collection change.

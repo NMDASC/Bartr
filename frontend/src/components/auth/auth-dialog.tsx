@@ -135,6 +135,24 @@ export function AuthDialog({
 
           <div>
             <label
+              htmlFor="auth-phone"
+              className="mb-1.5 flex items-baseline justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground"
+            >
+              <span>iMessage number</span>
+              <span className="text-tint-500">optional</span>
+            </label>
+            <Input
+              id="auth-phone"
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="+1 (412) 475-4173"
+            />
+          </div>
+
+          <div>
+            <label
               htmlFor="auth-password"
               className="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground"
             >

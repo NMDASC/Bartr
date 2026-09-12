@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { AgentMessage } from "@contracts/types";
 import { API_URL, IS_MOCK, demoUser } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,12 @@ import { cn } from "@/lib/cn";
 import fixture from "@contracts/examples/agent-chat.json";
 
 const canned = (fixture as { messages: AgentMessage[] }).messages;
+
+/** A stored turn. `/agent/messages` adds the transport it arrived on. */
+type Turn = AgentMessage & { channel?: string; t?: string };
+
+/** Shorter than a person can text and read a reply, so a phone turn lands here mid-demo. */
+const POLL_MS = 4000;
 
 async function ask(
   sessionId: string,
@@ -43,30 +49,79 @@ export function Chat({
   embedded?: boolean;
   userId?: string;
 }) {
-  const [msgs, setMsgs] = useState<AgentMessage[]>([]);
+  // The API keeps one conversation per identity across both transports, so the
+  // server list is the truth and `pending` only covers a turn still in flight.
+  const [history, setHistory] = useState<Turn[]>([]);
+  const [pending, setPending] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const end = useRef<HTMLDivElement>(null);
   const session = useRef<string>("");
+  // Read by the poll closure so an in-flight send is not overwritten mid-request.
+  const busyRef = useRef(false);
+  useEffect(() => {
+    busyRef.current = busy;
+  }, [busy]);
+
+  const msgs: Turn[] = [...history, ...pending];
+
   useEffect(() => {
     session.current = `web:${userId || demoUser()}`;
   }, [userId]);
+
+  const loadHistory = useCallback(async () => {
+    if (IS_MOCK) return;
+    try {
+      const res = await fetch(`${API_URL}/api/v1/agent/messages`, {
+        headers: { "x-demo-user": userId || demoUser() },
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      setHistory((await res.json()) as Turn[]);
+    } catch {
+      // Leave the last good history on screen rather than blanking it.
+    }
+  }, [userId]);
+
+  // Picks up anything texted to the line while this page is open.
+  useEffect(() => {
+    if (IS_MOCK) return;
+    // Deferred rather than called in the effect body, so the first read is a
+    // callback into an external system and not a synchronous cascading render.
+    const first = setTimeout(() => void loadHistory(), 0);
+    const poll = setInterval(() => {
+      if (!busyRef.current) void loadHistory();
+    }, POLL_MS);
+    return () => {
+      clearTimeout(first);
+      clearInterval(poll);
+    };
+  }, [loadHistory]);
+
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
-  }, [msgs, busy]);
+  }, [msgs.length, busy]);
 
   async function send(text: string) {
     const t = text.trim();
     if (!t || busy) return;
-    const next = [...msgs, { role: "user", content: t } as AgentMessage];
-    setMsgs(next);
+    const turn: Turn = { role: "user", content: t };
     setInput("");
     setBusy(true);
+    if (IS_MOCK) setHistory((h) => [...h, turn]);
+    else setPending([turn]);
     try {
-      const reply = await ask(session.current, t, next, userId);
-      setMsgs((m) => [...m, reply]);
+      const reply = await ask(session.current, t, [...history, turn], userId);
+      if (IS_MOCK) {
+        setHistory((h) => [...h, reply]);
+      } else {
+        await loadHistory();
+        setPending([]);
+      }
     } catch (e) {
-      setMsgs((m) => [...m, { role: "assistant", content: e instanceof Error ? e.message : "Agent error" }]);
+      const failed: Turn = { role: "assistant", content: e instanceof Error ? e.message : "Agent error" };
+      if (IS_MOCK) setHistory((h) => [...h, failed]);
+      else setPending((p) => [...p, failed]);
     } finally {
       setBusy(false);
     }
@@ -83,7 +138,10 @@ export function Chat({
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
           {msgs.map((m, i) => (
             <div key={i} className={cn("max-w-[72ch]", m.role === "user" ? "self-end" : "self-start")}>
-              <Label tracking="tight" className="block mb-1">{m.role === "user" ? "you" : "bartr"}</Label>
+              <Label tracking="tight" className="block mb-1">
+                {m.role === "user" ? "you" : "bartr"}
+                {m.channel === "imessage" ? " · imessage" : ""}
+              </Label>
               <div className={cn("px-3 py-2 text-[15px] whitespace-pre-wrap", m.role === "user" ? "bg-surface" : "border-l-2 border-accent bg-accent/[0.05]")}>{m.content}</div>
               {m.tool_calls?.length ? (
                 <ul className="mt-1.5 flex flex-wrap gap-1.5">
