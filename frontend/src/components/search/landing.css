@@ -28,6 +28,14 @@
   animation: bl-arrive 260ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
+.bl-hero-copy {
+  transition: opacity 720ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bl-hero-copy.is-leaving {
+  opacity: 0;
+}
+
 /* a value that lands because the job finished pricing it */
 @keyframes bl-land {
   from {
@@ -484,7 +492,7 @@
     transform: translateX(0);
   }
   to {
-    transform: translateX(-50%);
+    transform: translateX(-25%);
   }
 }
 
@@ -525,10 +533,12 @@
   }
 
   .bl-arrive,
-  .bl-land {
+  .bl-land,
+  .bl-hero-copy {
     opacity: 1;
     transform: none;
     clip-path: none;
+    transition: none !important;
   }
 
   .bl-draw,

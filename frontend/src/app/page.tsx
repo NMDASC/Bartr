@@ -1,7 +1,10 @@
-import Link from "next/link";
 import { SearchBar } from "@/components/search/search-bar";
 import { CityShortcuts } from "@/components/search/city-shortcuts";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
 import { LandingHeroArt } from "@/components/search/landing-hero-art";
+import { AUTH_COOKIE, readSessionToken } from "@/lib/auth/session";
 import { LandingLogos } from "@/components/search/landing-logos";
 import { LandingMirror } from "@/components/search/landing-mirror";
 import type { Company } from "@contracts/types";
@@ -19,15 +22,19 @@ import { getCompany } from "@/lib/api";
 const examples = ["laundromat in Pittsburgh", "car wash in Waco", "machine shop in McKees Rocks"];
 
 export default async function Home() {
+  // A signed-in person has an account to look at. The landing page is for people who do not.
+  const session = readSessionToken((await cookies()).get(AUTH_COOKIE)?.value);
+  if (session) redirect(session.role === "admin" ? "/admin" : "/overview");
+
   const fetched = await getCompany("co_squirrel_hill_wash").catch(() => null);
   const hero = fetched?.valuation ? fetched : (exampleCompany as Company);
 
   return (
     <>
-      <section className="relative overflow-hidden bg-background">
-        <LandingHeroArt />
+      <section className="relative bg-background">
         <div className="relative mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
-          <div className="grid gap-12 pt-20 pb-10 md:pt-28 md:pb-14 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.92fr)] xl:gap-10">
+          <LandingHeroArt />
+          <div className="grid gap-12 pt-20 pb-10 md:pt-28 md:pb-14 xl:grid-cols-[minmax(0,1fr)_minmax(440px,1fr)]">
             <div className="relative z-10 max-w-2xl">
               <Label className="mb-4 block">Discovery engine and exchange</Label>
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.12em] text-accent">33 million businesses. None of them has a price.</p>
@@ -41,7 +48,7 @@ export default async function Home() {
               <SearchBar className="mt-8" autoFocus chips={examples} />
               <CityShortcuts />
             </div>
-            <div className="relative hidden min-h-[340px] xl:block" aria-hidden />
+            <div className="relative hidden min-h-[720px] xl:block" aria-hidden />
           </div>
           <div className="relative z-10 border-t border-line">
             <LandingLogos />
@@ -51,21 +58,6 @@ export default async function Home() {
 
       <section className="border-t border-line">
         {hero?.valuation ? <LandingValuationJourney company={hero} /> : null}
-      </section>
-
-      <section className="border-t border-line">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-6 px-4 py-10 sm:px-6 xl:border-x xl:border-line 3xl:max-w-8xl">
-          <div>
-            <Label className="mb-2 block">Exchange</Label>
-            <h2 className="text-[28px] leading-[1.15] md:text-[34px]">Bid after the number exists.</h2>
-          </div>
-          <Link
-            href="/company/co_squirrel_hill_wash/bid"
-            className="border border-primary bg-primary px-5 py-3 font-mono text-[12px] uppercase tracking-[0.08em] text-primary-foreground"
-          >
-            Open the book
-          </Link>
-        </div>
       </section>
 
       <section className="border-t border-line">
