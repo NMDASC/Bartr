@@ -8,7 +8,7 @@
 2. Keys: `→` `space` next (reveals the second beat on slide 2 first), `←` back, `Home`, `End` returns to the public close, `Q` jumps to the internal Q&A appendix, `P` presenter clock (starts when you leave slide 1, turns white at 2:50), `R` replays the two rounds on slide 9, `Esc` leaves full screen. Clicking the right two thirds of the screen also advances.
 3. `#8` in the URL jumps to a slide. The deck scales to any window (tested 1920x1080 and 1440x900).
 4. Slide 9 plays on its own when you land on it: two rounds, about 30 seconds. Traders quote from their cards, each quote flies into the book, the countdown hits zero, demand and supply draw, the clearing price snaps in, fills flash, the price chart gets a point, the model value updates and the owner requotes the ladder and floor from it. In round 2 a holder sells. It runs the real clearing rule and the real belief update (same constants as `engine.py`) on the real opening book from `scripts/demo_pricing.py`.
-5. Stop the public presentation on slide 16. Slides 17 to 28 are an internal Q&A appendix covering market, owners, competition, valuation, liquidity, regulation, investor rights, business model, technical truth and security. Press `Q` from any slide to open it.
+5. Stop the public presentation on the close slide (`End`). Slides after that are an internal Q&A appendix covering market, owners, competition, valuation, the Kelly paper, liquidity, regulation, investor rights, business model, technical truth and security. Press `Q` from any slide to open it.
 6. If Chrome dies, `Bartr.pdf` has the 16 public slides followed by the 12-slide Q&A appendix. `Bartr.pptx` is the same as images with the talk track and Q&A prompts in the notes.
 
 Fonts: SF Pro on a Mac, Inter from Google Fonts otherwise. KaTeX loads from cdnjs. Both need network once; after that Chrome caches them. Open the deck once on the venue wifi before we go up.
@@ -35,7 +35,7 @@ Sponsor logos are in `assets/logos/` (simple-icons, CC0). No xAI, IFM or Querit 
 
 Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 
-## Talk track (3:00, 16 public slides, keep moving)
+## Talk track (3:00, keep moving)
 
 | Time | Slide | Say |
 |---|---|---|
@@ -51,11 +51,12 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 | 1:25 | 9 Live | Let two rounds run. "Everyone paid 58.67, including Jonas who bid 64.20. Round two: the value moved, the owner requoted, Jonas sold part of his stake at the same price the new buyers paid." |
 | 1:55 | 10 Fairness | "One price, no head start. Price check, no self trades, size limits, a 10 percent band, proportional fills, an audit log." |
 | 2:05 | 11 Portfolio | "Every suggestion shows the gap. Kelly sizes the stake. The slider is your risk: move it and the gain and the possible loss move with it." |
-| 2:17 | 12 Acquire | "From 20 shares to the whole company: an LOI at the last price and a Pittsburgh checklist with the official forms." |
-| 2:26 | 13 Security | "Rules catch it, two models judge it separately, and Grok tries to beat it as red team." |
-| 2:38 | 14 Grok | "Every company is appraised twice: Grok researches and names a value, K2 names one blind, both go into the price." |
-| 2:48 | 15 Stack | "Next.js, FastAPI, Atlas, Places, Querit, Grok, K2, iMessage. 103 tests." |
-| 2:55 | 16 Close | "The laundromat on Murray Avenue has a price. Buy 20 shares, watch the next round." |
+| 2:12 | 12 Kelly board | "We derived the fraction on the board. Maximize log wealth, then take half because the edge is estimated." |
+| 2:17 | 13 Acquire | "From 20 shares to the whole company: an LOI at the last price and a Pittsburgh checklist with the official forms." |
+| 2:26 | 14 Security | "Rules catch it, two models judge it separately, and Grok tries to beat it as red team." |
+| 2:38 | 15 Grok | "Every company is appraised twice: Grok researches and names a value, K2 names one blind, both go into the price." |
+| 2:48 | 16 Stack | "Next.js, FastAPI, Atlas, Places, Querit, Grok, K2, iMessage. 103 tests." |
+| 2:55 | 17 Close | "The laundromat on Murray Avenue has a price. Buy 20 shares, watch the next round." |
 
 ## Files
 
@@ -63,4 +64,4 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 - `Bartr.pdf` fallback, 16 pages, 16:9
 - `Bartr.pptx` fallback, slide images with notes
 - `export.sh` regenerates both with headless Chrome (`pptx.js` builds the pptx, needs node)
-- `assets/` screenshots, logos, QR
+- `assets/` screenshots, logos, QR, Kelly board photo, Kelly derivation PDF

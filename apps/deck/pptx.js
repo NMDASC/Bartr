@@ -1,4 +1,4 @@
-// Builds Bartr.pptx from the 29 slide stills in .stills/ with the talk track and Q&A prompts as speaker notes.
+// Builds Bartr.pptx from the slide stills in .stills/ with the talk track and Q&A prompts as speaker notes.
 // Run via ./export.sh (it installs pptxgenjs into .stills/ and renders the stills first).
 const pptxgen = require('pptxgenjs');
 const path = require('path');
@@ -15,16 +15,18 @@ const NOTES = [
   'Two rounds. Everyone paid 58.67, including Jonas who bid 64.20. Round two: the value moved, the owner requoted, Jonas sold part of his stake at the same price the new buyers paid.',
   'One price, no head start. Price check, no self trades, size limits, a 10 percent band, proportional fills, an audit log.',
   'Every suggestion shows the gap. Kelly sizes the stake. The slider is your risk: move it and the gain and the possible loss move with it.',
+  'We derived the fraction on the board. Maximize log wealth, then take half because the edge is estimated. The paper is in the Q and A appendix.',
   'From 20 shares to the whole company: an LOI at the last price and a Pittsburgh checklist with the official forms.',
   'Rules catch it, two models judge it separately, and Grok tries to beat it as red team.',
   'Every company is appraised twice: Grok researches and names a value, K2 names one blind, both go into the price.',
   'Next.js, FastAPI, Atlas, Places, Querit, Grok, K2, iMessage. 103 tests.',
   'The laundromat on Murray Avenue has a price. Buy 20 shares, watch the next round.',
-  'Internal Q&A appendix. Stop the public presentation on slide 16. Press Q from anywhere to jump here.',
+  'Internal Q&A appendix. Stop the public presentation on the close slide. Press Q from anywhere to jump here.',
   'Market: distinguish the 36.2 million business context from the initial reachable market. Lead with aging owners and demonstrated buyer demand.',
   'Users and consent: the first wedge is acquisition search. Unclaimed pages need clear attribution, correction, opt-out and no trading before owner acceptance.',
   'Competition: Google finds locations, BizBuySell begins after a sale decision, and crowdfunding focuses on issuance. The code alone is not the moat.',
   'Valuation: call the pre-owner number an estimate with a range. The calibration path exists, but production accuracy has not yet been proven.',
+  'Kelly paper: scroll the derivation. f star is (pb minus q) over b. We use half Kelly, cap 20 percent.',
   'Market design: production cannot promise liquidity. The owner bid is finite, and thin markets remain vulnerable even with rules and halts.',
   'Regulation: the interests are securities. Production issuance and secondary execution require licensed partners and an offering exemption.',
   'Investor rights: the demo models economic units. Production documents must define voting, distributions, dilution, information rights and transfers.',
@@ -33,7 +35,7 @@ const NOTES = [
   'Security: rules create flags and models review them. The current audit log is application append-only, not cryptographically immutable.',
   'Hard questions: owner trust is the core assumption. State the tests that could validate or disprove the exchange thesis.',
 ];
-const TOTAL = 29;
+const TOTAL = 31;
 const pptx = new pptxgen();
 pptx.defineLayout({ name: 'W', width: 13.333, height: 7.5 });
 pptx.layout = 'W';
