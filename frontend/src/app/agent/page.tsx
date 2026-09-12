@@ -1,4 +1,5 @@
 import { Chat } from "@/components/agent/chat";
+import { ChannelStatusBar } from "@/components/agent/channel-status";
 
 export default function AgentPage() {
   return (
@@ -6,6 +7,7 @@ export default function AgentPage() {
       <div className="pt-10 pb-6">
         <h1 className="text-[30px] md:text-[40px] leading-[1.1]">Agent</h1>
       </div>
+      <ChannelStatusBar className="mb-6" />
       <Chat />
     </div>
   );

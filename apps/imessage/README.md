@@ -27,7 +27,9 @@ Shared-pool number, max 10 users, DMs only (no group chats). Enough for a judge 
 
 ## Shared account and live status
 
-Set `IMESSAGE_NUMBER` in the API's root `.env` to the actual assigned phone line.
+The assigned line is **+1 (628) 289-4567** (Photon shared pool). Set
+`IMESSAGE_NUMBER=+16282894567` in the API's root `.env`, or `/agent/channel` reports
+`configured: false` and the web assistant shows the line as offline.
 The bridge sends an authenticated heartbeat every 30 seconds. The web overview and
 assistant show the bridge as connected only after a recent heartbeat (under 120 seconds).
 Terminal mode does not claim an iMessage connection.

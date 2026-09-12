@@ -5,7 +5,7 @@
     "": {
       "name": "fifth",
       "dependencies": {
-        "spectrum-ts": "latest",
+        "spectrum-ts": "^12.8.0",
       },
       "devDependencies": {
         "@types/bun": "latest",

@@ -181,3 +181,36 @@ Company navigation now separates research from transaction controls. `/company/{
 
 ## 027  Sat 12:36  author: Codex  affects: A, B, D
 Live discovery no longer requires Querit and Grok together. `DISCOVERY_LIVE=1` starts when any of Google Places, Querit or xAI is configured. Grok now uses the xAI Responses API server-side web search through the existing audited model wrapper; inline-cited business paragraphs are normalized into discovery pages and pass the existing evidence gate. Places results stream and persist before slower Grok research completes. Provider failures remain warnings and do not discard results from another source. The nationwide smoke script accepts sourced partial results as a successful search while still failing on zero results or terminal failure. No route, shared type or collection shape changed.
+
+## 026  Sat 13:25  author: Zhiyuan (A)  affects: A, deploy
+The iMessage bridge runs. It was written Friday and had never been installed or started: no
+`node_modules`, no credentials, no line. `bun install` is now locked (120 packages, spectrum-ts
+12.8.0, pinned off `latest` so a deploy is reproducible), the Photon Spectrum line is assigned
+and connected, and the bridge boots `mode=live` with an authenticated heartbeat reaching
+`POST /agent/heartbeat`.
+
+Assigned line: **+1 (628) 289-4567**, Photon shared pool, DMs only, 10 users, free tier.
+Spectrum credentials and `BRIDGE_API_TOKEN` are in `apps/imessage/.env` and the repo-root `.env`,
+both gitignored. The two tokens must be equal or `/agent/chat` and `/agent/heartbeat` answer 403.
+Set `IMESSAGE_NUMBER=+16282894567` in the root `.env`, or `/agent/channel` reports
+`configured: false` and every screen shows the line as offline.
+
+Decision 024 said the web assistant shows the bridge as connected. No frontend file read
+`/agent/channel`, so that was not true. It is now. `components/agent/channel-status.tsx` polls
+`/agent/channel` every 15s, shorter than the API's 120s liveness window, and renders the line
+number, the heartbeat age and a Live/Offline chip on `/agent`. `connected` is the API's reading
+and never the component's guess, so an unreachable API renders offline instead of optimistic.
+The number is click to copy.
+
+Verified against a contract-accurate stand-in for the bridge surface, because `apps/api` cannot
+boot in this environment: `pydantic_core` is a native module and the sandbox refuses to load it.
+Checked: 403 on a wrong bridge token, 200 and an `AgentMessage` on a correct one, a replayed
+`request_id` returning the stored reply instead of placing a second order, 409 on the same
+`request_id` with a different body, and `configured -> heartbeat -> connected` on
+`/agent/channel`. `node --test apps/imessage/tests/client.test.mjs` passes 3 of 3. The bridge
+typechecks clean and both frontend files are clean under `tsc` and `eslint`.
+
+Two things are still open. `railway up` has never run, so the line answers only while the bridge
+runs on someone's machine. And nothing links to `/agent`: the header carries Overview, Discover
+and Admin only, and `components/site/*` is frozen, so a judge cannot reach the assistant without
+typing the URL. D: that second one is a one-line nav entry if you want it.
