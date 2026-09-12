@@ -16,3 +16,4 @@ dist/
 *.log
 
 .atlas_password
+.venv
