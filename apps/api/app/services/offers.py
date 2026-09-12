@@ -24,6 +24,12 @@ import httpx
 from app.services.market.treasury import SHARES
 
 
+def round_offer(v: float) -> float:
+    """People offer round numbers: nearest $5,000 under $500k, nearest $25,000 above."""
+    step = 5_000 if v < 500_000 else 25_000
+    return float(round(v / step) * step)
+
+
 def _money(x: float) -> str:
     return f"${x:,.0f}"
 
@@ -95,7 +101,7 @@ def deliver(to: str | None, subject: str, body: str) -> str:
 
 def make_offer(store, c: dict, buyer_id: str, buyer_name: str, buyer_email: str, buyer_phone: str | None,
                price: float | None, message: str | None, owner_email: str | None) -> dict:
-    price = price or c["valuation"]["v0"]
+    price = price or round_offer(c["valuation"]["v0"])
     subject, body = compose(c, price, buyer_name, buyer_email, buyer_phone, message)
     to = owner_email or c.get("owner_email")
     try:

@@ -14,7 +14,8 @@ export function OfferPanel({ company }: { company: Company }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [price, setPrice] = useState<string>(v ? String(Math.round(v.v0)) : "");
+  const step = v && v.v0 >= 500000 ? 25000 : 5000;
+  const [price, setPrice] = useState<string>(v ? String(Math.round(v.v0 / step) * step) : "");
   const [message, setMessage] = useState("");
   const [ownerEmail, setOwnerEmail] = useState("");
   const [busy, setBusy] = useState(false);
@@ -100,7 +101,7 @@ export function OfferPanel({ company }: { company: Company }) {
             </div>
             <div>
               <Label className="mb-1 block">Your offer, USD</Label>
-              <Input type="number" min={1} step={1000} value={price} onChange={(e) => setPrice(e.target.value)} className="tabular-nums" />
+              <Input type="number" min={1} step={step} value={price} onChange={(e) => setPrice(e.target.value)} className="tabular-nums" />
             </div>
           </div>
           <div>

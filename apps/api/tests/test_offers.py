@@ -20,7 +20,7 @@ def test_discovered_company_shows_estimate_and_takes_offer_then_lists():
         assert r.status_code == 422 and "offer" in r.json()["detail"]
         o = c.post(f"/api/v1/companies/{cid}/offer", headers=H, json={"buyer_name": "Aditya Dewan", "buyer_email": "aditya@example.com", "buyer_phone": "412 555 0100",
                                                                        "message": "I grew up two streets over and would keep the staff on."}).json()
-        assert o["status"] == "queued" and o["delivery"] == "queued" and o["price"] == round(co["valuation"]["v0"], 2)
+        assert o["status"] == "queued" and o["delivery"] == "queued" and o["price"] % 5000 == 0 and abs(o["price"] - co["valuation"]["v0"]) <= 12500
         body = o["email"]["body"]
         assert body.startswith("To the owner of Dormont Laundromat,") and "Aditya Dewan" in body and "412 555 0100" in body
         assert "I grew up two streets over" in body and "reply with the word \"no\"" in body and "!" not in body
