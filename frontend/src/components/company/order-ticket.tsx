@@ -11,7 +11,19 @@ import { Label } from "@/components/ui/label";
 import { Callout } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
 
-export function OrderTicket({ marketId, book, nextBatchAt, round }: { marketId: string; book: Book | null; nextBatchAt?: string | null; round?: number }) {
+export function OrderTicket({
+  marketId,
+  book,
+  nextBatchAt,
+  round,
+  onPlaced,
+}: {
+  marketId: string;
+  book: Book | null;
+  nextBatchAt?: string | null;
+  round?: number;
+  onPlaced?: (order: Order) => void;
+}) {
   const secs = useCountdown(nextBatchAt);
   const [side, setSide] = useState<Side>("buy");
   const [qty, setQty] = useState("50");
@@ -19,6 +31,9 @@ export function OrderTicket({ marketId, book, nextBatchAt, round }: { marketId: 
   const [busy, setBusy] = useState(false);
   const [placed, setPlaced] = useState<Order | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // A round clears at one price, so a limit at the band edge fills whenever there
+  // is a counterparty and still pays the clearing price, not the limit.
+  const [fillNow, setFillNow] = useState(true);
 
   const bestBid = book?.bids[0]?.price ?? null;
   const bestAsk = book?.asks[0]?.price ?? null;
@@ -26,7 +41,13 @@ export function OrderTicket({ marketId, book, nextBatchAt, round }: { marketId: 
   const crossed = book?.indicative_price != null;
   const buyAt = crossed ? book!.indicative_price! : bestAsk;
   const sellAt = crossed ? book!.indicative_price! : bestBid;
-  const suggested = side === "buy" ? buyAt : sellAt;
+  // Before the first print the band is empty; the round can still move the band
+  // percent off the reference, so that is the edge until a price exists.
+  const anchor = book?.last ?? book?.ref ?? null;
+  const bandEdge = book ? (side === "buy" ? book.band.high : book.band.low) : null;
+  const edge =
+    bandEdge ?? (anchor !== null && book ? Math.round(anchor * (side === "buy" ? 1 + book.band.pct : 1 - book.band.pct) * 100) / 100 : null);
+  const suggested = fillNow && edge ? edge : side === "buy" ? buyAt : sellAt;
   const q = Number(qty);
   const l = limit === "" ? suggested : Number(limit);
   const notional = q > 0 && l ? q * l : null;
@@ -40,6 +61,7 @@ export function OrderTicket({ marketId, book, nextBatchAt, round }: { marketId: 
     try {
       const o = await placeOrder(marketId, { side, qty: q, limit_price: l });
       setPlaced(o);
+      onPlaced?.(o);
     } catch (x) {
       setErr(x instanceof Error ? x.message : "Order rejected");
     } finally {
@@ -93,12 +115,24 @@ export function OrderTicket({ marketId, book, nextBatchAt, round }: { marketId: 
           <dt className="uppercase tracking-[0.08em] text-muted-foreground">Band</dt>
           <dd className="text-right">{book ? `${px(book.band.low)} to ${px(book.band.high)}` : "\u2014"}</dd>
         </dl>
+        <label className="flex cursor-pointer items-center justify-between gap-3 border border-line px-3 py-2">
+          <span className="flex items-center gap-2.5">
+            <input
+              type="checkbox"
+              checked={fillNow}
+              onChange={(e) => { setFillNow(e.target.checked); setLimit(""); }}
+              className="size-4 shrink-0 appearance-none border border-line bg-input checked:border-primary checked:bg-primary focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
+            />
+            <span className="font-mono text-[11px] uppercase tracking-[0.08em]">Fill this round</span>
+          </span>
+          <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{edge !== null ? `up to ${px(edge)}` : "\u2014"}</span>
+        </label>
         <div className="grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => { setSide("buy"); setLimit(buyAt !== null ? px(buyAt) : ""); }} disabled={buyAt === null}
+          <button type="button" onClick={() => { setSide("buy"); setFillNow(false); setLimit(buyAt !== null ? px(buyAt) : ""); }} disabled={buyAt === null}
             className="h-9 border border-line font-mono text-[11px] tabular-nums text-up hover:bg-up/[0.06] disabled:opacity-40 transition-colors duration-150">
             {crossed ? "Buy at indicative" : "Buy at ask"} {buyAt !== null ? px(buyAt) : "—"}
           </button>
-          <button type="button" onClick={() => { setSide("sell"); setLimit(sellAt !== null ? px(sellAt) : ""); }} disabled={sellAt === null}
+          <button type="button" onClick={() => { setSide("sell"); setFillNow(false); setLimit(sellAt !== null ? px(sellAt) : ""); }} disabled={sellAt === null}
             className="h-9 border border-line font-mono text-[11px] tabular-nums text-down hover:bg-down/[0.06] disabled:opacity-40 transition-colors duration-150">
             {crossed ? "Sell at indicative" : "Sell to bid"} {sellAt !== null ? px(sellAt) : "—"}
           </button>

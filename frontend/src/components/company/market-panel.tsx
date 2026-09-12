@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Company } from "@contracts/types";
 import { useMarket } from "@/hooks/use-market";
 import { bidderLabel, sideVerb } from "@/lib/bidder";
@@ -12,14 +13,31 @@ import { OrderBook } from "./order-book";
 import { Participants } from "./participants";
 import { OrderTicket } from "./order-ticket";
 import { OfferPanel } from "./offer-panel";
+import { OfferLetter } from "./offer-letter";
+import type { OfferDraft } from "@/lib/offer-letter";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/cn";
+import { closingHref, detectWins } from "@/lib/closing";
 
 export function MarketPanel({ company }: { company: Company }) {
   const listed = company.listed !== false;
   const live = company.status === "ready" && listed;
   const m = useMarket(company._id, live, true);
   const [selected, setSelected] = useState<string | null>(null);
+  const [offer, setOffer] = useState<OfferDraft | null>(null);
+  const router = useRouter();
+  const placedHere = useRef<Set<string>>(new Set());
+  const won = useRef(false);
+
+  // The moment an order from this ticket clears, the buyer signs for the shares.
+  useEffect(() => {
+    if (won.current) return;
+    const win = detectWins(placedHere.current, m.fills).find((o) => o.side === "buy");
+    if (!win) return;
+    won.current = true;
+    const price = m.last ?? win.limit_price;
+    router.push(closingHref(company._id, { kind: "shares", qty: win.filled_qty, price, orderId: win._id, round: Math.max(1, m.round - 1) }));
+  }, [m.fills, m.last, m.round, company._id, router]);
 
   const shares = company.market?.shares_outstanding ?? 10000;
   const ref = company.valuation ? company.valuation.v0 / shares : null;
@@ -82,8 +100,16 @@ export function MarketPanel({ company }: { company: Company }) {
         ) : null}
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="flex flex-col gap-4 order-first lg:order-none lg:col-start-2 lg:sticky lg:top-4 lg:self-start">
-            {live ? <OrderTicket marketId={company._id} book={m.book} nextBatchAt={m.book?.next_batch_at} round={m.round} /> : null}
-            {!listed ? <OfferPanel company={company} /> : null}
+            {live ? (
+              <OrderTicket
+                marketId={company._id}
+                book={m.book}
+                nextBatchAt={m.book?.next_batch_at}
+                round={m.round}
+                onPlaced={(o) => placedHere.current.add(o._id)}
+              />
+            ) : null}
+            {!listed ? <OfferPanel company={company} offer={offer} onOffer={setOffer} /> : null}
             <div className="flex gap-4 px-1 font-mono text-[11px] uppercase tracking-[0.08em]">
               <a href={`/company/${company._id}/acquire`} className="text-muted-foreground hover:text-foreground">
                 Acquire
@@ -103,6 +129,7 @@ export function MarketPanel({ company }: { company: Company }) {
                 <PricePath batches={m.batches} refPrice={ref} selected={selected} onSelect={setSelected} opening={ref} />
               </>
             ) : null}
+            {!listed && offer ? <OfferLetter offer={offer} /> : null}
           </div>
         </div>
       </div>

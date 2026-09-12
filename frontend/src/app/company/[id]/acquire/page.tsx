@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { BackLink } from "@/components/site/back-link";
 import { Loi } from "@/components/acquire/loi";
 import { Checklist } from "@/components/acquire/checklist";
+import { closingHref } from "@/lib/closing";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,14 @@ export default async function AcquirePage({ params }: { params: Promise<{ id: st
         <h1 className="text-[30px] md:text-[40px] leading-[1.1]">{company.name}</h1>
       </div>
       <div className="grid gap-6 lg:grid-cols-[1fr_400px] pb-20 border-t border-line pt-6">
-        <Loi md={acq.loi_md} />
+        <Loi
+          md={acq.loi_md}
+          closingHref={
+            company.valuation
+              ? closingHref(id, { kind: "whole", qty: company.market?.shares_outstanding ?? 10000, price: Math.round(company.valuation.v0) })
+              : undefined
+          }
+        />
         <Checklist items={acq.checklist} />
       </div>
     </div>

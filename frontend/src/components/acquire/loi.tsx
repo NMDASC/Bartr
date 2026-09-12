@@ -41,14 +41,18 @@ function inline(s: string) {
   });
 }
 
-export function Loi({ md }: { md: string }) {
+export function Loi({ md, closingHref }: { md: string; closingHref?: string }) {
   return (
     <article className="bg-card border border-line">
       <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
         <Label>Letter of intent</Label>
         <div className="flex gap-2">
           <Button size="sm">Edit with agent</Button>
-          <Button size="sm" variant="primary">Download</Button>
+          {closingHref ? (
+            <Button size="sm" variant="positive" href={closingHref}>
+              Proceed to closing
+            </Button>
+          ) : null}
         </div>
       </div>
       <div className="p-6 md:p-8 max-w-[72ch]">{render(md)}</div>

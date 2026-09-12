@@ -31,6 +31,8 @@ export interface MarketView {
   quietRound: boolean;
   arrivals: MarketArrival[];
   mine: Order[];
+  /** my orders that have filled, in whole or in part */
+  fills: Order[];
 }
 
 const levelKey = (side: "b" | "a", price: number) => `${side}${price}`;
@@ -93,6 +95,7 @@ export function useMarket(id: string, enabled = true, fresh = false): MarketView
   const [roundsSeen, setRoundsSeen] = useState(0);
   const [arrivals, setArrivals] = useState<MarketArrival[]>([]);
   const [mine, setMine] = useState<Order[]>([]);
+  const [fills, setFills] = useState<Order[]>([]);
   const lastBatchAt = useRef<number>(0);
   const arrivalQueue = useRef<MarketArrival[]>([]);
   const boundaryAt = useRef<number>(0);
@@ -140,7 +143,9 @@ export function useMarket(id: string, enabled = true, fresh = false): MarketView
         setReady(true);
         getMyOrders(id)
           .then((rows) => {
-            if (alive) setMine(rows.filter((o) => o.status === "open" || o.status === "partial"));
+            if (!alive) return;
+            setMine(rows.filter((o) => o.status === "open" || o.status === "partial"));
+            setFills(rows.filter((o) => o.filled_qty > 0));
           })
           .catch(() => undefined);
       }
@@ -168,7 +173,9 @@ export function useMarket(id: string, enabled = true, fresh = false): MarketView
           setQuietRound(Date.now() - lastBatchAt.current > 1500);
         }
         getMyOrders(id).then((rows) => {
-          if (alive) setMine(rows.filter((o) => o.status === "open" || o.status === "partial"));
+          if (!alive) return;
+          setMine(rows.filter((o) => o.status === "open" || o.status === "partial"));
+          setFills(rows.filter((o) => o.filled_qty > 0));
         }).catch(() => undefined);
         return;
       }
@@ -208,7 +215,7 @@ export function useMarket(id: string, enabled = true, fresh = false): MarketView
   const prev = priced.length >= 2 ? priced[priced.length - 2].clearing_price ?? null : null;
   const dir = last !== null && prev !== null && last !== prev ? (last > prev ? "up" : "down") : null;
   const round = Math.max(roundsSeen, batches.length) + 1;
-  return { book, pending, batches, last, prev, round, tick, dir, changed, ready, justCleared, flash: flashOn, quietRound, arrivals, mine };
+  return { book, pending, batches, last, prev, round, tick, dir, changed, ready, justCleared, flash: flashOn, quietRound, arrivals, mine, fills };
 }
 
 /** Seconds until an ISO time, ticking at 10 Hz. Null until a target exists. */

@@ -20,6 +20,7 @@ import type {
   OfferIn,
   Order,
   Portfolio,
+  Position,
   SearchIntent,
   Side,
   Suggestion,
@@ -111,6 +112,11 @@ export async function listCompanies(params: { q?: string; state?: string; catego
     // loose: any query token hits
     return q.split(/\s+/).some((t) => t.length > 2 && hay.includes(t));
   });
+}
+
+export async function appraise(id: string): Promise<Company | null> {
+  await new Promise((r) => setTimeout(r, 2400));
+  return getCompany(id);
 }
 
 export async function getCompany(id: string): Promise<Company | null> {
@@ -341,6 +347,8 @@ interface MarketState {
   proceeds: number;
   boughtBack: number;
   fees: number;
+  /** the user's orders that cleared, with the price they cleared at */
+  fills: { order: UserOrder; px: number; t: number }[];
 }
 
 const MARKETS = new Map<string, MarketState>();
@@ -394,6 +402,7 @@ function market(id: string): MarketState {
     proceeds: 0,
     boughtBack: 0,
     fees: 0,
+    fills: [],
   };
   m.proceeds = round2((FLOAT - m.unsold) * v0 * 1.08);
   // a few resting bot orders so the book is not only the house
@@ -513,6 +522,7 @@ function runBatch(m: MarketState) {
 
   const filled = m.orders.filter((o) => (o.side === "buy" ? o.limit >= px : o.limit <= px));
   m.orders = m.orders.filter((o) => !filled.includes(o));
+  for (const o of filled) if (o.user === "you") m.fills.push({ order: o, px, t: Date.now() });
   // owner side of the fills: ladder levels at or below px sell float, floor buys back if px <= floor
   const quotes = treasuryQuotes(m);
   const floor = quotes[0];
@@ -594,21 +604,38 @@ export async function placeOrder(id: string, o: { side: Side; qty: number; limit
 export async function getMyOrders(id: string): Promise<Order[]> {
   const m = MARKETS.get(id);
   if (!m) return [];
-  return m.orders
-    .filter((o) => o.user === "you")
-    .map((order) => ({
-      _id: order.id,
-      market_id: id,
-      user_id: "you",
-      side: order.side,
-      qty: order.qty,
-      limit_price: order.limit,
-      status: "open" as const,
-      filled_qty: 0,
-      origin: "user" as const,
-      created_at: new Date(order.t).toISOString(),
-      cancelled_at: null,
-    }));
+  const row = (order: UserOrder, filled: number): Order => ({
+    _id: order.id,
+    market_id: id,
+    user_id: "you",
+    side: order.side,
+    qty: order.qty,
+    limit_price: order.limit,
+    status: filled > 0 ? "filled" : "open",
+    filled_qty: filled,
+    origin: "user",
+    created_at: new Date(order.t).toISOString(),
+    cancelled_at: null,
+  });
+  return [
+    ...m.fills.map((f) => row(f.order, f.order.qty)),
+    ...m.orders.filter((o) => o.user === "you").map((o) => row(o, 0)),
+  ];
+}
+
+/** Positions the user built in this browser session, from the simulator's fills. */
+function mockPositions(): Position[] {
+  const out: Position[] = [];
+  for (const m of MARKETS.values()) {
+    const buys = m.fills.filter((f) => f.order.side === "buy");
+    const sells = m.fills.filter((f) => f.order.side === "sell");
+    const qty = buys.reduce((s, f) => s + f.order.qty, 0) - sells.reduce((s, f) => s + f.order.qty, 0);
+    if (qty <= 0) continue;
+    const cost = buys.reduce((s, f) => s + f.order.qty * f.px, 0) / Math.max(1, buys.reduce((s, f) => s + f.order.qty, 0));
+    const card = CARDS.find((c) => c._id === m.id);
+    out.push({ market_id: m.id, name: card?.name ?? m.id, qty, avg_cost: round2(cost), last: m.last, value: round2(qty * m.last), pnl: round2(qty * (m.last - cost)) });
+  }
+  return out;
 }
 
 export function subscribeMarket(id: string, onFrame: (f: MarketFrame) => void): () => void {
@@ -628,7 +655,12 @@ export async function getPortfolio(userId?: string) {
   if (userId?.trim().toLowerCase() === CACHED_DEMO_EMAIL) {
     return CACHED_DEMO_PORTFOLIO;
   }
-  return portfolioFixture as unknown as Portfolio;
+  const base = portfolioFixture as unknown as Portfolio;
+  const mine = mockPositions();
+  if (!mine.length) return base;
+  const ids = new Set(mine.map((p) => p.market_id));
+  const spent = mine.reduce((s, p) => s + p.qty * p.avg_cost, 0);
+  return { ...base, cash: round2(base.cash - spent), positions: [...mine, ...base.positions.filter((p) => !ids.has(p.market_id))] };
 }
 export async function suggest(userId?: string) {
   if (userId?.trim().toLowerCase() === CACHED_DEMO_EMAIL) {
