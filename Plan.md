@@ -179,7 +179,7 @@ JB/
     app/llm.py               # provider switch: xai | ifm
     app/routers/{discovery,companies,market,portfolio,acquire,agent,surveillance}.py
     app/services/discovery/  # querit.py places.py extract.py valuation.py
-    app/services/market/     # book.py auction.py mm.py kelly.py options.py
+    app/services/market/     # book.py auction.py mm.py kelly.py
     app/services/agents/     # compliance.py portfolio_agent.py chat_agent.py
     app/db.py
     seeds/                   # cached discovery results so the demo never waits on the network
