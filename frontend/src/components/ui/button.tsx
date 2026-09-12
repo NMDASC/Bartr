@@ -2,7 +2,7 @@ import * as React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "secondary" | "ghost";
+type Variant = "primary" | "secondary" | "positive" | "ghost";
 type Size = "sm" | "md" | "lg";
 
 const base =
@@ -20,6 +20,7 @@ const sizes: Record<Size, string> = {
 const variants: Record<Variant, string> = {
   primary: "group bg-primary text-white",
   secondary: "bg-surface text-primary hover:bg-surface-hover",
+  positive: "bg-up text-primary hover:bg-teal",
   ghost: "bg-transparent text-muted-foreground hover:text-primary",
 };
 

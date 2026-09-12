@@ -42,6 +42,40 @@ const FLOOR_QTY = 1000; // owner buys back up to 10% at the floor
 const S_M = 0.1; // observation noise of a clearing price, log space
 const FEE = 0.005;
 const Z = { p20: -0.8416, ladder: [0.1257, 0.2859, 0.4538, 0.6356, 0.8416] }; // z(0.20), z(0.55..0.80)
+const CACHED_DEMO_EMAIL = "hackcmu@gmail.com";
+
+const CACHED_DEMO_PORTFOLIO: Portfolio = {
+  cash: 58_420,
+  pnl: { realized: 2_840, unrealized: 4_976, total: 7_816 },
+  positions: [
+    { market_id: "co_three_rivers_hvac", name: "Three Rivers Heating and Cooling", qty: 140, avg_cost: 76.2, last: 83.39, value: 11_674.6, pnl: 1_006.6 },
+    { market_id: "co_mon_valley_auto", name: "Monongahela Auto Works", qty: 220, avg_cost: 55.4, last: 61.2, value: 13_464, pnl: 1_276 },
+    { market_id: "co_schenley_daycare", name: "Schenley Park Kids Academy", qty: 95, avg_cost: 64.8, last: 70.56, value: 6_703.2, pnl: 547.2 },
+  ],
+};
+
+const CACHED_DEMO_SUGGESTIONS: Suggestion[] = [
+  {
+    company: { _id: "co_three_rivers_hvac", name: "Three Rivers Heating and Cooling", city: "Pittsburgh", state: "PA", category: "hvac" },
+    price: 83.39,
+    model_value: 85,
+    edge: 0.0191,
+    sigma: 0.36,
+    kelly_fraction: 0.0737,
+    suggested_usd: 4_305,
+    why: "Strong local demand, documented operations, and room between the market and appraised value.",
+  },
+  {
+    company: { _id: "co_mon_valley_auto", name: "Monongahela Auto Works", city: "Homestead", state: "PA", category: "auto_repair" },
+    price: 61.2,
+    model_value: 60,
+    edge: -0.0198,
+    sigma: 0.4,
+    kelly_fraction: 0,
+    suggested_usd: 0,
+    why: "Current pricing is above the appraisal, so the position stays on watch.",
+  },
+];
 
 // ---------------------------------------------------------------- tiny seeded rng
 
@@ -109,6 +143,74 @@ export async function getCompany(id: string): Promise<Company | null> {
   const scale = v0 / COMPANY.valuation!.v0;
   const sigma = round2(0.15 + 0.6 * (1 - card.confidence!));
   const post = posterior(m);
+
+  if (id === "co_bloomfield_coin") {
+    return {
+      ...COMPANY,
+      evidence: [],
+      _id: card._id,
+      name: card.name,
+      category: card.category,
+      naics_guess: "812310",
+      address: "4700 Liberty Ave, Pittsburgh, PA 15224",
+      city: card.city,
+      state: card.state,
+      lat: 40.4613,
+      lng: -79.9488,
+      website: null,
+      phone: null,
+      rating: card.rating,
+      review_count: card.review_count,
+      founded_year: null,
+      owners: [],
+      description: "An unattended neighborhood laundry with limited public operating records.",
+      financials: null,
+      valuation: {
+        v0,
+        sigma: 0.62,
+        low: 250_000,
+        high: 708_000,
+        method: "base_rate",
+        disagreement: 0.46,
+        estimates: [
+          {
+            name: "base_rate",
+            value: v0,
+            sigma: 0.7,
+            note: "Category and location estimate with no verified operating financials.",
+          },
+        ],
+        as_of: "2025-11-03T16:00:00Z",
+      },
+      sources: [
+        {
+          url: "https://www.google.com/maps",
+          title: "Bloomfield Coin Laundry listing",
+          snippet: "Business listing with address, hours, and customer reviews.",
+          fetched_at: "2025-11-03T16:00:00Z",
+        },
+      ],
+      status: "ready",
+      listed: true,
+      market: {
+        listed: true,
+        shares_outstanding: SHARES,
+        float: FLOAT,
+        retained: SHARES - FLOAT,
+        tick: 0.01,
+        last_price: m.last,
+        ref_price: card.v0_per_share,
+        batch_interval_s: INTERVAL_S,
+        next_batch_at: new Date(m.nextBatchAt).toISOString(),
+        band_pct: 0.1,
+        belief: { mu: post.mu, sigma: 0.62, s_m: S_M, n_rounds: m.rounds },
+        treasury: treasurySummary(m),
+        fees_collected: round2(m.fees),
+        halted: false,
+      },
+    };
+  }
+
   return {
     ...COMPANY,
     _id: card._id,
@@ -152,7 +254,11 @@ export async function getCompany(id: string): Promise<Company | null> {
   };
 }
 
-export function streamSearch(q: string, onEvent: (e: DiscoveryEvent) => void): () => void {
+export function streamSearch(
+  q: string,
+  onEvent: (e: DiscoveryEvent) => void,
+  options: { cached?: boolean } = {},
+): () => void {
   const timers: number[] = [];
   const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms));
   const place = q.match(/\b(?:in|near|around)\s+(.+?)(?=\s+(?:under|over|with|below|above|for)\b|$)/i)?.[1];
@@ -162,16 +268,43 @@ export function streamSearch(q: string, onEvent: (e: DiscoveryEvent) => void): (
   const amount = q.match(/\b(?:under|below)\s*\$?([\d,.]+)\s*(k|m|million|thousand)?\b/i);
   const maxValue = amount ? Number(amount[1].replaceAll(",", "")) * (/^(m|million)$/i.test(amount[2] ?? "") ? 1e6 : /^(k|thousand)$/i.test(amount[2] ?? "") ? 1e3 : 1) : null;
   const intent: SearchIntent = { category, naics_guess: null, state, city, min_value: null, max_value: maxValue, must_have: [] };
-  const matches = CARDS.filter(c => (!city || c.city?.toLowerCase() === city.toLowerCase()) && (!state || c.state === state)
+  const filtered = CARDS.filter(c => (!city || c.city?.toLowerCase() === city.toLowerCase()) && (!state || c.state === state)
     && (category === "default" || c.category === category) && (maxValue === null || c.v0_per_share !== null && c.v0_per_share * SHARES <= maxValue));
-  at(250, () => onEvent({ type: "intent", intent }));
-  at(400, () => onEvent({ type: "ranking", revision: 1, companies: matches }));
+  const matches = (
+    options.cached
+      ? ["co_squirrel_hill_wash", "co_bloomfield_coin"]
+          .map((id) => CARDS.find((company) => company._id === id))
+          .filter((company): company is CompanyCard => Boolean(company))
+      : filtered
+  ).toSorted((a, b) => (b.confidence ?? -1) - (a.confidence ?? -1));
+
+  const rankedStubs = matches.map((company) => ({
+    ...company,
+    bid: null,
+    ask: null,
+    last: null,
+    v0_per_share: null,
+    confidence: null,
+    status: "stub" as const,
+  }));
+
+  at(120, () => onEvent({ type: "status", phase: "intent", message: "Reading business type and market", t: Date.now() }));
+  at(260, () => onEvent({ type: "intent", intent }));
+  at(420, () => onEvent({ type: "status", phase: "places", message: `Looking at places across ${city || state || "North America"}`, t: Date.now() }));
+  at(720, () => onEvent({ type: "status", phase: "category", message: `Finding options in ${category === "default" ? "local businesses" : category.replaceAll("_", " ")}`, t: Date.now() }));
+  at(820, () => onEvent({ type: "ranking", revision: 1, companies: rankedStubs }));
+  at(980, () => onEvent({ type: "status", phase: "records", message: options.cached ? "Loading saved company research" : "Checking financial and ownership records", t: Date.now() }));
   matches.forEach((c, i) => {
-    const stub: CompanyCard = { ...c, bid: null, ask: null, last: null, v0_per_share: null, confidence: null, status: "stub" };
-    at(600 + i * 350, () => onEvent({ type: "company_stub", company: stub }));
-    if (c.status === "ready") at(2200 + i * 900, () => onEvent({ type: "company_ready", company: c }));
+    if (c.status === "ready") at(1_300 + i * 650, () => onEvent({ type: "company_ready", company: c }));
   });
-  at(2200 + matches.length * 900 + 400, () => onEvent({ type: "done", total: matches.length, warnings: ["Live search unavailable"], status: "partial" }));
+  const doneAt = 1_650 + matches.length * 650;
+  at(doneAt - 200, () => onEvent({ type: "status", phase: "finished", message: `${matches.length} businesses ranked by research confidence`, t: Date.now() }));
+  at(doneAt, () => onEvent({
+    type: "done",
+    total: matches.length,
+    warnings: options.cached ? [] : ["Live search unavailable"],
+    status: options.cached ? "complete" : "partial",
+  }));
   return () => timers.forEach((t) => window.clearTimeout(t));
 }
 
@@ -249,7 +382,11 @@ function market(id: string): MarketState {
     subs: new Set(),
     r,
     n: 1000,
-    sumLnP: batches.reduce((a, b) => (b.clearing_price === null ? a : a + Math.log(b.clearing_price * SHARES)), 0),
+    sumLnP: batches.reduce(
+      (a, b) =>
+        b.clearing_price === null ? a : a + Math.log(b.clearing_price * SHARES),
+      0,
+    ),
     rounds: batches.length,
     unsold: Math.round(FLOAT * 0.62),
     proceeds: 0,
@@ -465,10 +602,16 @@ export function subscribeMarket(id: string, onFrame: (f: MarketFrame) => void): 
 
 // ---------------------------------------------------------------- the rest, static fixtures
 
-export async function getPortfolio() {
+export async function getPortfolio(userId?: string) {
+  if (userId?.trim().toLowerCase() === CACHED_DEMO_EMAIL) {
+    return CACHED_DEMO_PORTFOLIO;
+  }
   return portfolioFixture as unknown as Portfolio;
 }
-export async function suggest() {
+export async function suggest(userId?: string) {
+  if (userId?.trim().toLowerCase() === CACHED_DEMO_EMAIL) {
+    return CACHED_DEMO_SUGGESTIONS;
+  }
   return suggestFixture as unknown as Suggestion[];
 }
 export async function flags() {

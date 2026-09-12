@@ -65,10 +65,6 @@ export function Results({ q }: { q: string }) {
           <p className="text-[16px]">{q}</p>
           {intent ? (
             <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-[11px] text-muted-foreground">
-              <dt className="uppercase tracking-[0.08em]">cat</dt>
-              <dd className="text-foreground">{intent.category === "default" ? "any" : intent.category.replace(/_/g, " ")}</dd>
-              <dt className="uppercase tracking-[0.08em]">naics</dt>
-              <dd className="text-foreground">{intent.naics_guess ?? "\u2014"}</dd>
               <dt className="uppercase tracking-[0.08em]">state</dt>
               <dd className="text-foreground">{intent.state ?? "any"}</dd>
               <dt className="uppercase tracking-[0.08em]">city</dt>

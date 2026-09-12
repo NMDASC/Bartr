@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowUp, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/cn";
 import "./landing.css";
 
 const ROTATION = [
@@ -32,11 +34,13 @@ export function SearchBar({
   className,
   autoFocus,
   chips,
+  prominent = false,
 }: {
   initial?: string;
   className?: string;
   autoFocus?: boolean;
   chips?: string[];
+  prominent?: boolean;
 }) {
   const router = useRouter();
   const [q, setQ] = useState(initial);
@@ -120,7 +124,10 @@ export function SearchBar({
     <div ref={hostRef} className={className}>
       <form
         role="search"
-        className="bl-field relative flex items-stretch gap-2"
+        className={cn(
+          "bl-field relative flex items-stretch gap-2",
+          prominent && "border border-line bg-card p-1.5 focus-within:border-accent",
+        )}
         onSubmit={(e) => {
           e.preventDefault();
           if (q.trim()) go(q.trim());
@@ -142,18 +149,40 @@ export function SearchBar({
             }}
             onFocus={() => setIdle(false)}
             onBlur={() => setIdle(q === "")}
-            className="h-11 w-full text-[16px]"
+            className={cn(
+              "h-11 w-full text-[16px]",
+              prominent && "h-12 border-0 bg-transparent px-4 text-[16px] focus-visible:border-transparent md:text-[17px]",
+            )}
           />
           {q === "" ? (
-            <span aria-hidden className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[16px] text-foreground/45">
+            <span
+              aria-hidden
+              className={cn(
+                "pointer-events-none absolute inset-y-0 left-3 flex items-center text-[16px] text-foreground/45",
+                prominent && "left-4 text-[16px] md:text-[17px]",
+              )}
+            >
               {ghost}
               {idle ? <span className="bl-caret ml-px" /> : null}
             </span>
           ) : null}
           <span aria-hidden className="bl-underline pointer-events-none absolute inset-x-0 bottom-0 h-px bg-accent" />
         </div>
-        <Button type="submit" variant="primary" size="lg" className="h-11 shrink-0">
-          Search
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          aria-label={prominent ? "Search businesses" : undefined}
+          className={cn("h-11 shrink-0", prominent && "size-12 px-0")}
+        >
+          {prominent ? (
+            <ArrowUp />
+          ) : (
+            <>
+              <Search />
+              Search
+            </>
+          )}
         </Button>
       </form>
 

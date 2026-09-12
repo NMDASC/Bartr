@@ -11,7 +11,12 @@ import fixture from "@contracts/examples/agent-chat.json";
 
 const canned = (fixture as { messages: AgentMessage[] }).messages;
 
-async function ask(sessionId: string, message: string, history: AgentMessage[]): Promise<AgentMessage> {
+async function ask(
+  sessionId: string,
+  message: string,
+  history: AgentMessage[],
+  userId?: string,
+): Promise<AgentMessage> {
   if (IS_MOCK) {
     await new Promise((r) => setTimeout(r, 700));
     // walk the fixture: reply with the next assistant turn, then fall back to a stub
@@ -21,7 +26,7 @@ async function ask(sessionId: string, message: string, history: AgentMessage[]):
   }
   const res = await fetch(`${API_URL}/api/v1/agent/chat`, {
     method: "POST",
-    headers: { "content-type": "application/json", "x-demo-user": demoUser() },
+    headers: { "content-type": "application/json", "x-demo-user": userId || demoUser() },
     body: JSON.stringify({ session_id: sessionId, message }),
   });
   if (!res.ok) throw new Error(`agent ${res.status}`);
@@ -31,15 +36,21 @@ async function ask(sessionId: string, message: string, history: AgentMessage[]):
   return { role: "assistant", content: await res.text() };
 }
 
-export function Chat() {
+export function Chat({
+  embedded = false,
+  userId,
+}: {
+  embedded?: boolean;
+  userId?: string;
+}) {
   const [msgs, setMsgs] = useState<AgentMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const end = useRef<HTMLDivElement>(null);
   const session = useRef<string>("");
   useEffect(() => {
-    session.current = `web:${demoUser()}`;
-  }, []);
+    session.current = `web:${userId || demoUser()}`;
+  }, [userId]);
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" });
   }, [msgs, busy]);
@@ -52,7 +63,7 @@ export function Chat() {
     setInput("");
     setBusy(true);
     try {
-      const reply = await ask(session.current, t, next);
+      const reply = await ask(session.current, t, next, userId);
       setMsgs((m) => [...m, reply]);
     } catch (e) {
       setMsgs((m) => [...m, { role: "assistant", content: e instanceof Error ? e.message : "Agent error" }]);
@@ -64,8 +75,8 @@ export function Chat() {
   const starters = ["find me a laundromat in pittsburgh", "buy 50 shares of squirrel hill wash at 56", "what should i hold with 10k"];
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_280px] pb-20">
-      <div className="bg-card border border-line flex flex-col min-h-[520px]">
+    <div className={cn("grid gap-6 lg:grid-cols-[1fr_280px]", embedded ? "" : "pb-20")}>
+      <div className={cn("bg-card border border-line flex flex-col", embedded ? "min-h-[420px]" : "min-h-[520px]")}>
         <div className="flex h-8 shrink-0 items-center border-b border-line px-3">
           <Label>Session</Label>
         </div>
