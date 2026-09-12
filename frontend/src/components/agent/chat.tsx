@@ -17,7 +17,7 @@ async function ask(sessionId: string, message: string, history: AgentMessage[]):
     // walk the fixture: reply with the next assistant turn, then fall back to a stub
     const idx = history.filter((m) => m.role === "assistant").length;
     const next = canned.filter((m) => m.role === "assistant")[idx];
-    return next ?? { role: "assistant", content: "Mock agent out of lines. Set NEXT_PUBLIC_API_URL to talk to the real one." };
+    return next ?? { role: "assistant", content: "Ask for a business by type and place, or name one you already hold." };
   }
   const res = await fetch(`${API_URL}/api/v1/agent/chat`, {
     method: "POST",
@@ -66,12 +66,10 @@ export function Chat() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_280px] pb-20">
       <div className="bg-card border border-line flex flex-col min-h-[520px]">
-        <div className="flex items-center justify-between border-b border-line px-3 py-2">
+        <div className="flex items-center border-b border-line px-3 py-2">
           <Label>Session</Label>
-          <span className="font-mono text-[10px] text-muted-foreground">{IS_MOCK ? "mock" : "live"}</span>
         </div>
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-          {msgs.length === 0 ? <p className="text-[14px] secondary">Ask for a business, a book, or an order.</p> : null}
           {msgs.map((m, i) => (
             <div key={i} className={cn("max-w-[72ch]", m.role === "user" ? "self-end" : "self-start")}>
               <Label tracking="tight" className="block mb-1">{m.role === "user" ? "you" : "jb"}</Label>
@@ -108,12 +106,6 @@ export function Chat() {
             {s}
           </button>
         ))}
-        <Label className="mt-4">Tools</Label>
-        <ul className="font-mono text-[11px] text-muted-foreground flex flex-col gap-1">
-          {["search_companies", "get_company", "get_book", "place_order", "suggest_portfolio"].map((t) => (
-            <li key={t}>{t}</li>
-          ))}
-        </ul>
       </aside>
     </div>
   );

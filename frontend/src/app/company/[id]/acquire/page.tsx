@@ -18,9 +18,6 @@ export default async function AcquirePage({ params }: { params: Promise<{ id: st
         <BackLink fallback={`/company/${id}`} />
         <Label className="mt-4 mb-2 block">Acquire · {company.state ?? "US"} · {company.category}</Label>
         <h1 className="text-[30px] md:text-[40px] leading-[1.1]">{company.name}</h1>
-        <p className="mt-subhead text-[16px] secondary max-w-2xl">
-          A non-binding letter of intent priced from the last clearing round, and a diligence checklist for this state and business type. Play money. Not legal advice.
-        </p>
       </div>
       <div className="grid gap-6 lg:grid-cols-[1fr_400px] pb-20 border-t border-line pt-6">
         <Loi md={acq.loi_md} />

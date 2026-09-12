@@ -14,11 +14,7 @@ export default async function SurveillancePage() {
   return (
     <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
       <div className="pt-10 pb-6">
-        <Label className="mb-3 block">Surveillance</Label>
-        <h1 className="text-[30px] md:text-[40px] leading-[1.1]">Every batch, reviewed twice.</h1>
-        <p className="mt-subhead text-[16px] secondary max-w-2xl">
-          Deterministic detectors run on the tape after each round. Grok writes the case. K2 Horizon reviews it independently. Disagreement is shown, not hidden.
-        </p>
+        <h1 className="text-[30px] md:text-[40px] leading-[1.1]">Surveillance</h1>
       </div>
 
       <div className="grid grid-cols-3 border-t border-b border-line divide-x divide-line">

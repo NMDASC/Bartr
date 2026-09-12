@@ -21,15 +21,14 @@ Keys live in `.env` (never committed). `.env.example` lists every variable.
 
 Grok and K2 are used only through API calls inside the app (extraction, valuation opinions, compliance review, chat agent). Do not use them to write code.
 
-Writing style for docs and UI copy: no em dashes, no filler.
+Writing style for docs and UI copy: no em dashes, no filler. No explainer text in the UI (formulas, "how it works" captions, helper sentences under controls, subtitles describing the backend): controls and data speak, mechanism lives in Plan.md.
 
 ## API conventions
 
-- Storage goes through `app/store.py::Store`. `MemoryStore` is the default; set `MONGODB_URI` and `app/deps.py` swaps in `app/store_mongo.py::MongoStore`. The protocol is synchronous, so the mongo implementation uses pymongo, not motor. Do not reach past the store from a router or the engine.
-- Indexes, the Atlas search index and seed documents live in `migrations/` and are applied by `uv run python migrate.py up`. Never create an index at application startup. `app/db.py` exists only to give that runner an async handle.
-- Identity: `app/identity.py` normalizes `X-Demo-User` (a name, an email, or an E.164 phone) into the user id the engine uses, so one person cannot become two accounts through casing or phone formatting. Auth0 is not wired; do not branch on provider outside that module.
-- `/agent/chat` returns a single JSON message, never a token stream, because the iMessage bridge cannot consume one (decision 006).
+- Storage goes through `app/store.py::Store`. `MemoryStore` is the default; set `MONGODB_URI` and `app/deps.py` swaps in `app/store_mongo.py::MongoStore`. The protocol is synchronous, so the mongo side uses pymongo, not motor. Routers and the engine never reach past the store.
+- Indexes, the Atlas search index and seed documents live in `migrations/`, applied by `uv run python migrate.py up`. Never create an index at application startup. `app/db.py` exists only to give that runner an async handle.
+- `app/identity.py` normalizes `X-Demo-User` (a name, an email, or an E.164 phone) into the user id the engine uses, so one person cannot become two accounts through casing or phone formatting. Auth0 is not wired; nothing branches on provider outside that module.
 - All model calls go through `app/llm.py`. Nothing else imports `openai`.
-- Stub routes are marked `TODO(owner)`: replace the body, keep the signature.
-- Run the API with one uvicorn worker. The hub, the engine and the scheduler are in process singletons.
+- `/agent/chat` returns one JSON message, never a token stream, because `apps/imessage` cannot consume one (decision 006).
 - `packages/contracts/types.ts` is hand authored and is the contract. `./scripts/gen_contract.sh` exports `openapi.yaml` as a cross check and does not touch `types.ts`.
+- Run one uvicorn worker. The hub, the engine and the scheduler are in process singletons.

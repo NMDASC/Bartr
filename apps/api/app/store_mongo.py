@@ -1,4 +1,4 @@
-"""MongoDB implementation of the Store protocol. Owner: Vir. See DECISIONS 008.
+"""MongoDB implementation of the Store protocol. Owner: Vir. See DECISIONS 011.
 
 Decision 005 asked for the real database to arrive as another class with the
 same methods, constructed in deps.py. This is that class, so the engine, the

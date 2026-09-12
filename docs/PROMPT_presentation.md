@@ -11,7 +11,7 @@ You are building the presentation for **JB**, a HackCMU 2026 project, presented 
 A discovery engine and exchange for businesses that will never be listed: laundromats, car washes, machine shops, family manufacturers. Search them like Google, price them like a stock, buy a fraction like Robinhood, acquire them like a PE firm.
 
 Two phases:
-1. **Discover.** "Laundromat in Oklahoma" -> Google Places finds real businesses, Querit (web search API) reads the web about each one, Grok (xAI, `grok-4.6`) extracts a structured profile with cited sources, and a Bayesian valuation ensemble prices it with an honest uncertainty.
+1. **Discover.** "Laundromat in Pittsburgh" -> Google Places finds real businesses, Querit (web search API) reads the web about each one, Grok (xAI, `grok-4.6`) extracts a structured profile with cited sources, and a Bayesian valuation ensemble prices it with an honest uncertainty.
 2. **Trade and acquire.** Each business is 10,000 shares. A frequent batch auction clears every 10 seconds at the single price that maximizes executed volume. The owner provides liquidity (ask ladder for the float, buyback floor). The platform never trades. A portfolio builder sizes stakes with half Kelly. Grok and IFM K2 review every round's tape for wash trades, spoofing, and pumps. "Acquire" drafts an LOI and a state specific diligence checklist with citations.
 
 Track: **Optimization**. Judging criteria: originality, technical difficulty ("real technical challenges vs ChatGPT wrapper"), demo quality (under 3 minutes), usefulness, track relevance.
@@ -36,14 +36,14 @@ Apple keynote aesthetic, executed properly:
 ## Slide list (target 12 slides, 3 minutes, 15 seconds per slide average)
 
 1. **Title.** "JB" huge. Subline: "A stock market for the businesses that will never be listed." Team names small at the bottom: Nico, Vir, Aditya, Zhiyuan.
-2. **The problem.** "33 million small businesses. None of them has a price." Second beat: "If you wanted to buy a laundromat in Tulsa tonight, you could not even find the list."
-3. **Discover.** Screenshot placeholder of the search results streaming in. Three words under it: Places, Querit, Grok.
-4. **One company.** Screenshot placeholder of the company page: profile, sources, the five estimators, the valuation range bar.
+2. **The problem.** "33 million small businesses. None of them has a price." Second beat: "If you wanted to buy a laundromat in Squirrel Hill tonight, you could not even find the list." (Judges are at CMU; every example in the deck is Pittsburgh: Squirrel Hill, Bloomfield, Lawrenceville, the South Side, McKnight Road, McKees Rocks, Homestead.)
+3. **Discover.** Screenshot placeholder of the search results for "laundromat in Pittsburgh" streaming in (Squirrel Hill Wash and Fold, Butler Street Laundromat, Bloomfield Coin Laundry). Three words under it: Places, Querit, Grok.
+4. **One company.** Screenshot placeholder of the Squirrel Hill Wash and Fold page: profile, sources, the five estimators, the valuation range bar.
 5. **How we price it.** The intimidating slide. Black background, white equations, KaTeX, dense, every symbol defined in a small legend along the bottom. Content below in "Equations".
 6. **How the market clears.** Second intimidating slide: the batch auction, band, rationing, interval, belief update. Content below in "Equations".
 7. **Live.** The animated order book: countdown, curves, clearing price, fills. This is where the presenter says "scan the QR and bid" and a QR placeholder sits in the corner.
 8. **Portfolio.** Kelly. One equation, one screenshot placeholder, one sentence: "Sized by half Kelly on the gap between model value and market price."
-9. **Acquire.** LOI and Oklahoma diligence checklist screenshot placeholder. "From a share to the whole company."
+9. **Acquire.** LOI and Pittsburgh diligence checklist screenshot placeholder (City of Pittsburgh registration, Allegheny County Health Department, PA bulk sale clearance). "From a share to the whole company."
 10. **Surveillance.** The one red slide. "Every round, two model families read the tape." Grok flag, K2 concurs. Show the wash trade detection rule in one line.
 11. **Stack.** Sponsor names as plain text logos in a single row, plus "built in Cursor". No logo images unless they are in `apps/deck/assets/` already.
 12. **Close.** "JB. Price everything." QR to the live site.
@@ -107,11 +107,12 @@ Legend: $v$ model value per share, $p$ market price, $\sigma$ posterior uncertai
 
 ## Numbers you can put on slides (real output from `python scripts/demo_pricing.py`)
 
-- Documented laundromat, Tulsa OK, SDE $140k, 4.6 stars, 180 reviews: **$525,900**, sigma 0.22, P20 $437k, P80 $633k. Per share $52.59. Owner floor $43.70, ask ladder $54.06 to $63.28.
-- Same business actually listed at $575k: **$512,114**, sigma 0.13.
-- A laundromat that is only a Google Places pin, 23 reviews: **$184,487**, sigma 0.78 (the model refuses to be confident).
-- Car wash where Grok says $1.9M and K2 says $0.9M: model opinion sigma widens to 0.52, posterior **$1,391,313**, sigma 0.35.
-- 6 round auction sim, 8 Kelly sized bots: 54.06 -> 56.00 -> 56.00 -> 56.00 -> 58.04 -> 55.02 against a model price of 52.59.
+- Squirrel Hill Wash and Fold (Murray Ave), SDE $152k, 4.6 stars, 214 reviews: **$570,768**, sigma 0.22, P20 $475k, P80 $686k. Per share $57.08. Owner floor $47.48, ask ladder $58.67 to $68.62.
+- Butler Street Laundromat (Lawrenceville), actually listed on BizBuySell at $640k: **$565,138**, sigma 0.14.
+- Bloomfield Coin Laundry, only a Google Places pin, 27 reviews: **$192,254**, sigma 0.82 (the model refuses to be confident).
+- Steel City Express Car Wash (McKnight Rd) where Grok says $2.1M and K2 says $1.0M: posterior **$1,534,521**, sigma 0.37.
+- Iron City Precision Machine (McKees Rocks), revenue only, owner operated 26 years: **$979,576**, sigma 0.36.
+- 6 round auction sim on Squirrel Hill, 8 Kelly sized bots: 58.67 -> 60.76 -> 60.76 -> 60.76 -> 60.76 -> 63.03 against a model price of 57.08.
 - BizBuySell 2026: median small business sells at 2.7x cash flow, laundromats at about 4.0x, car washes 5.8x asking.
 
 ## Do not

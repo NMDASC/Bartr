@@ -10,7 +10,7 @@ export function Valuation({ company, last }: { company: Company; last: number | 
     return (
       <div className="bg-card border border-line p-3">
         <Label className="mb-2 block">Valuation</Label>
-        <p className="text-[14px] secondary">Not priced yet. The pipeline is still reading this business.</p>
+        <p className="text-[14px] secondary">Not priced yet.</p>
       </div>
     );
   }
@@ -80,7 +80,6 @@ export function Valuation({ company, last }: { company: Company; last: number | 
               </li>
             ))}
           </ol>
-          <p className="mt-2 font-mono text-[10px] text-muted-foreground">precision weighted in log space, sigma inflated by disagreement</p>
         </div>
       </div>
     </div>

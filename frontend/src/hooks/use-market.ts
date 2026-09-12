@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Batch, Book } from "@contracts/types";
 import { getBatches, getBook, subscribeMarket } from "@/lib/api";
 
@@ -19,7 +19,6 @@ export function useMarket(id: string, enabled = true): MarketView {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [tick, setTick] = useState(0);
   const [ready, setReady] = useState(false);
-  const prevRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -35,10 +34,7 @@ export function useMarket(id: string, enabled = true): MarketView {
       if (!alive) return;
       if (f.type === "book") setBook(f.book);
       if (f.type === "batch") {
-        setBatches((xs) => {
-          prevRef.current = xs.at(-1)?.clearing_price ?? null;
-          return [...xs.slice(-199), f.batch];
-        });
+        setBatches((xs) => [...xs.slice(-199), f.batch]);
         setTick((t) => t + 1);
       }
     });
@@ -49,7 +45,7 @@ export function useMarket(id: string, enabled = true): MarketView {
   }, [id, enabled]);
 
   const last = batches.at(-1)?.clearing_price ?? book?.last ?? null;
-  const prev = batches.length >= 2 ? batches[batches.length - 2].clearing_price : prevRef.current;
+  const prev = batches.length >= 2 ? batches[batches.length - 2].clearing_price : null;
   return { book, batches, last, prev, tick, ready };
 }
 

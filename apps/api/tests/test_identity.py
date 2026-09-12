@@ -1,4 +1,4 @@
-"""Identity normalization and the email claim. Owner: Vir. See DECISIONS 008.
+"""Identity normalization and the email claim. Owner: Vir. See DECISIONS 011.
 
 The property that matters: one person is one account, however they typed
 themselves in, and an identity carrying an email inherits whatever was already

@@ -5,58 +5,45 @@ import { px, qty } from "@/lib/format";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/cn";
 
+const BID_BAR = "rgb(43 195 146 / 0.08)";
+const ASK_BAR = "rgb(238 85 87 / 0.08)";
+
 function Side({ levels, side, max }: { levels: Book["bids"]; side: "bid" | "ask"; max: number }) {
   const isBid = side === "bid";
   return (
-    <table className="w-full border-collapse">
+    <table className="w-full table-fixed border-collapse">
+      <colgroup>
+        <col style={{ width: "50%" }} />
+        <col style={{ width: "50%" }} />
+      </colgroup>
       <thead>
         <tr className="border-b border-line">
-          {isBid ? (
-            <>
-              <th className="py-1.5 pl-2 text-left"><Label tracking="tight">Qty</Label></th>
-              <th className="py-1.5 pr-2 text-right"><Label tracking="tight">Bid</Label></th>
-            </>
-          ) : (
-            <>
-              <th className="py-1.5 pl-2 text-left"><Label tracking="tight">Ask</Label></th>
-              <th className="py-1.5 pr-2 text-right"><Label tracking="tight">Qty</Label></th>
-            </>
-          )}
+          <th className="py-1.5 px-2 text-left font-normal">
+            <Label tracking="tight">{isBid ? "Qty" : "Ask"}</Label>
+          </th>
+          <th className="py-1.5 px-2 text-right font-normal">
+            <Label tracking="tight">{isBid ? "Bid" : "Qty"}</Label>
+          </th>
         </tr>
       </thead>
       <tbody>
         {levels.slice(0, 9).map((l, i) => {
           const w = Math.min(100, (l.qty / max) * 100);
           const owner = l.origin === "treasury";
+          const bar = isBid
+            ? `linear-gradient(to left, ${BID_BAR} ${w}%, transparent ${w}%)`
+            : `linear-gradient(to right, ${ASK_BAR} ${w}%, transparent ${w}%)`;
+          const qtyCell = (
+            <span className={cn("font-mono text-[12px] tabular-nums", owner ? "text-tint-500" : "text-foreground")}>
+              {qty(l.qty)}
+              {owner ? <span className="ml-1.5 text-[9px] uppercase tracking-[0.06em]">owner</span> : null}
+            </span>
+          );
+          const priceCell = <span className={cn("font-mono text-[12px] tabular-nums", isBid ? "text-up" : "text-down")}>{px(l.price)}</span>;
           return (
-            <tr key={`${l.price}-${i}`} className="relative border-b border-hairline-soft">
-              <td
-                colSpan={2}
-                className="absolute inset-y-0 pointer-events-none"
-                style={{
-                  [isBid ? "right" : "left"]: 0,
-                  width: `${w}%`,
-                  background: isBid ? "rgb(43 195 146 / 0.08)" : "rgb(238 85 87 / 0.08)",
-                }}
-                aria-hidden
-              />
-              {isBid ? (
-                <>
-                  <td className={cn("relative py-1 pl-2 font-mono text-[12px] tabular-nums", owner ? "text-tint-500" : "text-foreground")}>
-                    {qty(l.qty)}
-                    {owner ? <span className="ml-1.5 text-[9px] uppercase tracking-[0.06em]">owner</span> : null}
-                  </td>
-                  <td className="relative py-1 pr-2 text-right font-mono text-[12px] tabular-nums text-up">{px(l.price)}</td>
-                </>
-              ) : (
-                <>
-                  <td className="relative py-1 pl-2 font-mono text-[12px] tabular-nums text-down">{px(l.price)}</td>
-                  <td className={cn("relative py-1 pr-2 text-right font-mono text-[12px] tabular-nums", owner ? "text-tint-500" : "text-foreground")}>
-                    {owner ? <span className="mr-1.5 text-[9px] uppercase tracking-[0.06em]">owner</span> : null}
-                    {qty(l.qty)}
-                  </td>
-                </>
-              )}
+            <tr key={`${l.price}-${i}`} className="border-b border-hairline-soft" style={{ background: bar }}>
+              <td className="py-1 px-2 text-left">{isBid ? qtyCell : priceCell}</td>
+              <td className="py-1 px-2 text-right">{isBid ? priceCell : qtyCell}</td>
             </tr>
           );
         })}
@@ -65,7 +52,7 @@ function Side({ levels, side, max }: { levels: Book["bids"]; side: "bid" | "ask"
   );
 }
 
-export function OrderBook({ book, last, flash }: { book: Book | null; last: number | null; flash: boolean }) {
+export function OrderBook({ book, last, tick }: { book: Book | null; last: number | null; tick: number }) {
   if (!book) return <div className="h-64 bg-surface animate-pulse" aria-hidden />;
   const max = Math.max(1, ...book.bids.map((b) => b.qty), ...book.asks.map((a) => a.qty));
   const bestBid = book.bids[0]?.price ?? null;
@@ -78,21 +65,27 @@ export function OrderBook({ book, last, flash }: { book: Book | null; last: numb
         <div className="flex items-center gap-4 font-mono text-[11px] tabular-nums">
           <span className="text-muted-foreground">
             {spread !== null && spread <= 0 ? (
-              <span className="text-accent uppercase tracking-[0.08em] text-[10px]">crossed · clears next batch</span>
+              <span className="text-accent uppercase tracking-[0.08em] text-[10px]">crossed</span>
             ) : (
-              <>spread <span className="text-foreground">{spread !== null ? spread.toFixed(2) : "\u2014"}</span></>
+              <>
+                spread <span className="text-foreground">{spread !== null ? spread.toFixed(2) : "\u2014"}</span>
+              </>
             )}
           </span>
-          <span className={cn("px-1.5 -mx-1.5 text-accent", flash && "jb-clear")}>last {px(last)}</span>
+          <span key={tick} className={cn("px-1.5 -mx-1.5 text-accent", tick > 0 && "jb-clear")}>
+            last {px(last)}
+          </span>
         </div>
       </div>
-      <div className="grid grid-cols-2 divide-x divide-line">
+      <div className="grid grid-cols-2 items-start divide-x divide-line">
         <Side levels={book.bids} side="bid" max={max} />
         <Side levels={book.asks} side="ask" max={max} />
       </div>
       <div className="flex items-center justify-between border-t border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
-        <span>band {px(book.band.low)} to {px(book.band.high)}</span>
-        <span>{book.halted ? <span className="text-down">halted</span> : "uniform price · platform never trades"}</span>
+        <span>
+          band {px(book.band.low)} to {px(book.band.high)}
+        </span>
+        {book.halted ? <span className="text-down">halted</span> : null}
       </div>
     </div>
   );

@@ -45,7 +45,6 @@ export function OrderTicket({ marketId, book, last }: { marketId: string; book: 
     <form onSubmit={submit} className="bg-card border border-line">
       <div className="flex items-center justify-between border-b border-line px-3 py-2">
         <Label>Order ticket</Label>
-        <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">limit · fills at p*</span>
       </div>
       <div className="p-3 flex flex-col gap-3">
         <div className="grid grid-cols-2 gap-px bg-line border border-line" role="radiogroup" aria-label="Side">
@@ -96,7 +95,7 @@ export function OrderTicket({ marketId, book, last }: { marketId: string; book: 
         {placed ? (
           <Callout tone={placed.side === "buy" ? "up" : "down"}>
             <span className="font-mono text-[11px] tabular-nums">
-              {placed.side} {placed.qty} @ {px(placed.limit_price)} resting. Fills at the clearing price if it crosses.
+              {placed.side} {placed.qty} @ {px(placed.limit_price)} resting
             </span>
           </Callout>
         ) : null}
@@ -105,7 +104,6 @@ export function OrderTicket({ marketId, book, last }: { marketId: string; book: 
             <span className="font-mono text-[11px]">{err}</span>
           </Callout>
         ) : null}
-        <p className="text-[12px] secondary">Play money. Every order in a batch fills at the same price.</p>
       </div>
     </form>
   );

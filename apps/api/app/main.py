@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.deps import STORE_KIND, engine, store
-from app.routers import acquire, agent, companies, discovery, market, portfolio, surveillance
+from app.routers import acquire, agent, companies, discovery, market, portfolio, surveillance, ws
 
 SEED = os.getenv("SEED", "1") == "1"
 BOTS = os.getenv("BOTS", "0") == "1"
@@ -66,12 +66,13 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 
 API = "/api/v1"
 app.include_router(companies.router, prefix=API)
+app.include_router(discovery.router, prefix=API)
 app.include_router(market.router, prefix=API)
 app.include_router(portfolio.router, prefix=API)
-app.include_router(surveillance.router, prefix=API)
-app.include_router(discovery.router, prefix=API)
 app.include_router(acquire.router, prefix=API)
+app.include_router(surveillance.router, prefix=API)
 app.include_router(agent.router, prefix=API)
+app.include_router(ws.router)  # /ws/markets/{id} at the root, per the contract
 
 
 @app.get("/health")
@@ -81,16 +82,15 @@ def health():
 
 @app.get("/readiness")
 def readiness():
-    """What is actually wired up. Useful while keys are still being collected."""
+    """Which store is live and which keys are set. Useful while keys are still coming in."""
     from app.llm import is_configured
 
-    ok = store.ping() if hasattr(store, "ping") else True
     return {
         "store": STORE_KIND,
-        "store_ok": ok,
+        "store_ok": store.ping() if hasattr(store, "ping") else True,
         "llm_xai": is_configured("xai"),
         "llm_ifm": is_configured("ifm"),
         "querit": bool(os.getenv("QUERIT_API_KEY")),
         "google_places": bool(os.getenv("GOOGLE_PLACES_API_KEY")),
-        "auth0": False,  # not wired, see docs/DECISIONS.md 008
+        "auth0": False,  # not wired, see docs/DECISIONS.md 011
     }

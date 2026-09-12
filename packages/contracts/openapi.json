@@ -1,0 +1,3230 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "JB API",
+  "version": "0.1.0"
+ },
+ "paths": {
+  "/api/v1/companies": {
+   "post": {
+    "tags": [
+     "companies"
+    ],
+    "summary": "Create Company",
+    "description": "Create a company from observables, run the valuation ensemble, open its market.\nRole B's discovery pipeline calls this (or engine.create_company directly) per company.",
+    "operationId": "create_company_api_v1_companies_post",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CompanyIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Company"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "companies"
+    ],
+    "summary": "List Companies",
+    "operationId": "list_companies_api_v1_companies_get",
+    "parameters": [
+     {
+      "name": "state",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "State"
+      }
+     },
+     {
+      "name": "category",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Category"
+      }
+     },
+     {
+      "name": "q",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Q"
+      }
+     },
+     {
+      "name": "sort",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "pattern": "^(v0|confidence|last|name)$",
+       "default": "v0",
+       "title": "Sort"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/CompanyCard"
+         },
+         "title": "Response List Companies Api V1 Companies Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/companies/{cid}": {
+   "get": {
+    "tags": [
+     "companies"
+    ],
+    "summary": "Get Company",
+    "operationId": "get_company_api_v1_companies__cid__get",
+    "parameters": [
+     {
+      "name": "cid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Cid"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Company"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/companies/valuation/preview": {
+   "post": {
+    "tags": [
+     "companies"
+    ],
+    "summary": "Preview Valuation",
+    "description": "Run the ensemble without creating anything. Handy for the UI and for calibration.",
+    "operationId": "preview_valuation_api_v1_companies_valuation_preview_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CompanyIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Valuation"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/discovery/search": {
+   "post": {
+    "tags": [
+     "discovery"
+    ],
+    "summary": "Search",
+    "operationId": "search_api_v1_discovery_search_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SearchIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "202": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SearchJobAccepted"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/discovery/jobs/{job_id}": {
+   "get": {
+    "tags": [
+     "discovery"
+    ],
+    "summary": "Job Stream",
+    "operationId": "job_stream_api_v1_discovery_jobs__job_id__get",
+    "parameters": [
+     {
+      "name": "job_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Job Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/markets/{mid}": {
+   "get": {
+    "tags": [
+     "markets"
+    ],
+    "summary": "Get Market",
+    "operationId": "get_market_api_v1_markets__mid__get",
+    "parameters": [
+     {
+      "name": "mid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Mid"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/MarketSummary"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/markets/{mid}/book": {
+   "get": {
+    "tags": [
+     "markets"
+    ],
+    "summary": "Get Book",
+    "operationId": "get_book_api_v1_markets__mid__book_get",
+    "parameters": [
+     {
+      "name": "mid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Mid"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Book"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/markets/{mid}/orders": {
+   "post": {
+    "tags": [
+     "markets"
+    ],
+    "summary": "Place Order",
+    "operationId": "place_order_api_v1_markets__mid__orders_post",
+    "parameters": [
+     {
+      "name": "mid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Mid"
+      }
+     },
+     {
+      "name": "x-demo-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Demo-User"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OrderIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Order"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/markets/{mid}/orders/mine": {
+   "get": {
+    "tags": [
+     "markets"
+    ],
+    "summary": "My Orders",
+    "operationId": "my_orders_api_v1_markets__mid__orders_mine_get",
+    "parameters": [
+     {
+      "name": "mid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Mid"
+      }
+     },
+     {
+      "name": "x-demo-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Demo-User"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/Order"
+         },
+         "title": "Response My Orders Api V1 Markets  Mid  Orders Mine Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/markets/orders/{oid}": {
+   "delete": {
+    "tags": [
+     "markets"
+    ],
+    "summary": "Cancel Order",
+    "operationId": "cancel_order_api_v1_markets_orders__oid__delete",
+    "parameters": [
+     {
+      "name": "oid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Oid"
+      }
+     },
+     {
+      "name": "x-demo-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Demo-User"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Order"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/markets/{mid}/batches": {
+   "get": {
+    "tags": [
+     "markets"
+    ],
+    "summary": "Batches",
+    "operationId": "batches_api_v1_markets__mid__batches_get",
+    "parameters": [
+     {
+      "name": "mid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Mid"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "default": 60,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "snapshot",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": false,
+       "title": "Snapshot"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/Batch"
+         },
+         "title": "Response Batches Api V1 Markets  Mid  Batches Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/markets/{mid}/trades": {
+   "get": {
+    "tags": [
+     "markets"
+    ],
+    "summary": "Trades",
+    "operationId": "trades_api_v1_markets__mid__trades_get",
+    "parameters": [
+     {
+      "name": "mid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Mid"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "default": 50,
+       "title": "Limit"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/Trade"
+         },
+         "title": "Response Trades Api V1 Markets  Mid  Trades Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/markets/{mid}/batch/run": {
+   "post": {
+    "tags": [
+     "markets"
+    ],
+    "summary": "Run Batch Now",
+    "description": "Force a round to clear now. Demo and test convenience.",
+    "operationId": "run_batch_now_api_v1_markets__mid__batch_run_post",
+    "parameters": [
+     {
+      "name": "mid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Mid"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Batch"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/portfolio": {
+   "get": {
+    "tags": [
+     "portfolio"
+    ],
+    "summary": "Get Portfolio",
+    "operationId": "get_portfolio_api_v1_portfolio_get",
+    "parameters": [
+     {
+      "name": "x-demo-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Demo-User"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Portfolio"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/portfolio/suggest": {
+   "post": {
+    "tags": [
+     "portfolio"
+    ],
+    "summary": "Suggest",
+    "description": "Half Kelly over every market (or the user's filters). value = user's own value if given,\nelse the model value. Role D layers vector matching and Grok narrative on top of this.",
+    "operationId": "suggest_api_v1_portfolio_suggest_post",
+    "parameters": [
+     {
+      "name": "x-demo-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Demo-User"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/SuggestIn"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/Suggestion"
+         },
+         "title": "Response Suggest Api V1 Portfolio Suggest Post"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/acquire/{cid}/start": {
+   "post": {
+    "tags": [
+     "acquire"
+    ],
+    "summary": "Start",
+    "operationId": "start_api_v1_acquire__cid__start_post",
+    "parameters": [
+     {
+      "name": "cid",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Cid"
+      }
+     },
+     {
+      "name": "x-demo-user",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "X-Demo-User"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Acquisition"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/acquire/{acq_id}": {
+   "get": {
+    "tags": [
+     "acquire"
+    ],
+    "summary": "Get",
+    "operationId": "get_api_v1_acquire__acq_id__get",
+    "parameters": [
+     {
+      "name": "acq_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Acq Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Acquisition"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/surveillance/audit": {
+   "get": {
+    "tags": [
+     "surveillance"
+    ],
+    "summary": "Audit",
+    "operationId": "audit_api_v1_surveillance_audit_get",
+    "parameters": [
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "default": 200,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "actor",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Actor"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/surveillance/treasury": {
+   "get": {
+    "tags": [
+     "surveillance"
+    ],
+    "summary": "Treasury Summary",
+    "operationId": "treasury_summary_api_v1_surveillance_treasury_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/surveillance/flags": {
+   "get": {
+    "tags": [
+     "surveillance"
+    ],
+    "summary": "Flags",
+    "operationId": "flags_api_v1_surveillance_flags_get",
+    "parameters": [
+     {
+      "name": "market_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Market Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "array",
+         "items": {
+          "$ref": "#/components/schemas/Flag"
+         },
+         "title": "Response Flags Api V1 Surveillance Flags Get"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/health": {
+   "get": {
+    "summary": "Health",
+    "operationId": "health_health_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "Acquisition": {
+    "properties": {
+     "acquisition_id": {
+      "type": "string",
+      "title": "Acquisition Id"
+     },
+     "market_id": {
+      "type": "string",
+      "title": "Market Id"
+     },
+     "loi_md": {
+      "type": "string",
+      "title": "Loi Md"
+     },
+     "checklist": {
+      "items": {
+       "$ref": "#/components/schemas/ChecklistItem"
+      },
+      "type": "array",
+      "title": "Checklist"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "draft",
+       "sent",
+       "closed"
+      ],
+      "title": "Status",
+      "default": "draft"
+     }
+    },
+    "type": "object",
+    "required": [
+     "acquisition_id",
+     "market_id",
+     "loi_md",
+     "checklist"
+    ],
+    "title": "Acquisition"
+   },
+   "Band": {
+    "properties": {
+     "pct": {
+      "type": "number",
+      "title": "Pct"
+     },
+     "low": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Low"
+     },
+     "high": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "High"
+     }
+    },
+    "type": "object",
+    "required": [
+     "pct",
+     "low",
+     "high"
+    ],
+    "title": "Band"
+   },
+   "Batch": {
+    "properties": {
+     "_id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "market_id": {
+      "type": "string",
+      "title": "Market Id"
+     },
+     "t": {
+      "type": "string",
+      "title": "T"
+     },
+     "clearing_price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Clearing Price"
+     },
+     "volume": {
+      "type": "number",
+      "title": "Volume"
+     },
+     "imbalance": {
+      "type": "number",
+      "title": "Imbalance"
+     },
+     "n_buy": {
+      "type": "integer",
+      "title": "N Buy"
+     },
+     "n_sell": {
+      "type": "integer",
+      "title": "N Sell"
+     },
+     "band_hit": {
+      "type": "boolean",
+      "title": "Band Hit"
+     },
+     "ref_moved": {
+      "type": "boolean",
+      "title": "Ref Moved"
+     },
+     "book_snapshot": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Book Snapshot"
+     }
+    },
+    "type": "object",
+    "required": [
+     "_id",
+     "market_id",
+     "t",
+     "clearing_price",
+     "volume",
+     "imbalance",
+     "n_buy",
+     "n_sell",
+     "band_hit",
+     "ref_moved"
+    ],
+    "title": "Batch"
+   },
+   "Belief": {
+    "properties": {
+     "mu": {
+      "type": "number",
+      "title": "Mu"
+     },
+     "sigma": {
+      "type": "number",
+      "title": "Sigma"
+     },
+     "s_m": {
+      "type": "number",
+      "title": "S M"
+     },
+     "n_rounds": {
+      "type": "integer",
+      "title": "N Rounds"
+     },
+     "model_value": {
+      "type": "number",
+      "title": "Model Value"
+     },
+     "market_value": {
+      "type": "number",
+      "title": "Market Value"
+     }
+    },
+    "type": "object",
+    "required": [
+     "mu",
+     "sigma",
+     "s_m",
+     "n_rounds",
+     "model_value",
+     "market_value"
+    ],
+    "title": "Belief"
+   },
+   "Book": {
+    "properties": {
+     "market_id": {
+      "type": "string",
+      "title": "Market Id"
+     },
+     "bids": {
+      "items": {
+       "$ref": "#/components/schemas/BookLevel"
+      },
+      "type": "array",
+      "title": "Bids"
+     },
+     "asks": {
+      "items": {
+       "$ref": "#/components/schemas/BookLevel"
+      },
+      "type": "array",
+      "title": "Asks"
+     },
+     "last": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last"
+     },
+     "ref": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ref"
+     },
+     "indicative_price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Indicative Price"
+     },
+     "next_batch_at": {
+      "type": "string",
+      "title": "Next Batch At"
+     },
+     "band": {
+      "$ref": "#/components/schemas/Band"
+     },
+     "halted": {
+      "type": "boolean",
+      "title": "Halted"
+     },
+     "n_open_orders": {
+      "type": "integer",
+      "title": "N Open Orders"
+     }
+    },
+    "type": "object",
+    "required": [
+     "market_id",
+     "bids",
+     "asks",
+     "last",
+     "ref",
+     "indicative_price",
+     "next_batch_at",
+     "band",
+     "halted",
+     "n_open_orders"
+    ],
+    "title": "Book"
+   },
+   "BookLevel": {
+    "properties": {
+     "price": {
+      "type": "number",
+      "title": "Price"
+     },
+     "qty": {
+      "type": "number",
+      "title": "Qty"
+     },
+     "origin": {
+      "type": "string",
+      "enum": [
+       "user",
+       "treasury",
+       "bot",
+       "agent"
+      ],
+      "title": "Origin"
+     }
+    },
+    "type": "object",
+    "required": [
+     "price",
+     "qty",
+     "origin"
+    ],
+    "title": "BookLevel"
+   },
+   "ChecklistItem": {
+    "properties": {
+     "item": {
+      "type": "string",
+      "title": "Item"
+     },
+     "why": {
+      "type": "string",
+      "title": "Why"
+     },
+     "citation": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Citation"
+     },
+     "done": {
+      "type": "boolean",
+      "title": "Done",
+      "default": false
+     }
+    },
+    "type": "object",
+    "required": [
+     "item",
+     "why",
+     "citation"
+    ],
+    "title": "ChecklistItem"
+   },
+   "Company": {
+    "properties": {
+     "_id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "category": {
+      "type": "string",
+      "title": "Category"
+     },
+     "naics_guess": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Naics Guess"
+     },
+     "address": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address"
+     },
+     "city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "City"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "lat": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lat"
+     },
+     "lng": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lng"
+     },
+     "website": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Website"
+     },
+     "phone": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone"
+     },
+     "rating": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rating"
+     },
+     "review_count": {
+      "type": "integer",
+      "title": "Review Count"
+     },
+     "founded_year": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Founded Year"
+     },
+     "owners": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Owners"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "financials": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Financials"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "valuation": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Valuation"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/Source"
+      },
+      "type": "array",
+      "title": "Sources"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "stub",
+       "ready",
+       "failed"
+      ],
+      "title": "Status"
+     },
+     "created_at": {
+      "type": "string",
+      "title": "Created At"
+     },
+     "market": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MarketSummary"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "observables": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Observables"
+     }
+    },
+    "type": "object",
+    "required": [
+     "_id",
+     "name",
+     "category",
+     "naics_guess",
+     "address",
+     "city",
+     "state",
+     "lat",
+     "lng",
+     "website",
+     "phone",
+     "rating",
+     "review_count",
+     "founded_year",
+     "owners",
+     "description",
+     "financials",
+     "valuation",
+     "sources",
+     "status",
+     "created_at",
+     "market",
+     "observables"
+    ],
+    "title": "Company"
+   },
+   "CompanyCard": {
+    "properties": {
+     "_id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "category": {
+      "type": "string",
+      "title": "Category"
+     },
+     "city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "City"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "rating": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rating"
+     },
+     "review_count": {
+      "type": "integer",
+      "title": "Review Count"
+     },
+     "bid": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bid"
+     },
+     "ask": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ask"
+     },
+     "last": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last"
+     },
+     "indicative_price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Indicative Price"
+     },
+     "v0_per_share": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "V0 Per Share"
+     },
+     "confidence": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Confidence"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "stub",
+       "ready",
+       "failed"
+      ],
+      "title": "Status"
+     }
+    },
+    "type": "object",
+    "required": [
+     "_id",
+     "name",
+     "category",
+     "city",
+     "state",
+     "rating",
+     "review_count",
+     "bid",
+     "ask",
+     "last",
+     "indicative_price",
+     "v0_per_share",
+     "confidence",
+     "status"
+    ],
+    "title": "CompanyCard"
+   },
+   "CompanyIn": {
+    "properties": {
+     "category": {
+      "type": "string",
+      "title": "Category",
+      "default": "default"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "revenue": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Revenue"
+     },
+     "sde": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sde"
+     },
+     "asking_price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Asking Price"
+     },
+     "employees": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Employees"
+     },
+     "rating": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rating"
+     },
+     "review_count": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Review Count"
+     },
+     "years_operating": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Years Operating"
+     },
+     "owner_operated": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owner Operated"
+     },
+     "llm_estimate": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Llm Estimate"
+     },
+     "llm_confidence": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Llm Confidence"
+     },
+     "llm2_estimate": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Llm2 Estimate"
+     },
+     "machines": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Machines"
+     },
+     "sources": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Sources"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "City"
+     },
+     "address": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Address"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "website": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Website"
+     },
+     "phone": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone"
+     },
+     "naics_guess": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Naics Guess"
+     },
+     "lat": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lat"
+     },
+     "lng": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lng"
+     },
+     "owners": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Owners"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name"
+    ],
+    "title": "CompanyIn"
+   },
+   "Estimate": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "value": {
+      "type": "number",
+      "title": "Value"
+     },
+     "sigma": {
+      "type": "number",
+      "title": "Sigma"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name",
+     "value",
+     "sigma",
+     "note"
+    ],
+    "title": "Estimate"
+   },
+   "Financials": {
+    "properties": {
+     "revenue_est": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Revenue Est"
+     },
+     "sde_est": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sde Est"
+     },
+     "margin_est": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Margin Est"
+     },
+     "employees_est": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Employees Est"
+     },
+     "confidence": {
+      "type": "number",
+      "title": "Confidence"
+     },
+     "method": {
+      "type": "string",
+      "enum": [
+       "extracted",
+       "proxy"
+      ],
+      "title": "Method"
+     }
+    },
+    "type": "object",
+    "required": [
+     "revenue_est",
+     "sde_est",
+     "margin_est",
+     "employees_est",
+     "confidence",
+     "method"
+    ],
+    "title": "Financials"
+   },
+   "Flag": {
+    "properties": {
+     "_id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "market_id": {
+      "type": "string",
+      "title": "Market Id"
+     },
+     "batch_id": {
+      "type": "string",
+      "title": "Batch Id"
+     },
+     "rule": {
+      "type": "string",
+      "title": "Rule"
+     },
+     "severity": {
+      "type": "string",
+      "enum": [
+       "benign",
+       "low",
+       "medium",
+       "high"
+      ],
+      "title": "Severity"
+     },
+     "subjects": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Subjects"
+     },
+     "explanation": {
+      "type": "string",
+      "title": "Explanation"
+     },
+     "reviewer": {
+      "type": "string",
+      "enum": [
+       "rules",
+       "grok",
+       "k2"
+      ],
+      "title": "Reviewer"
+     },
+     "reviews": {
+      "items": {
+       "$ref": "#/components/schemas/Review"
+      },
+      "type": "array",
+      "title": "Reviews"
+     },
+     "disputed": {
+      "type": "boolean",
+      "title": "Disputed"
+     },
+     "t": {
+      "type": "string",
+      "title": "T"
+     }
+    },
+    "type": "object",
+    "required": [
+     "_id",
+     "market_id",
+     "batch_id",
+     "rule",
+     "severity",
+     "subjects",
+     "explanation",
+     "reviewer",
+     "reviews",
+     "disputed",
+     "t"
+    ],
+    "title": "Flag"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "Level": {
+    "properties": {
+     "price": {
+      "type": "number",
+      "title": "Price"
+     },
+     "qty": {
+      "type": "number",
+      "title": "Qty"
+     }
+    },
+    "type": "object",
+    "required": [
+     "price",
+     "qty"
+    ],
+    "title": "Level"
+   },
+   "MarketSummary": {
+    "properties": {
+     "shares_outstanding": {
+      "type": "integer",
+      "title": "Shares Outstanding"
+     },
+     "float": {
+      "type": "number",
+      "title": "Float"
+     },
+     "retained": {
+      "type": "number",
+      "title": "Retained"
+     },
+     "tick": {
+      "type": "number",
+      "title": "Tick"
+     },
+     "last_price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Price"
+     },
+     "ref_price": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ref Price"
+     },
+     "batch_interval_s": {
+      "type": "number",
+      "title": "Batch Interval S"
+     },
+     "next_batch_at": {
+      "type": "string",
+      "title": "Next Batch At"
+     },
+     "band_pct": {
+      "type": "number",
+      "title": "Band Pct"
+     },
+     "belief": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Belief"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "treasury": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Treasury"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "fees_collected": {
+      "type": "number",
+      "title": "Fees Collected"
+     },
+     "halted": {
+      "type": "boolean",
+      "title": "Halted"
+     }
+    },
+    "type": "object",
+    "required": [
+     "shares_outstanding",
+     "float",
+     "retained",
+     "tick",
+     "last_price",
+     "ref_price",
+     "batch_interval_s",
+     "next_batch_at",
+     "band_pct",
+     "belief",
+     "treasury",
+     "fees_collected",
+     "halted"
+    ],
+    "title": "MarketSummary"
+   },
+   "Order": {
+    "properties": {
+     "_id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "market_id": {
+      "type": "string",
+      "title": "Market Id"
+     },
+     "user_id": {
+      "type": "string",
+      "title": "User Id"
+     },
+     "side": {
+      "type": "string",
+      "enum": [
+       "buy",
+       "sell"
+      ],
+      "title": "Side"
+     },
+     "qty": {
+      "type": "number",
+      "title": "Qty"
+     },
+     "limit_price": {
+      "type": "number",
+      "title": "Limit Price"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "open",
+       "filled",
+       "partial",
+       "cancelled"
+      ],
+      "title": "Status"
+     },
+     "filled_qty": {
+      "type": "number",
+      "title": "Filled Qty"
+     },
+     "origin": {
+      "type": "string",
+      "enum": [
+       "user",
+       "treasury",
+       "bot",
+       "agent"
+      ],
+      "title": "Origin"
+     },
+     "created_at": {
+      "type": "string",
+      "title": "Created At"
+     },
+     "cancelled_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cancelled At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "_id",
+     "market_id",
+     "user_id",
+     "side",
+     "qty",
+     "limit_price",
+     "status",
+     "filled_qty",
+     "origin",
+     "created_at",
+     "cancelled_at"
+    ],
+    "title": "Order"
+   },
+   "OrderIn": {
+    "properties": {
+     "side": {
+      "type": "string",
+      "enum": [
+       "buy",
+       "sell"
+      ],
+      "title": "Side"
+     },
+     "qty": {
+      "type": "number",
+      "exclusiveMinimum": 0.0,
+      "title": "Qty"
+     },
+     "limit_price": {
+      "type": "number",
+      "exclusiveMinimum": 0.0,
+      "title": "Limit Price"
+     }
+    },
+    "type": "object",
+    "required": [
+     "side",
+     "qty",
+     "limit_price"
+    ],
+    "title": "OrderIn"
+   },
+   "Pnl": {
+    "properties": {
+     "realized": {
+      "type": "number",
+      "title": "Realized"
+     },
+     "unrealized": {
+      "type": "number",
+      "title": "Unrealized"
+     },
+     "total": {
+      "type": "number",
+      "title": "Total"
+     }
+    },
+    "type": "object",
+    "required": [
+     "realized",
+     "unrealized",
+     "total"
+    ],
+    "title": "Pnl"
+   },
+   "Portfolio": {
+    "properties": {
+     "user_id": {
+      "type": "string",
+      "title": "User Id"
+     },
+     "cash": {
+      "type": "number",
+      "title": "Cash"
+     },
+     "reserved_cash": {
+      "type": "number",
+      "title": "Reserved Cash"
+     },
+     "equity": {
+      "type": "number",
+      "title": "Equity"
+     },
+     "pnl": {
+      "$ref": "#/components/schemas/Pnl"
+     },
+     "positions": {
+      "items": {
+       "$ref": "#/components/schemas/Position"
+      },
+      "type": "array",
+      "title": "Positions"
+     }
+    },
+    "type": "object",
+    "required": [
+     "user_id",
+     "cash",
+     "reserved_cash",
+     "equity",
+     "pnl",
+     "positions"
+    ],
+    "title": "Portfolio"
+   },
+   "Position": {
+    "properties": {
+     "market_id": {
+      "type": "string",
+      "title": "Market Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "qty": {
+      "type": "number",
+      "title": "Qty"
+     },
+     "avg_cost": {
+      "type": "number",
+      "title": "Avg Cost"
+     },
+     "last": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last"
+     },
+     "value": {
+      "type": "number",
+      "title": "Value"
+     },
+     "pnl": {
+      "type": "number",
+      "title": "Pnl"
+     }
+    },
+    "type": "object",
+    "required": [
+     "market_id",
+     "name",
+     "qty",
+     "avg_cost",
+     "last",
+     "value",
+     "pnl"
+    ],
+    "title": "Position"
+   },
+   "Review": {
+    "properties": {
+     "reviewer": {
+      "type": "string",
+      "enum": [
+       "rules",
+       "grok",
+       "k2"
+      ],
+      "title": "Reviewer"
+     },
+     "severity": {
+      "type": "string",
+      "enum": [
+       "benign",
+       "low",
+       "medium",
+       "high"
+      ],
+      "title": "Severity"
+     }
+    },
+    "type": "object",
+    "required": [
+     "reviewer",
+     "severity"
+    ],
+    "title": "Review"
+   },
+   "SearchIn": {
+    "properties": {
+     "q": {
+      "type": "string",
+      "title": "Q"
+     }
+    },
+    "type": "object",
+    "required": [
+     "q"
+    ],
+    "title": "SearchIn"
+   },
+   "SearchIntent": {
+    "properties": {
+     "category": {
+      "type": "string",
+      "title": "Category"
+     },
+     "naics_guess": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Naics Guess"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "City"
+     },
+     "min_value": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Min Value"
+     },
+     "max_value": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Max Value"
+     },
+     "must_have": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Must Have"
+     }
+    },
+    "type": "object",
+    "required": [
+     "category",
+     "naics_guess",
+     "state",
+     "city",
+     "min_value",
+     "max_value",
+     "must_have"
+    ],
+    "title": "SearchIntent"
+   },
+   "SearchJobAccepted": {
+    "properties": {
+     "job_id": {
+      "type": "string",
+      "title": "Job Id"
+     },
+     "intent": {
+      "$ref": "#/components/schemas/SearchIntent"
+     }
+    },
+    "type": "object",
+    "required": [
+     "job_id",
+     "intent"
+    ],
+    "title": "SearchJobAccepted"
+   },
+   "Source": {
+    "properties": {
+     "url": {
+      "type": "string",
+      "title": "Url"
+     },
+     "title": {
+      "type": "string",
+      "title": "Title"
+     },
+     "snippet": {
+      "type": "string",
+      "title": "Snippet"
+     },
+     "fetched_at": {
+      "type": "string",
+      "title": "Fetched At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "url",
+     "title",
+     "snippet",
+     "fetched_at"
+    ],
+    "title": "Source"
+   },
+   "SuggestIn": {
+    "properties": {
+     "bankroll": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bankroll"
+     },
+     "kelly_multiplier": {
+      "type": "number",
+      "title": "Kelly Multiplier",
+      "default": 0.5
+     },
+     "own_values": {
+      "additionalProperties": {
+       "type": "number"
+      },
+      "type": "object",
+      "title": "Own Values"
+     },
+     "states": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "States"
+     },
+     "categories": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Categories"
+     },
+     "exclude_held": {
+      "type": "boolean",
+      "title": "Exclude Held",
+      "default": true
+     }
+    },
+    "type": "object",
+    "title": "SuggestIn"
+   },
+   "Suggestion": {
+    "properties": {
+     "company": {
+      "$ref": "#/components/schemas/SuggestionCompany"
+     },
+     "price": {
+      "type": "number",
+      "title": "Price"
+     },
+     "model_value": {
+      "type": "number",
+      "title": "Model Value"
+     },
+     "edge": {
+      "type": "number",
+      "title": "Edge"
+     },
+     "sigma": {
+      "type": "number",
+      "title": "Sigma"
+     },
+     "kelly_fraction": {
+      "type": "number",
+      "title": "Kelly Fraction"
+     },
+     "suggested_usd": {
+      "type": "number",
+      "title": "Suggested Usd"
+     },
+     "why": {
+      "type": "string",
+      "title": "Why"
+     }
+    },
+    "type": "object",
+    "required": [
+     "company",
+     "price",
+     "model_value",
+     "edge",
+     "sigma",
+     "kelly_fraction",
+     "suggested_usd",
+     "why"
+    ],
+    "title": "Suggestion"
+   },
+   "SuggestionCompany": {
+    "properties": {
+     "_id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "city": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "City"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "category": {
+      "type": "string",
+      "title": "Category"
+     }
+    },
+    "type": "object",
+    "required": [
+     "_id",
+     "name",
+     "city",
+     "state",
+     "category"
+    ],
+    "title": "SuggestionCompany"
+   },
+   "Trade": {
+    "properties": {
+     "_id": {
+      "type": "string",
+      "title": "Id"
+     },
+     "market_id": {
+      "type": "string",
+      "title": "Market Id"
+     },
+     "batch_id": {
+      "type": "string",
+      "title": "Batch Id"
+     },
+     "buyer_id": {
+      "type": "string",
+      "title": "Buyer Id"
+     },
+     "seller_id": {
+      "type": "string",
+      "title": "Seller Id"
+     },
+     "qty": {
+      "type": "number",
+      "title": "Qty"
+     },
+     "price": {
+      "type": "number",
+      "title": "Price"
+     },
+     "t": {
+      "type": "string",
+      "title": "T"
+     }
+    },
+    "type": "object",
+    "required": [
+     "_id",
+     "market_id",
+     "batch_id",
+     "buyer_id",
+     "seller_id",
+     "qty",
+     "price",
+     "t"
+    ],
+    "title": "Trade"
+   },
+   "Treasury": {
+    "properties": {
+     "unsold_float": {
+      "type": "number",
+      "title": "Unsold Float"
+     },
+     "proceeds": {
+      "type": "number",
+      "title": "Proceeds"
+     },
+     "floor_price": {
+      "type": "number",
+      "title": "Floor Price"
+     },
+     "floor_qty": {
+      "type": "number",
+      "title": "Floor Qty"
+     },
+     "bought_back": {
+      "type": "number",
+      "title": "Bought Back"
+     },
+     "ask_ladder": {
+      "items": {
+       "$ref": "#/components/schemas/Level"
+      },
+      "type": "array",
+      "title": "Ask Ladder"
+     }
+    },
+    "type": "object",
+    "required": [
+     "unsold_float",
+     "proceeds",
+     "floor_price",
+     "floor_qty",
+     "bought_back",
+     "ask_ladder"
+    ],
+    "title": "Treasury"
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "ctx": {
+      "type": "object",
+      "title": "Context"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   },
+   "Valuation": {
+    "properties": {
+     "v0": {
+      "type": "number",
+      "title": "V0"
+     },
+     "sigma": {
+      "type": "number",
+      "title": "Sigma"
+     },
+     "low": {
+      "type": "number",
+      "title": "Low"
+     },
+     "high": {
+      "type": "number",
+      "title": "High"
+     },
+     "method": {
+      "type": "string",
+      "title": "Method"
+     },
+     "disagreement": {
+      "type": "number",
+      "title": "Disagreement"
+     },
+     "estimates": {
+      "items": {
+       "$ref": "#/components/schemas/Estimate"
+      },
+      "type": "array",
+      "title": "Estimates"
+     },
+     "as_of": {
+      "type": "string",
+      "title": "As Of"
+     }
+    },
+    "type": "object",
+    "required": [
+     "v0",
+     "sigma",
+     "low",
+     "high",
+     "method",
+     "disagreement",
+     "estimates",
+     "as_of"
+    ],
+    "title": "Valuation"
+   }
+  }
+ }
+}

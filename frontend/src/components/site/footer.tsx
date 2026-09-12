@@ -12,7 +12,7 @@ export function Footer() {
               <span>JB</span>
             </div>
             <p className="mt-3 text-[14px] secondary">
-              A discovery engine and exchange for the businesses that will never be listed. Play money. Not investment or legal advice.
+              A discovery engine and exchange for the businesses that will never be listed.
             </p>
           </div>
           <div>
@@ -26,9 +26,6 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <p className="mt-10 font-mono text-[10px] uppercase tracking-[0.1em] text-tint-400">
-          Batch auction every 10 seconds. One price per round.
-        </p>
       </div>
     </footer>
   );

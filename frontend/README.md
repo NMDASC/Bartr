@@ -43,6 +43,11 @@ Britti Sans is licensed and not installed. The sans stack is `brittiSans, Geist,
 
 ## Conventions
 
+- **No explainer text in the UI.** Controls and data speak; mechanism lives here and in Plan.md. Cut any string
+  that explains how something works, why a number is what it is, or what will happen when the user acts, plus
+  formulas, architecture facts, and repeated reassurance. Keep labels, numbers, states, chart legends, one
+  footer disclaimer. Test: would a team with no knowledge of the code have written this sentence?
+
 - Prices per share are `px()` (2 decimals, no symbol). Whole-company values are `usd(n, { compact: true })`.
 - `origin` on a book level is `user | treasury | bot | agent`. Treasury rows get the `OWNER` tag.
 - Plate figures use the `JB. x.y` prefix and must encode something real from live data.

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getPortfolio, suggestPortfolio } from "@/lib/api";
-import { usd, px, signed, pct } from "@/lib/format";
+import { usd, px, signed } from "@/lib/format";
 import { Label } from "@/components/ui/label";
 import { Suggestions } from "@/components/portfolio/suggestions";
 import { cn } from "@/lib/cn";
@@ -13,8 +13,7 @@ export default async function PortfolioPage() {
   return (
     <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
       <div className="pt-10 pb-6">
-        <Label className="mb-3 block">Portfolio</Label>
-        <h1 className="text-[30px] md:text-[40px] leading-[1.1]">Your stakes.</h1>
+        <h1 className="text-[30px] md:text-[40px] leading-[1.1]">Portfolio</h1>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 border-t border-b border-line divide-x divide-line">

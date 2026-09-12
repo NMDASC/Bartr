@@ -24,14 +24,27 @@ Env: `SEED=1` loads `seeds/companies.json` (default on). `BOTS=1` runs 20 demo t
 | POST | /markets/{id}/orders | `{side, qty, limit_price}`; 422 with the reason on rejection |
 | GET | /markets/{id}/orders/mine | |
 | DELETE | /markets/orders/{oid} | |
-| GET | /markets/{id}/batches | price history, one row per round |
+| GET | /markets/{id}/batches?snapshot= | price history, one row per round (`ref_moved` marks limit up/down steps) |
 | GET | /markets/{id}/trades | tape |
 | POST | /markets/{id}/batch/run | clear a round now (demo) |
-| WS | /markets/ws/{id} | events `book` and `batch` |
-| GET | /portfolio | cash, positions, equity, pnl |
+| WS | **/ws/markets/{id}** (app root, not under /api/v1) | frames `book`, `batch`, `halt` |
+| POST | /discovery/search | `{q}` -> 202 `{job_id, intent}` (local keyword parser until B lands Grok) |
+| GET | /discovery/jobs/{id} | SSE: `intent`, `company_stub`, `company_ready`, `done` |
+| GET | /portfolio | cash, positions, equity, pnl {realized, unrealized, total} |
 | POST | /portfolio/suggest | half Kelly over markets; `own_values` overrides the model value per market |
+| POST | /acquire/{company_id}/start | LOI markdown + state/category checklist (templated until D lands Grok) |
+| GET | /surveillance/flags?market_id= | rules layer flags (wash, pump, concentration, band); D adds Grok/K2 reviews |
 | GET | /surveillance/audit?actor= | append only log |
 | GET | /surveillance/treasury | owner proceeds and buybacks per market |
+
+Shapes match `packages/contracts/types.ts`. `packages/contracts/openapi.json` is exported from the app (`python -c "import json; from app.main import app; print(json.dumps(app.openapi()))"`).
+
+## Run with the frontend
+
+```
+cd apps/api && SEED=1 BOTS=1 .venv/bin/uvicorn app.main:app --port 8000
+cd frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 pnpm dev
+```
 
 ## Layout
 
@@ -39,9 +52,11 @@ Env: `SEED=1` loads `seeds/companies.json` (default on). `BOTS=1` runs 20 demo t
 app/main.py                     app, scheduler (ticks markets, steps bots)
 app/deps.py                     store, engine, hub singletons; demo auth
 app/schemas.py                  API contract (changes need a DECISIONS.md entry)
+app/views.py                    engine dicts -> contract shapes (_id, ISO timestamps)
 app/store.py                    Store protocol + MemoryStore (swap in the simulated DB / Atlas here)
 app/services/discovery/         valuation.py (ensemble), benchmarks.py
 app/services/market/            auction.py, treasury.py, kelly.py, engine.py, hub.py, bots.py
+app/routers/                    companies, discovery, market, ws, portfolio, acquire, surveillance
 seeds/companies.json            8 demo companies
 tests/                          auction, valuation, engine, API
 ```

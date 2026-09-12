@@ -3,7 +3,7 @@
 `email` is sparse unique and normalized (trimmed, lowercased) by
 `app/identity.py`. It is the claim key: an identity carrying an address
 resolves to whichever user already owns it, so the cash, positions and orders
-built under a demo session carry over instead of resetting. See DECISIONS 008.
+built under a demo session carry over instead of resetting. See DECISIONS 011.
 
 Sparse matters. Judges who type a bare name and iMessage senders identified by
 phone have no email at all, and a non sparse unique index would let exactly one

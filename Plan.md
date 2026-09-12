@@ -77,7 +77,7 @@ Note on the rule "not permitted to start building or designing until the event":
 - Gemini, ElevenLabs, Solana: skip (Gemini conflicts with the Grok story; Solana tokenized shares is a stretch idea only).
 
 **Business data sources for discovery (validated).**
-- Google Places API (New) Text Search: 5,000 free calls/month on Pro SKU, 10,000 on Essentials. Gives name, address, rating, review count, hours, phone, website. Best structured source for "laundromats in Tulsa, OK".
+- Google Places API (New) Text Search: 5,000 free calls/month on Pro SKU, 10,000 on Essentials. Gives name, address, rating, review count, hours, phone, website. Best structured source for "laundromats in Pittsburgh, PA".
 - Yelp Fusion: free tier is gone, 30 day trial with 5,000 calls. Backup only.
 - BizBuySell (no API; use Querit search to find listings and Querit contents to read them). Public benchmarks for the valuation anchor: overall small business median sale price $349,250, cash flow (SDE) multiple 2.7x, revenue multiple 0.7x (Q2 2026 Insight Report). Laundromats 3x to 5x SDE single store, margins around 38%. Source pages: https://www.bizbuysell.com/learning-center/industry-valuation-multiples/ and https://www.bizbuysell.com/learning-center/valuation-benchmarks/laundromats-coin-laundry/
 
@@ -124,7 +124,7 @@ Note on the rule "not permitted to start building or designing until the event":
 
 ### 3.1 The two phases
 
-**Phase 1, Discover.** "I want a laundromat in Oklahoma." The pipeline finds real businesses (Places + Querit), reads about them (Querit contents + Grok web_search), extracts a structured profile (Grok structured output), estimates value with a distribution (section 8.2), and lists them with a bid, an ask, and a confidence. Each company page shows: what it does, founders/owners, location, estimated revenue and SDE with sources, valuation range, the live order book, price history, and an "Acquire" button.
+**Phase 1, Discover.** "I want a laundromat in Pittsburgh." The pipeline finds real businesses (Places + Querit), reads about them (Querit contents + Grok web_search), extracts a structured profile (Grok structured output), estimates value with a distribution (section 8.2), and lists them with a bid, an ask, and a confidence. Each company page shows: what it does, founders/owners, location, estimated revenue and SDE with sources, valuation range, the live order book, price history, and an "Acquire" button.
 
 **Phase 2, Trade and Acquire.** Every listed company is split into 10,000 shares. Users place limit orders (fractional allowed, 0.01 share min). A batch auction clears every 10 seconds (demo setting; 30s to 60s in "real" mode). The owner's ask ladder and buyback floor, both derived from the valuation posterior, guarantee there is always a bid and an ask; the platform never trades. "Acquire" opens a flow: a Grok drafted letter of intent and a due diligence checklist specific to the state and business type with citations. A portfolio tab suggests other stakes with Kelly sized amounts. A surveillance panel shows what the compliance agents flagged this session.
 
@@ -132,7 +132,7 @@ Note on the rule "not permitted to start building or designing until the event":
 
 | Route | Purpose | Key components |
 |---|---|---|
-| `/` | Landing + search bar ("laundromat in Oklahoma") + trending companies | SearchBar, TrendingGrid |
+| `/` | Landing + search bar ("laundromat in Pittsburgh") + trending companies | SearchBar, TrendingGrid |
 | `/search?q=` | Results list with bid / ask / last / confidence, filters (state, category, price band) | ResultCard, FilterRail, progress stream while the pipeline runs |
 | `/company/[id]` | Profile, valuation with sources, order book, chart, order ticket, acquire button | ProfileHeader, ValuationCard (range bar), OrderBook (live), PriceChart, OrderTicket, SourcesList |
 | `/company/[id]/acquire` | LOI draft, DD checklist | LoiEditor, ChecklistAccordion |
@@ -159,7 +159,7 @@ Chosen for: four people in parallel, 19 hours, Python for the quant code, a UI t
 | Search | Querit (`querit` SDK) for web search + page contents; Google Places (New) Text Search for structured business listings | Sponsor API plus the best free structured source |
 | Embeddings | `sentence-transformers` all-MiniLM-L6-v2 (local, 384 dims) | No key, no cost; fallback Gemini embeddings |
 | Deploy | Frontend on Vercel; API on a Vultr VPS (Docker, `docker compose up`) | Vultr prize; Vercel is free |
-| Repo | Monorepo `JB/` with `apps/web`, `apps/api`, `packages/contracts`, `docs/` | One clone, one CLAUDE.md, one contract folder |
+| Repo | Monorepo `JB/` with `frontend/`, `apps/api`, `apps/imessage`, `packages/contracts`, `docs/` | One clone, one CLAUDE.md, one contract folder |
 | Dev tooling | Cursor on every machine, Claude Code on every machine, `uv` for Python, `pnpm` for web | Cursor prize; agents coordinate through the repo (section 12) |
 
 Repo layout:
@@ -174,29 +174,31 @@ JB/
     STEERING.md              # index into this plan
     DECISIONS.md             # append only decision log (who, when, what changed, who is affected)
   packages/contracts/
-    openapi.yaml             # exported from /openapi.json; changes need a DECISIONS entry
-    types.ts                 # generated with openapi-typescript
-    examples/                # the bodies the stub routes return, and the frontend's mocks
+    types.ts                 # hand authored, and it is the contract (decision 005)
+    openapi.yaml             # exported from the routes as a cross check only
+    examples/                # fixtures the frontend mocks against
   apps/api/
-    app/main.py              # all 21 routes of section 7, stubbed then filled in
-    app/schemas.py           # the contract
+    app/main.py              # routers, the batch scheduler, /health, /readiness
+    app/schemas.py           # request and response models
+    app/deps.py              # the hub, the store, the engine, and current_user
+    app/store.py             # Store protocol + MemoryStore
+    app/store_mongo.py       # MongoStore (pymongo, because Store is synchronous)
+    app/identity.py          # normalizes X-Demo-User; Auth0 not wired
     app/llm.py               # provider switch: xai | ifm
-    app/db.py                # connection only; schema lives in migrations/
-    app/identity.py          # demo auth now, Auth0 later, same user document
-    app/ws.py                # websocket hub, one process
+    app/db.py                # async handle for the migration runner only
     app/routers/{discovery,companies,market,portfolio,acquire,agent,surveillance}.py
     app/services/discovery/  # querit.py places.py extract.py valuation.py benchmarks.py
-    app/services/market/     # auction.py treasury.py kelly.py book.py (persistence)
+    app/services/market/     # auction.py treasury.py kelly.py engine.py hub.py bots.py
     app/services/agents/     # compliance.py portfolio_agent.py chat_agent.py
     migrate.py               # forward only runner: status | up | reset
     migrations/              # indexes, the Atlas search index, seed documents
     seeds/                   # cached discovery results so the demo never waits on the network
-    tests/                   # auction, valuation, contract stubs, identity
-  apps/web/                  # Next.js
+    tests/                   # auction, valuation, engine, api, identity
+  frontend/                  # Next.js (repo root, not apps/web: decision 007)
+  apps/imessage/             # Photon Spectrum bridge (decision 006)
   scripts/
-    gen_contract.sh          # openapi.yaml + types.ts
+    gen_contract.sh          # exports openapi.yaml; does not touch types.ts
     demo_pricing.py          # runs the valuation ensemble + a 6 round auction sim, no keys needed
-    imessage_bridge.py       # future: Mac chat.db poller + osascript sender
 ```
 
 ---
@@ -250,9 +252,9 @@ sequenceDiagram
   participant QR as Querit
   participant GK as Grok
   participant DB as Atlas
-  U->>API: POST /discovery/search {q:"laundromat in Oklahoma"}
+  U->>API: POST /discovery/search {q:"laundromat in Pittsburgh"}
   API->>GK: parse intent -> {category, location, constraints} (structured)
-  API->>PL: Text Search "laundromat in Oklahoma" (top 20)
+  API->>PL: Text Search "laundromat in Pittsburgh" (top 20)
   API->>DB: upsert stubs, return job_id immediately
   API-->>U: 202 {job_id}, client opens SSE /discovery/jobs/{job_id}
   loop per company (bounded concurrency 4)
@@ -379,7 +381,7 @@ What this gives the rest of the system: `V0` is the opening reference price, the
 
 Calibration (role B, Saturday morning): scrape 30 to 60 real listings with asking prices via Querit, hide the price, run the estimators, measure each one's log error std with `valuation.calibrate()`, and replace the prior sigmas with measured ones. Judges hear "our estimators are calibrated on 40 real listings; the median absolute error is X%", which beats any formula.
 
-Sample output (from the demo script): documented laundromat with SDE $140k, 4.6 stars, 180 reviews: $526k, sigma 0.22, P20 $437k, P80 $633k. Same business listed at $575k: $512k, sigma 0.13. A laundromat that is only a Places pin with 23 reviews: $184k, sigma 0.78. A car wash where Grok says $1.9M and K2 says $0.9M: the model opinion's sigma widens to 0.52 and the posterior lands at $1.39M, sigma 0.35.
+Sample output (from the demo script, Pittsburgh seeds): Squirrel Hill Wash and Fold, SDE $152k, 4.6 stars, 214 reviews: $571k, sigma 0.22, P20 $475k, P80 $686k. Butler Street Laundromat, actually listed at $640k: $565k, sigma 0.14. Bloomfield Coin Laundry, only a Places pin with 27 reviews: $192k, sigma 0.82. Steel City Express Car Wash where Grok says $2.1M and K2 says $1.0M: the model opinion's sigma widens and the posterior lands at $1.53M, sigma 0.37.
 
 ### 8.2b Belief update after trading
 Prior `ln V ~ N(mu, sigma^2)` from 8.2. Each round's clearing price (x 10,000) is a noisy observation with noise `s_m` (start 0.10, then realized round to round std). Posterior mean is the precision weighted average `m_post = (mu/sigma^2 + sum(w_i ln P_i)/s_m^2) / (1/sigma^2 + sum(w_i)/s_m^2)` with `w_i` = round volume over average volume, and `s_post^2 = 1/(1/sigma^2 + sum(w_i)/s_m^2)`, blended with realized vol over the last 20 rounds so a jumpy market stays wide. A documented business holds its anchor; an unknown one lets the crowd price it. Displayed as "model value" next to "market implied value". The Treasury requotes its ladder and floor from the updated posterior between rounds.
@@ -453,7 +455,7 @@ System prompt: an analyst filling a `CompanyProfile` from raw page text; must ci
 For a company with almost no web presence, a second call uses `tools=[{"type":"web_search"}]` on grok-4.6 to look for a BizBuySell or LoopNet listing, owner name, and news, with `allowed_domains` on the first pass (bizbuysell.com, loopnet.com, bizquest.com, yelp.com, facebook.com) and open on the second.
 
 ### 9.2 Discovery intent parser (Grok, structured)
-"Kerosene manufacturers in Oklahoma under 2M" -> `{category, naics_guess, state, city?, max_value, min_value, must_have[]}`. Feeds both Places (text query) and Querit (query expansion into 3 queries).
+"Machine shops near Pittsburgh under 2M" -> `{category, naics_guess, state, city?, max_value, min_value, must_have[]}`. Feeds both Places (text query) and Querit (query expansion into 3 queries).
 
 ### 9.3 Portfolio agent (Grok)
 Given the user's profile and the top matches from vector search plus Kelly numbers, write one sentence per company on fit, and a 3 sentence portfolio summary. Pure narrative on top of deterministic numbers, so the numbers stay auditable.
@@ -476,12 +478,12 @@ Stretch (only if there is time after 12 PM Saturday): a free running Grok agent 
 Tools: `search_companies(q)`, `get_company(id)`, `get_book(id)`, `place_order(id, side, qty, limit)`, `suggest_portfolio()`. Conversation state keyed by `session_id`. Responses are plain text with short lines so they read well in iMessage.
 
 **iMessage plan (post hackathon, designed now).** No official Apple API. Two routes:
-1. Zero cost, on a Mac we own: poll `~/Library/Messages/chat.db` (SQLite) for new rows in `message` joined to `handle`, call `POST /agent/chat` with `session_id = phone number`, send replies with `osascript -e 'tell application "Messages" to send ... to buddy ...'`. Needs Full Disk Access for the terminal. This is `scripts/imessage_bridge.py`.
+1. Superseded by decision 006. We use a Photon Spectrum managed line in `apps/imessage`, so there is no Mac to keep awake and no Full Disk Access prompt. The `chat.db` polling route below is kept only as the fallback if the managed line fails.
 2. Hosted: Sendblue (about $100/mo), Blooio ($39/mo) give a REST API and webhooks for inbound. Same `/agent/chat` endpoint, a webhook handler instead of the poller.
 Because the agent endpoint is transport agnostic, the bridge is under 100 lines either way.
 
 ### 9.6 Acquisition and legal flow (Grok with web_search, grounded)
-`POST /acquire/{id}/start` produces: (a) an LOI in markdown with the blanks filled from the profile (price from the last batch, structure asset purchase, 45 day diligence period, non binding), and (b) a due diligence checklist specific to `state` and `category`, each item with a citation from `web_search` (for example, Oklahoma sales tax permit transfer, lease assignment consent, equipment liens via UCC search, environmental for dry cleaners, health permits for food). A disclaimer line: play money, not legal advice. The chat endpoint edits the LOI in place.
+`POST /acquire/{id}/start` produces: (a) an LOI in markdown with the blanks filled from the profile (price from the last batch, structure asset purchase, 45 day diligence period, non binding), and (b) a due diligence checklist specific to `state` and `category`, each item with a citation from `web_search` (for example, PA bulk sale clearance, City of Pittsburgh business registration, Allegheny County health permits, lease assignment consent, equipment liens via UCC search, environmental for dry cleaners, health permits for food). A disclaimer line: play money, not legal advice. The chat endpoint edits the LOI in place.
 
 ---
 
@@ -514,15 +516,15 @@ Both are pure functions, so Aditya develops against a fake book and Nico develop
 
 ### The platform pair: Vir + Zhiyuan
 
-Owns `apps/web/`, `packages/contracts/`, `app/services/discovery/`, `app/routers/{discovery,companies,agent,acquire}.py`, `app/db.py`, `app/llm.py`, `seeds/`, and deploy.
+Owns `frontend/`, `apps/imessage/`, `packages/contracts/`, `app/services/discovery/`, `app/routers/{discovery,companies,agent,acquire}.py`, `app/store.py`, `app/store_mongo.py`, `app/identity.py`, `app/llm.py`, `migrations/`, `seeds/`, and deploy.
 
 **Vir: platform, then product surface.**
 Landed in hour 1: monorepo scaffold, all 21 routes of section 7 stubbed against `packages/contracts/examples/`, `openapi.yaml` and `types.ts`, `schemas.py`, `db.py`, `llm.py` with the xai and ifm switch, the WebSocket hub, demo auth, `docker-compose.yml`, and the coordination layer from section 12. Still owed: every key collected (xAI, IFM, Querit, Places, Atlas, Auth0, Vultr) and the API deployed to Vultr with `GET /health` green. Hours 3 to 5: Next.js scaffold, design tokens, shadcn/ui component library, and the mock JSON in `packages/contracts/examples/` so the UI is never blocked on a real backend. Hours 5 to 14: `/`, `/search` with the streaming result list, and the profile half of `/company/[id]` (header, valuation range bar, sources). Hours 14 to 19: mobile layout (judges bid from their phones), Devpost page, deploy, rehearsal.
 
 **Zhiyuan: discovery and the database.**
-`valuation.py` (the ensemble) and `benchmarks.py` are already in. Hours 0 to 2: `querit.py` and `places.py` clients, the Grok intent parser, and the `CompanyProfile` schema, which is the single most contended type in the repo and must map cleanly onto `valuation.Observables`. Hours 2 to 7: `extract.py` with Grok structured output and a source URL on every numeric field, filling `sde`, `revenue`, `asking_price`, `employees`, `llm_estimate` and `llm_confidence`; embeddings; the migrations for collections and the Atlas Vector Search index; the SSE job endpoint. Saturday morning: scrape 30 to 60 listings and run `valuation.calibrate()`. Hours 7 to 11: run the 8 seed queries and cache 60 companies in `seeds/`, so the demo never waits on the network. Hours 11 to 16: extraction quality passes, the Grok `web_search` fallback for thin companies, refresh endpoint. Hours 16 to 19: `chat_agent.py` and the acquire LOI if the schedule is green, both of which are cut candidates.
+`valuation.py` (the ensemble) and `benchmarks.py` are already in. Hours 0 to 2: `querit.py` and `places.py` clients, the Grok intent parser, and the `CompanyProfile` schema, which is the single most contended type in the repo and must map cleanly onto `valuation.Observables`. Hours 2 to 7: `extract.py` with Grok structured output and a source URL on every numeric field, filling `sde`, `revenue`, `asking_price`, `employees`, `llm_estimate` and `llm_confidence`; embeddings; the migrations for collections and the Atlas Vector Search index; the SSE job endpoint. Saturday morning: scrape 30 to 60 listings and run `valuation.calibrate()`. Hours 7 to 11: run the 8 seed queries, centered on Pittsburgh per decision 010 (laundromats Squirrel Hill and Bloomfield, car washes McKnight Rd, South Side restaurants, machine shops McKees Rocks, HVAC East End, plus two out of state controls), and cache 60 companies in `seeds/`, so the demo never waits on the network. Hours 11 to 16: extraction quality passes, the Grok `web_search` fallback for thin companies, refresh endpoint. Hours 16 to 19: `chat_agent.py` and the acquire LOI if the schedule is green, both of which are cut candidates.
 
-**The trading UI belongs to Aditya, not to Vir.** `OrderBook`, `OrderTicket`, `PriceChart`, and the depth view are thin React over a WebSocket feed, and the person who designed the microstructure is the one who knows what they should show. Vir owns the design tokens and the component library; Aditya composes from them and writes no raw CSS. This is the one deliberate exception to directory ownership, and it exists so that `apps/web` does not become a single person bottleneck at hour 12.
+**The trading UI shipped with the frontend.** `OrderBook`, `OrderTicket`, `PriceChart` and the depth plate are already in `frontend/src/components/company/`, built against the Lemma design system and the mock engine in `frontend/src/lib/mock.ts` (decision 007). Whoever changes microstructure behaviour tells the frontend owner what the panel should show rather than editing it directly.
 
 ### The only cross pair dependencies
 
@@ -587,12 +589,12 @@ This is deliberately low tech. A shared markdown log that every agent reads at s
 
 ## 13. Demo script (3 minutes)
 
-0:00 The problem. "There are 33 million small businesses in the US and none of them has a price. If you wanted to buy a laundromat in Tulsa tonight you could not even find the list."
-0:20 Type "laundromat in Oklahoma". Results stream in with bid, ask, confidence. Point at the Querit and Grok pipeline in one sentence.
+0:00 The problem. "There are 33 million small businesses in the US and none of them has a price. If you wanted to buy a laundromat in Squirrel Hill tonight you could not even find the list."
+0:20 Type "laundromat in Pittsburgh". Results stream in with bid, ask, confidence: Squirrel Hill Wash and Fold, Butler Street Laundromat, Bloomfield Coin Laundry. Point at the Querit and Grok pipeline in one sentence.
 0:50 Click one. Profile with sources, the five estimators and their spread, the live order book, countdown. "Every ten seconds we run a uniform price auction and clear at the volume maximizing price. The owner's ask ladder and buyback floor come from the same valuation posterior, so you can always buy while float remains and always exit at the floor. The platform never trades."
 1:20 Judges scan the QR and place bids from phones. Batch clears, price moves, chart ticks. Bot traders keep it alive.
 1:50 Portfolio tab. "Given your profile, here are four stakes sized by half Kelly." One sentence on the math.
-2:10 Acquire. LOI draft and Oklahoma specific diligence checklist with citations.
+2:10 Acquire. LOI draft and a Pittsburgh specific diligence checklist (City of Pittsburgh business registration, Allegheny County Health Department permit, PA bulk sale clearance) with citations.
 2:35 Surveillance. A planted wash trade from the bot gets flagged; Grok explains it, K2 concurs. "Two model families, independent review."
 2:50 Stack slide: Next.js, FastAPI, MongoDB Atlas Vector Search, Auth0, Vultr, Querit, Grok, K2, built in Cursor. Track: Optimization.
 

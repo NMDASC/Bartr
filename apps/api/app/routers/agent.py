@@ -1,9 +1,12 @@
 """Chat agent. Owner: Zhiyuan. STUB: replace the body, keep the signature.
 
-Transport agnostic, and deliberately NOT streaming: decision 006 requires a
-JSON terminal response because the iMessage bridge cannot consume a token
-stream. The web chat page and the bridge hit this same endpoint, with
-`session_id` the Auth0 sub on web and an E.164 phone over iMessage.
+Transport agnostic and deliberately not streaming: decision 006 requires a JSON
+terminal response because `apps/imessage` cannot consume a token stream. It
+posts here with `session_id` and `X-Demo-User` both set to the sender's phone,
+and reads `{content, tool_calls?}`.
+
+Replies are short plain lines with no markdown, since the same text renders in
+a chat bubble.
 """
 
 from fastapi import APIRouter, Depends
@@ -19,28 +22,28 @@ TOOLS = ("search_companies", "get_company", "get_book", "place_order", "suggest_
 @router.post("/chat", response_model=AgentMessage)
 def chat(body: AgentChatRequest, uid: str = Depends(current_user)):
     # TODO(Zhiyuan): llm.complete with these tools, loop on tool calls, keep
-    # session state keyed by session_id. Replies must stay short lines with no
-    # markdown so they read well over iMessage.
-    companies = store.list_companies()[:3]
+    # session state keyed by session_id.
+    companies = store.list_companies()
     if not companies:
-        return AgentMessage(role="assistant", content="No companies loaded yet. Try a search first.")
+        return AgentMessage(role="assistant", content="Nothing listed yet.")
 
-    lines = ["Three to look at.", ""]
-    for c in companies:
-        card = engine.card(c)
-        last = card.get("last_price")
-        price = f"last ${last:,.2f}/share" if last else "no trades yet"
-        lines.append(f"{c['name']}, {c.get('city', '')}. {price}.")
-    lines += ["", "Want the order book on one of them?"]
+    picks = companies[:3]
+    lines = []
+    for c in picks:
+        market = store.get_market(c["id"]) or {}
+        last = market.get("last_price") or market.get("ref_price")
+        where = c.get("city") or c.get("state") or ""
+        value = f"${(last * 10_000):,.0f}" if last else "not yet priced"
+        per_share = f", last ${last:,.2f}" if last else ""
+        lines.append(f"{c['name']}, {where}. {value}{per_share}.")
+
+    lines.append("")
+    lines.append("Want the order book on one of these?")
 
     return AgentMessage(
         role="assistant",
         content="\n".join(lines),
         tool_calls=[
-            ToolCallCard(
-                name="search_companies",
-                args={"q": body.message},
-                result_count=len(companies),
-            )
+            ToolCallCard(name="search_companies", args={"q": body.message}, result_count=len(picks))
         ],
     )

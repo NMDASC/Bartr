@@ -1,61 +1,116 @@
-"""Acquisition routes. Owner: Zhiyuan. STUBS: replace the bodies, keep the signatures.
+"""Acquire: POST /acquire/{company_id}/start -> Acquisition {loi_md, checklist}.
 
-Options are out of scope (decision 002), so this is the LOI plus a state and
-category specific diligence checklist, each item cited.
+LOCAL implementation: a templated LOI and a state/category checklist with no citations, so the
+frontend page works today. Role D replaces `draft_loi` and `checklist_for` with Grok + web_search
+(Plan.md 9.6) and keeps the shapes.
 """
+from __future__ import annotations
 
 import uuid
+from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.deps import current_user, engine, store
-from app.schemas import Acquisition, ChecklistItem
+from app.schemas import Acquisition
+from app.services.market.treasury import SHARES
 
 router = APIRouter(prefix="/acquire", tags=["acquire"])
+ACQS: dict[str, dict] = {}
+
+GENERIC = [
+    ("Three years of tax returns and P&L", "Verify the SDE the price is built on"),
+    ("Lease assignment consent from the landlord", "Most small business value is location; the lease must transfer"),
+    ("UCC lien search on equipment", "Equipment may be collateral on an existing loan"),
+    ("Asset purchase agreement, not stock", "Buyer avoids inheriting unknown liabilities"),
+    ("Non compete from the seller (3 years, county radius)", "The seller knows every customer"),
+    ("Transition period with the owner (30 to 90 days)", "Owner operated businesses lose customers when the owner leaves"),
+]
+BY_CATEGORY = {
+    "laundromat": [("Utility bills, 24 months, water and gas", "Utilities are the largest cost and reveal true volume"),
+                   ("Machine age and service records", "Replacement cost of a 38 machine floor runs six figures"),
+                   ("Card system vendor contract", "Payment systems often carry multi year contracts")],
+    "car_wash": [("Water reclamation and environmental permits", "Wash water discharge is regulated"),
+                 ("Membership count and churn", "Recurring revenue is the valuation driver")],
+    "restaurant": [("Health department inspection history", "Permits transfer only with a clean record"),
+                   ("Liquor license transfer eligibility", "Licenses are state specific and can take months")],
+    "machine_shop": [("Customer concentration by revenue", "One aerospace contract can be half the business"),
+                     ("ISO or AS9100 certification status", "Certifications are tied to the entity and process")],
+    "hvac": [("State contractor license transfer", "Licenses are personal in many states"),
+             ("Maintenance contract book", "Recurring contracts are the durable value")],
+    "auto_repair": [("Environmental: waste oil, solvent handling", "Shops carry cleanup risk"),
+                    ("Technician retention agreements", "ASE certified staff are the business")],
+}
+BY_STATE = {
+    "OK": [("Oklahoma sales tax permit transfer (OTC)", "New owner needs their own permit before the first sale"),
+           ("Oklahoma Secretary of State entity filing", "Assumed name or new LLC registration")],
+    "TX": [("Texas Comptroller sales tax permit", "Required before operating"),
+           ("Bulk sale notice to Comptroller for tax clearance", "Buyer can be liable for seller's unpaid sales tax")],
+    "PA": [("PA bulk sale clearance certificate (REV-181)", "Protects the buyer from the seller's tax liabilities"),
+           ("PA sales tax license (myPATH)", "Licenses do not transfer; apply before the first sale"),
+           ("PA Department of State fictitious name or new LLC filing", "Trade name must be registered to the new entity")],
+}
+BY_CITY = {
+    "Pittsburgh": [("City of Pittsburgh business registration and payroll expense tax", "Every business operating in the city registers with Finance"),
+                   ("Allegheny County Health Department permit (food, laundromat water discharge)", "County permits are issued to the operator, not the location")],
+    "Homestead": [("Borough of Homestead business privilege license", "Municipal license required to operate")],
+    "McKees Rocks": [("Borough business privilege and mercantile tax registration", "Local tax registration for the new owner")],
+    "OH": [("Ohio vendor's license", "County issued, does not transfer")],
+}
 
 
-@router.post("/{cid}/start", response_model=Acquisition)
+def draft_loi(c: dict, m: dict, buyer: str) -> str:
+    px = m["last_price"] or m["ref_price"]
+    total = px * SHARES
+    return f"""# Letter of Intent (non binding)
+
+**Date:** {date.today().isoformat()}
+**Buyer:** {buyer}
+**Seller:** {', '.join(c.get('owners') or ['the owner'])} of {c['name']}, {c.get('city') or ''} {c.get('state') or ''}
+
+## 1. Transaction
+Buyer proposes to acquire substantially all assets of {c['name']} (the "Business") through an asset purchase.
+
+## 2. Price
+Total consideration of **${total:,.0f}**, based on the last market clearing price of ${px:.2f} per share across {SHARES:,} shares. Subject to adjustment for working capital and verified seller's discretionary earnings.
+
+## 3. Structure
+Cash at closing, with up to 20% of the price held back for 12 months against undisclosed liabilities.
+
+## 4. Diligence
+45 day exclusivity and diligence period from acceptance. Seller provides the items in the attached checklist.
+
+## 5. Transition
+Seller provides 60 days of transition support and a 3 year non compete within the county.
+
+## 6. Non binding
+This letter expresses intent only. No obligation arises until a definitive agreement is signed.
+
+*Play money, not legal advice. Generated by JB from the company profile and market data.*
+"""
+
+
+def checklist_for(c: dict) -> list[dict]:
+    items = GENERIC + BY_CATEGORY.get(c["category"], []) + BY_STATE.get((c.get("state") or "").upper(), []) + BY_CITY.get(c.get("city") or "", [])
+    return [{"item": i, "why": w, "citation": None, "done": False} for i, w in items]
+
+
+@router.post("/{cid}/start", response_model=Acquisition, status_code=201)
 def start(cid: str, uid: str = Depends(current_user)):
-    company = store.get_company(cid)
-    if not company:
+    c = store.get_company(cid)
+    if not c:
         raise HTTPException(404, "no such company")
+    m = store.get_market(cid)
+    acq = {"acquisition_id": f"acq_{uuid.uuid4().hex[:8]}", "market_id": cid, "loi_md": draft_loi(c, m, uid),
+           "checklist": checklist_for(c), "status": "draft"}
+    ACQS[acq["acquisition_id"]] = acq
+    store.audit({"t": __import__("time").time(), "actor": uid, "action": "acquire_start", "payload": {"company": cid}})
+    return acq
 
-    # TODO(Zhiyuan): one Grok call for the LOI filled from the profile, one for
-    # the checklist with a web_search citation per item.
-    market = store.get_market(cid) or {}
-    last = market.get("last_price") or market.get("ref_price")
-    price = f"${last * 10_000:,.0f}" if last else "the last clearing price"
 
-    return Acquisition(
-        acquisition_id=f"a_{uuid.uuid4().hex[:8]}",
-        market_id=cid,
-        loi_md=(
-            f"# Non-Binding Letter of Intent\n\n"
-            f"**Buyer:** {uid}\n"
-            f"**Target:** {company['name']}, {company.get('address') or company.get('city', '')}\n\n"
-            f"## 1. Proposed consideration\n"
-            f"Purchase price of **{price}** for 100 percent of the assets, derived from the "
-            f"exchange's last clearing price across 10,000 shares.\n\n"
-            f"## 2. Structure\nAsset purchase, free of liens, premises lease assumed subject to "
-            f"landlord consent.\n\n"
-            f"## 3. Diligence period\n45 days from execution.\n\n"
-            f"## 4. Exclusivity\n30 days, no-shop.\n\n"
-            f"## 5. Non-binding\nThis letter states intent only.\n\n"
-            f"---\n_Play money. Not legal advice._\n"
-        ),
-        checklist=[
-            ChecklistItem(
-                item="Obtain landlord consent to lease assignment",
-                why="Value is tied to the site. A landlord who can refuse or reset rent erases the multiple.",
-            ),
-            ChecklistItem(
-                item="Run a UCC-1 lien search on the equipment",
-                why="Equipment is commonly financed, and liens survive an asset sale unless released at closing.",
-            ),
-            ChecklistItem(
-                item=f"Transfer the {company.get('state') or 'state'} sales tax permit and request a clearance letter",
-                why="Many states hold a successor liable for the seller's unpaid sales tax.",
-            ),
-        ],
-        status="draft",
-    )
+@router.get("/{acq_id}", response_model=Acquisition)
+def get(acq_id: str):
+    a = ACQS.get(acq_id)
+    if not a:
+        raise HTTPException(404, "no such acquisition")
+    return a

@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import type { Company } from "@contracts/types";
 import { useMarket } from "@/hooks/use-market";
 import { px, signed, usd } from "@/lib/format";
@@ -18,13 +17,6 @@ import { cn } from "@/lib/cn";
 export function MarketPanel({ company }: { company: Company }) {
   const live = company.status === "ready";
   const m = useMarket(company._id, live);
-  const [flash, setFlash] = useState(false);
-  useEffect(() => {
-    if (m.tick === 0) return;
-    setFlash(true);
-    const t = window.setTimeout(() => setFlash(false), 650);
-    return () => window.clearTimeout(t);
-  }, [m.tick]);
 
   const shares = company.market?.shares_outstanding ?? 10000;
   const ref = company.valuation ? company.valuation.v0 / shares : null;
@@ -40,7 +32,7 @@ export function MarketPanel({ company }: { company: Company }) {
             <div className="flex items-end gap-6">
               <div>
                 <Label tracking="tight" className="block mb-1">Last clearing price</Label>
-                <div className={cn("text-[40px] leading-none tabular-nums px-1 -mx-1", flash && "jb-clear")}>{px(m.last)}</div>
+                <div key={m.tick} className={cn("text-[40px] leading-none tabular-nums px-1 -mx-1", m.tick > 0 && "jb-clear")}>{px(m.last)}</div>
               </div>
               <div className="pb-1">
                 <Label tracking="tight" className="block mb-1">Change</Label>
@@ -95,7 +87,7 @@ export function MarketPanel({ company }: { company: Company }) {
               {live ? <PriceChart batches={m.batches} refPrice={ref} /> : <div className="h-[260px]" />}
             </div>
             <div className="grid gap-4 md:grid-cols-[1fr_1fr]">
-              <OrderBook book={m.book} last={m.last} flash={flash} />
+              <OrderBook book={m.book} last={m.last} tick={m.tick} />
               <DepthPlate book={m.book} tick={m.tick} last={m.last} />
             </div>
             <Sources sources={company.sources} />
