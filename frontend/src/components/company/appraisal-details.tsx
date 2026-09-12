@@ -135,7 +135,7 @@ export function AppraisalDetails({
                     </div>
                     <div>
                       <Label tracking="tight">Basis</Label>
-                      <p className="mt-1 text-[13px] leading-[1.5] text-muted-foreground">{estimate.note}</p>
+                      <p className="mt-1 text-[13px] leading-[1.5] text-muted-foreground [overflow-wrap:anywhere]">{estimate.note}</p>
                     </div>
                   </li>
                 );
@@ -147,7 +147,7 @@ export function AppraisalDetails({
         <p className="text-[14px] text-muted-foreground">A completed appraisal is not available yet.</p>
       )}
 
-      <div className="mt-8 grid gap-4 lg:grid-cols-2">
+      <div className="mt-8 grid min-w-0 gap-4 lg:grid-cols-2">
         <Evidence facts={evidence} />
         <Sources sources={sources} />
       </div>

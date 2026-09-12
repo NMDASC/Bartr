@@ -1,10 +1,18 @@
 import type { Company, FieldEvidence } from "@contracts/types";
 import { AppraisalDetails } from "@/components/company/appraisal-details";
+import { AppraisalStatus } from "@/components/company/appraisal-status";
 import { BackLink } from "@/components/site/back-link";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/cn";
 import { pct, usd } from "@/lib/format";
+
+const TONE_RULE = {
+  down: "border-l-down bg-down/[0.05]",
+  up: "border-l-up bg-up/[0.06]",
+  accent: "border-l-accent bg-accent/[0.05]",
+} as const;
 
 type CompanyObservables = {
   asking_price?: number | null;
@@ -73,9 +81,6 @@ function redFlags(company: DetailedCompany) {
   }
   if (aiConfidence !== null && aiConfidence < 0.4) {
     flags.push(`Grok assigned ${pct(aiConfidence)} confidence to its direct appraisal.`);
-  }
-  if (valuation && !valuation.estimates.some((estimate) => estimate.name === "llm")) {
-    missing.push("a direct Grok appraisal");
   }
   if (valuation && valuation.disagreement >= 0.35) {
     flags.push("The valuation methods disagree materially.");
@@ -213,6 +218,10 @@ export function CompanyOverview({ company }: { company: DetailedCompany }) {
   const recommendation = acquisitionRecommendation(company, confidence);
   const risks = redFlags(company);
   const strengths = greenFlags(company);
+  const needsGrok =
+    company.status === "ready" &&
+    !!valuation &&
+    !valuation.estimates.some((estimate) => estimate.name === "llm");
   const funding = fundingFact(company.evidence ?? []);
   const place = [company.city, company.state].filter(Boolean).join(", ");
   const category = readable(company.category);
@@ -267,14 +276,12 @@ export function CompanyOverview({ company }: { company: DetailedCompany }) {
         </div>
       </header>
 
-      <section className="border-t border-line bg-card px-4 py-4">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <Label>AI-assisted acquisition recommendation</Label>
-          <Chip tone={recommendation.tone} className="text-[11px]">
-            {recommendation.decision}
-          </Chip>
-        </div>
-        <p className="mt-1 max-w-5xl text-[14px] leading-[1.5] text-muted-foreground">
+      <AppraisalStatus companyId={company._id} needed={needsGrok} />
+
+      <section className={cn("border-t border-l-4 border-line px-4 py-5", TONE_RULE[recommendation.tone])}>
+        <Label>AI-assisted acquisition recommendation</Label>
+        <h2 className="mt-1.5 text-[24px] leading-[1.15] md:text-[28px]">{recommendation.decision}</h2>
+        <p className="mt-2 max-w-4xl text-[15px] leading-[1.5] text-foreground/80">
           {recommendation.detail}
         </p>
       </section>
@@ -287,7 +294,7 @@ export function CompanyOverview({ company }: { company: DetailedCompany }) {
           <Label tracking="tight" className="mb-2 block">
             Estimated value
           </Label>
-          <div className="font-mono text-[19px] tabular-nums">
+          <div className="text-[34px] leading-none tabular-nums tracking-[-0.01em] md:text-[40px]">
             {usd(valuation?.v0, { compact: true })}
           </div>
         </div>
@@ -299,7 +306,7 @@ export function CompanyOverview({ company }: { company: DetailedCompany }) {
             <div className="flex items-center gap-2 font-mono text-[19px] tabular-nums">
               <span
                 aria-hidden
-                className={`size-2 ${
+                className={`size-2.5 ${
                   confidence === null
                     ? "bg-tint-400"
                     : confidence >= 0.65

@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 
 import type { Portfolio, Suggestion } from "@contracts/types";
 import { Label } from "@/components/ui/label";
 import { Suggestions } from "@/components/portfolio/suggestions";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Chat } from "@/components/agent/chat";
 import { ChannelStatusBar } from "@/components/agent/channel-status";
 import { AccountRefresh } from "@/components/agent/account-refresh";
@@ -30,6 +32,21 @@ export const dynamic = "force-dynamic";
  * page would have shown one number at display scale and sized its suggestions
  * off a different one.
  */
+async function SuggestedStakes({ uid, bankroll }: { uid: ReturnType<typeof accountId>; bankroll: number }) {
+  const suggestions = await suggestPortfolio(uid).catch((): Suggestion[] => []);
+  return <Suggestions initial={suggestions} bankroll={bankroll} />;
+}
+
+function SuggestionsPending() {
+  return (
+    <div>
+      <h2 className="text-[30px] leading-[1.2] md:text-[36px] 3xl:text-[44px]">Suggested stakes</h2>
+      <Skeleton className="mt-6 h-2.5 w-full" />
+      <Skeleton className="mt-9 h-24 w-full" />
+    </div>
+  );
+}
+
 export default async function OverviewPage() {
   const cookieStore = await cookies();
   const session = readSessionToken(cookieStore.get(AUTH_COOKIE)?.value);
@@ -38,10 +55,7 @@ export default async function OverviewPage() {
   // The paired iMessage number wins over the email, because it is the only
   // identity the bridge can produce. One account across both transports.
   const uid = accountId(session);
-  const [portfolio, suggestions] = await Promise.all([
-    getPortfolio(uid).catch(() => empty),
-    suggestPortfolio(uid).catch((): Suggestion[] => []),
-  ]);
+  const portfolio = await getPortfolio(uid).catch(() => empty);
 
   const holdings = portfolio.positions.reduce((sum, p) => sum + p.value, 0);
   const accountValue = portfolio.cash + holdings;
@@ -144,7 +158,9 @@ export default async function OverviewPage() {
 
       {/* tier three: what to do next */}
       <section className="mt-12 border-t border-line pt-8">
-        <Suggestions initial={suggestions} bankroll={portfolio.cash} />
+        <Suspense fallback={<SuggestionsPending />}>
+          <SuggestedStakes uid={uid} bankroll={portfolio.cash} />
+        </Suspense>
       </section>
 
       {/* The same account over a phone. The figures above are server rendered from

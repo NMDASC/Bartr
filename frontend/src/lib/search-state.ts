@@ -12,19 +12,65 @@ export interface SearchState {
   activity: { phase: string; message: string; t: number }[];
   /** live discovery was off for this search (no model or search key); results are what we already had */
   liveOff: boolean;
+  /** the session cache has been consulted; until then nothing streams and no progress shows */
+  hydrated: boolean;
+  /** results came back from the session cache, so this mount does not stream */
+  restored: boolean;
 }
 
 export function initialSearchState(): SearchState {
-  return { phase: "streaming", intent: null, cards: new Map(), order: [], error: null, warnings: [], revision: -1, activity: [], liveOff: false };
+  return { phase: "streaming", intent: null, cards: new Map(), order: [], error: null, warnings: [], revision: -1, activity: [], liveOff: false, hydrated: false, restored: false };
+}
+
+export type SavedSearch = Omit<SearchState, "cards" | "hydrated" | "restored"> & { cards: [string, CompanyCard][] };
+
+function savedKey(q: string, userId?: string) {
+  return `bartr:search:${(userId ?? "guest").toLowerCase()}:${q.trim().toLowerCase()}`;
+}
+
+/** A finished search is kept for the session, so Back from a company brief lands on the results, not on the progress stage again. */
+export function readSavedSearch(q: string, userId?: string): SearchState | null {
+  try {
+    const raw = window.sessionStorage.getItem(savedKey(q, userId));
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as SavedSearch;
+    return { ...saved, cards: new Map(saved.cards), hydrated: true, restored: true };
+  } catch {
+    return null;
+  }
+}
+
+export function writeSavedSearch(q: string, userId: string | undefined, state: SearchState) {
+  try {
+    const saved: SavedSearch = {
+      phase: state.phase, intent: state.intent, order: state.order, error: state.error, warnings: state.warnings,
+      revision: state.revision, activity: state.activity, liveOff: state.liveOff, cards: [...state.cards],
+    };
+    window.sessionStorage.setItem(savedKey(q, userId), JSON.stringify(saved));
+  } catch {
+    // storage is a convenience; the search still works without it
+  }
+}
+
+export function clearSavedSearch(q: string, userId?: string) {
+  try {
+    window.sessionStorage.removeItem(savedKey(q, userId));
+  } catch {
+    // nothing to clear
+  }
 }
 
 function finishCards(cards: Map<string, CompanyCard>) {
   return new Map([...cards].map(([id, company]) => [id, company.status === "stub" ? { ...company, status: "failed" as const } : company]));
 }
 
-export function reduceDiscovery(state: SearchState, event: DiscoveryEvent | { type: "reset" }): SearchState {
+export type LocalEvent = { type: "reset" } | { type: "restore"; state: SearchState } | { type: "nocache" };
+
+export function reduceDiscovery(state: SearchState, event: DiscoveryEvent | LocalEvent): SearchState {
   switch (event.type) {
-    case "reset": return initialSearchState();
+    case "reset": return { ...initialSearchState(), hydrated: true };
+    case "restore": return event.state;
+    case "nocache": return { ...state, hydrated: true };
     case "intent": return { ...state, intent: event.intent };
     case "status": return { ...state, activity: [...state.activity.slice(-7), { phase: event.phase, message: event.message, t: event.t }] };
     case "ranking":

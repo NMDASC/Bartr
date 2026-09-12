@@ -14,7 +14,7 @@ import { SearchProgress } from "@/components/search/search-progress";
 import { streamSearch } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { pct, px, usd } from "@/lib/format";
-import { initialSearchState, reduceDiscovery } from "@/lib/search-state";
+import { clearSavedSearch, initialSearchState, readSavedSearch, reduceDiscovery, writeSavedSearch } from "@/lib/search-state";
 
 type Sort = "recommended" | "value" | "name";
 
@@ -68,21 +68,31 @@ export function DiscoveryResults({
   userId?: string;
   cached?: boolean;
 }) {
-  const [{ phase, intent, cards, order, error, warnings, activity }, dispatch] = useReducer(
-    reduceDiscovery,
-    undefined,
-    initialSearchState,
-  );
+  const [search, dispatch] = useReducer(reduceDiscovery, undefined, initialSearchState);
+  const { phase, intent, cards, order, error, warnings, activity, hydrated, restored } = search;
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState("");
   const [band, setBand] = useState("");
   const [sort, setSort] = useState<Sort>("recommended");
 
+  // Back from a company brief remounts this. A finished search comes out of the
+  // session cache, so the progress stage runs once per search, not once per visit.
   useEffect(() => {
     if (!q) return;
+    const saved = readSavedSearch(q, userId);
+    dispatch(saved ? { type: "restore", state: saved } : { type: "nocache" });
+  }, [q, userId]);
+
+  useEffect(() => {
+    if (!q || !hydrated || restored) return;
     const stop = streamSearch(q, dispatch, userId);
     return stop;
-  }, [q, attempt, userId]);
+  }, [q, attempt, userId, hydrated, restored]);
+
+  useEffect(() => {
+    if (!q || restored || phase === "streaming" || phase === "error") return;
+    writeSavedSearch(q, userId, search);
+  }, [q, userId, phase, restored, search]);
 
   const rows = useMemo(() => {
     const filtered = order
@@ -125,7 +135,7 @@ export function DiscoveryResults({
 
   return (
     <section className={cn("pb-20", !cached && "border-t border-line pt-10")}>
-      {searching ? (
+      {searching && hydrated ? (
         <SearchProgress
           q={q}
           intent={intent}
@@ -201,6 +211,7 @@ export function DiscoveryResults({
           size="sm"
           className="mb-5"
           onClick={() => {
+            clearSavedSearch(q, userId);
             dispatch({ type: "reset" });
             setAttempt((value) => value + 1);
           }}

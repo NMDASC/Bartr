@@ -50,9 +50,15 @@ export function demoUser(): string {
   return u;
 }
 
+/** A server render must never hang on the API. Client calls keep their own signals. */
+const SERVER_TIMEOUT_MS = 15_000;
+
 async function j<T>(path: string, init?: RequestInit, userId?: string): Promise<T> {
+  const signal =
+    init?.signal ?? (typeof window === "undefined" ? AbortSignal.timeout(SERVER_TIMEOUT_MS) : undefined);
   const res = await fetch(`${BASE}${path}`, {
     ...init,
+    signal,
     headers: {
       "content-type": "application/json",
       "x-demo-user": userId || demoUser(),
@@ -83,6 +89,12 @@ export async function getCompany(id: string): Promise<Company | null> {
   } catch {
     return null;
   }
+}
+
+/** Grok researches the business on the web and K2 gives a second number; the valuation is recomputed. */
+export async function appraiseCompany(id: string): Promise<Company | null> {
+  if (IS_MOCK) return mock.appraise(id);
+  return j<Company>(`/companies/${id}/appraise`, { method: "POST", body: "{}" });
 }
 
 /**
