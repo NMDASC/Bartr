@@ -45,7 +45,7 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 | 0:26 | 4 Half the workforce | "These places employ half the American workforce. This isn't a niche. It's the economy." |
 | 0:32 | 5 Who and what | "We connect buyers and sellers. Owners sell 30 percent and keep running the place. Investors buy 20 shares with a price and a way out. Acquirers get the owner's ear and a letter of intent." |
 | 0:40 | 6 Discover | "Type laundromat in Pittsburgh. Places, Querit, Grok. Every number keeps the sentence it came from. 53 real businesses priced." |
-| 0:47 | 7 How search works | "Nothing is typed in by hand. Grok reads the brief. Places lists every business in the city. Querit finds twelve pages and reads the best six. Grok turns pages into profiles where every figure keeps its sentence and its URL. Ranked by evidence, valued five ways, on the page as it happens." |
+| 0:47 | 7 How search works | "Our proprietary search helps you discover underground, undervalued companies. Grok reads the brief. Places lists every business in the city. Querit finds twelve pages and reads the best six. Grok turns pages into profiles where every figure keeps its sentence and its URL. Ranked by evidence, valued five ways, on the page as it happens." |
 | 0:58 | 8 One company | "Squirrel Hill Wash and Fold: $570,768, range 475 to 686 thousand." |
 | 0:58 | 9 Pricing | "Five ways to value it, each with its own typical miss. Weighted by one over the miss squared. Each method is a bit off and they disagree; we add both. A range, never a bare number." |
 | 1:12 | 10 Market | "The owner is the seller. Five lots above our value, a buyback below. Every round, one price for everyone, and the owner requotes from the updated value." |

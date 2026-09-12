@@ -9,7 +9,7 @@ const NOTES = [
   'These places employ half the American workforce. So this is not a niche. It is the economy.',
   'We connect buyers and sellers. Owners sell 30 percent and keep running the place. Investors buy 20 shares with a price and a way out. Acquirers get the owner s ear and a letter of intent.',
   'Type laundromat in Pittsburgh. Places, Querit, Grok. Every number keeps the sentence it came from. 53 real businesses priced.',
-  'Nothing is typed in by hand. Grok reads the brief. Google Places lists every business in the city. Querit finds twelve pages about them and reads the best six. Grok turns pages into profiles where every figure keeps its sentence and its URL. Ranked by evidence, valued five ways, on the page as it happens.',
+  'Our proprietary search helps you discover underground, undervalued companies. Grok reads the brief. Google Places lists every business in the city. Querit finds twelve pages about them and reads the best six. Grok turns pages into profiles where every figure keeps its sentence and its URL. Ranked by evidence, valued five ways, on the page as it happens.',
   'Squirrel Hill Wash and Fold: 570,768 dollars, range 475 to 686 thousand.',
   'Five ways to value it, each with its own typical miss. Weighted by one over the miss squared. Each method is a bit off and they disagree; we add both. A range, never a bare number.',
   'The owner is the seller. Five lots above our value, a buyback below. Every round, one price for everyone, and the owner requotes from the updated value.',
