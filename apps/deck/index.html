@@ -431,24 +431,43 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   </div>
 </section>
 
-<!-- 7 The owner is the other side -->
+
+
 <section class="slide" data-theme="dark" id="s7">
-  <p class="kicker fu">How the market works</p>
-  <p class="kicker right muted fu">One price per round. The owner is on the other side.</p>
-  <div style="position:absolute; left:140px; top:160px; width:860px;">
-    <h2 class="hl fu" style="font-size:64px;">The owner is the seller. There is no market maker.</h2>
-    <div style="margin-top:32px; font-size:22px; line-height:1.45;">
-      <p class="fu" style="margin:0 0 14px;"><b>The owner's asks.</b> 3,000 shares (30 percent) in five lots of 600, at five prices just above our value. For Squirrel Hill, value $57.08: lots at $58.67, $60.76, $63.03, $65.59 and $68.62. A shakier valuation spreads those prices wider.</p>
-      <p class="fu" style="margin:0 0 14px;"><b>The owner's buyback.</b> The owner also stands ready to buy up to 1,000 shares back at $47.48, about 17 percent under our value. That bid is in the book from the first minute.</p>
-      <p class="fu" style="margin:0;"><b>One price per round.</b> Every 10 to 60 seconds, faster when the book is busy, all orders clear at once at a single price. Everyone in that round pays it. Between rounds our value updates from what buyers paid, and the owner's asks and buyback move with it. Bartr holds no shares and takes no side.</p>
-    </div>
-    <p class="label fu" style="margin:28px 0 6px; font-size:21px;">Which price does a round clear at?</p>
-    <div class="math fu" style="font-size:24px;">$$p^\star = \arg\max_{p}\ \min\{\underbrace{D(p)}_{\text{shares buyers want at } p},\ \underbrace{S(p)}_{\text{shares offered at } p}\}$$</div>
-    <p class="label muted fu" style="font-size:19px; line-height:1.45; margin-top:6px;">Try every price. At each one, count how many shares buyers would take and how many sellers would give. Clear where the smaller of the two is largest. In round 1 of the demo, buyers wanted 305 shares at $58.67 or above and the owner offered 600 there, so 305 traded at $58.67, and Jonas, who bid $64.20, paid $58.67 too.</p>
+  <p class="kicker fu">The math, part one</p>
+  <p class="kicker right muted fu">Squirrel Hill Wash and Fold, one round</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:118px; font-size:50px; max-width:900px;">Every ten seconds, one price: the one where the most shares trade.</h2>
+  <div class="math" style="position:absolute; left:140px; top:282px; width:860px; font-size:21px;">
+    <p class="label fu" style="margin:0 0 4px; color:var(--paper-2);">Count what buyers would take and sellers would give at each price. Clear at the peak.</p>
+    <div class="fu">$$p^\star = \arg\max_{p}\ \min\{\underbrace{D(p)}_{\text{shares buyers want at } p},\ \underbrace{S(p)}_{\text{shares offered at } p}\}$$</div>
+    <p class="label fu" style="margin:14px 0 4px; color:var(--paper-2);">The longer side is rationed. A round cannot move the price more than 10 percent.</p>
+    <div class="fu" style="font-size:19px;">$$x_i = q_i\,\frac{\min\{D,S\}}{\max\{D,S\}}\quad\text{on the long side},\qquad p^\star\leftarrow\mathrm{clip}\big(p^\star,\ 0.9\,p_{t-1},\ 1.1\,p_{t-1}\big)$$</div>
+    <p class="label fu" style="margin:14px 0 4px; color:var(--paper-2);">Our value listens to what people paid, weighted by how much traded.</p>
+    <div class="fu" style="font-size:19px;">$$\mu_{\text{post}}=\frac{\mu/\sigma^2+\sum_t w_t\ln(Np^\star_t)/s_m^2}{1/\sigma^2+\sum_t w_t/s_m^2},\qquad w_t=\frac{v_t}{\bar v}$$</div>
+    <p class="label fu" style="margin:14px 0 4px; color:var(--paper-2);">The owner sells 3,000 shares in five lots above that value and buys back below it.</p>
+    <div class="fu" style="font-size:19px;">$$\text{asks}=\Big\{\tfrac{V_q}{N}: q\in\{0.55,\dots,0.80\}\Big\},\qquad \text{floor}=\tfrac{V_{0.20}}{N},\qquad V_q=e^{\mu+\sigma\Phi^{-1}(q)}$$</div>
   </div>
-  <div class="fu" style="position:absolute; left:1060px; top:170px; width:720px;">
-    <svg id="ladder" viewBox="0 0 740 760" width="720" height="740" style="overflow:visible;"></svg>
+  <div class="fu" style="position:absolute; left:1040px; top:250px; width:740px;">
+    <svg id="cross" viewBox="0 0 740 520" width="740" height="520" style="overflow:visible;"></svg>
+    <p id="cross-say" class="label" style="margin:14px 0 0; font-size:21px; color:var(--paper-2); min-height:60px; line-height:1.4;"></p>
   </div>
+  <div class="fu" style="position:absolute; left:140px; right:140px; bottom:64px; display:flex; gap:0; align-items:center; font-size:19px;">
+    <span class="muted">Find</span><span class="muted" style="margin:0 16px;">&rarr;</span>
+    <span class="muted">Appraise, five ways</span><span class="muted" style="margin:0 16px;">&rarr;</span>
+    <span class="muted">Owner lists 30%</span><span class="muted" style="margin:0 16px;">&rarr;</span>
+    <span class="green" style="font-weight:600;">Rounds clear every 10 s</span><span class="muted" style="margin:0 16px;">&rarr;</span>
+    <span class="green" style="font-weight:600;">Value updates, owner requotes</span><span class="muted" style="margin:0 16px;">&rarr;</span>
+    <span class="muted">Stake sized by Kelly (next)</span>
+  </div>
+</section>
+
+<!-- Kelly derivation, from the board. Public because this is the originality beat. -->
+<section class="slide" data-theme="dark" id="s10b">
+  <p class="kicker fu">The math, part two</p>
+  <p class="kicker right muted fu">Kelly, from first principles</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:118px; font-size:34px; max-width:1640px; white-space:nowrap;">We backed the bidding price and the portfolio construction with industry-tested trading mathematics.</h2>
+  <div class="board fu" style="right:auto; width:980px; top:190px; bottom:60px;"><img src="assets/kelly-board.png" alt="Whiteboard derivation of the Kelly fraction"></div>
+  <div class="board fu" style="left:auto; width:620px; top:190px; bottom:60px; background:#fff;"><img src="assets/kelly-paper.png" alt="Kelly criterion derivation, written out"></div>
 </section>
 
 <!-- 8 Live -->
@@ -510,14 +529,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   </div>
 </section>
 
-<!-- Kelly derivation, from the board. Public because this is the originality beat. -->
-<section class="slide" data-theme="dark" id="s10b">
-  <p class="kicker fu">Portfolio</p>
-  <p class="kicker right muted fu">Kelly, from first principles</p>
-  <h2 class="hl fu" style="position:absolute; left:140px; top:118px; font-size:40px; max-width:1640px;">We backed the bidding price and the portfolio construction with rigorous quantitative math.</h2>
-  <div class="board fu" style="right:auto; width:980px; top:190px; bottom:60px;"><img src="assets/kelly-board.png" alt="Whiteboard derivation of the Kelly fraction"></div>
-  <div class="board fu" style="left:auto; width:620px; top:190px; bottom:60px; background:#fff;"><img src="assets/kelly-paper.png" alt="Kelly criterion derivation, written out"></div>
-</section>
+
 
 <!-- 11 Acquire -->
 <section class="slide" data-theme="dark" id="s11">
@@ -619,30 +631,9 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
 
 
 
-<!-- Kelly paper, scrollable. Q&A only. -->
-<section class="slide qa-slide" data-theme="dark" id="qa-kelly">
-  <p class="kicker fu">Appendix &middot; Kelly derivation</p>
-  <p class="kicker right muted fu">Scroll the paper. Arrows still change slides.</p>
-  <div class="paper no-advance fu">
-    <iframe src="assets/kelly-derivation.pdf#view=FitH" title="Kelly Criterion derivation"></iframe>
-  </div>
-</section>
 
-<section class="slide qa-slide" data-theme="dark" id="qa-math">
-  <p class="kicker fu">Appendix &middot; The clearing rule and the belief update</p>
-  <div class="math" style="position:absolute; left:140px; right:140px; top:150px; font-size:24px;">
-    <p class="label" style="margin:0 0 6px;">One round clears where the most shares trade</p>
-    $$D(p)=\sum_{b:\ \ell_b\ge p} q_b,\qquad S(p)=\sum_{s:\ \ell_s\le p} q_s,\qquad p^\star=\arg\max_{p\in\mathcal L}\min\{D(p),S(p)\}$$
-    $$\text{ties: } \arg\min|D-S|,\ \text{then nearest } p_{t-1};\qquad p^\star\leftarrow\mathrm{clip}\big(p^\star,(1-\beta)p_{t-1},(1+\beta)p_{t-1}\big),\ \beta=0.10;\qquad x_i=q_i\,\frac{\min\{D,S\}}{\max\{D,S\}}\ \text{on the long side}$$
-    <p class="label" style="margin:26px 0 6px;">Our value moves with what people paid</p>
-    $$\ln V\sim\mathcal N(\mu,\sigma^2)\ \text{(prior from five estimators)},\qquad \mu_{\text{post}}=\frac{\mu/\sigma^2+\sum_t w_t\ln(Np^\star_t)/s_m^2}{1/\sigma^2+\sum_t w_t/s_m^2},\qquad \sigma^2_{\text{post}}=\frac{1}{1/\sigma^2+\sum_t w_t/s_m^2},\quad w_t=\frac{v_t}{\bar v}$$
-    <p class="label" style="margin:26px 0 6px;">The owner quotes from the same distribution</p>
-    $$\text{floor bid}=\frac{V_{0.20}}{N},\qquad \text{ask ladder}=\Big\{\frac{V_q}{N}: q\in\{0.55,0.6125,0.675,0.7375,0.80\}\Big\},\qquad V_q=\exp\big(\mu+\sigma\Phi^{-1}(q)\big)$$
-    <p class="label" style="margin:26px 0 6px;">The stake</p>
-    $$\text{gap}=\ln\frac{v}{p},\qquad f^\star=\frac{\text{gap}}{\sigma^2},\qquad f=\mathrm{clip}\big(\tfrac12 f^\star,\,0,\,0.20\big),\qquad \$=f\cdot B$$
-  </div>
-  <p class="legend fu">D demand, S supply, &#8467; limit, q quantity, N = 10,000 shares, p<sub>t&minus;1</sub> last clearing price, v<sub>t</sub> round volume, s<sub>m</sub> per round price noise, &Phi;<sup>&minus;1</sup> inverse normal CDF, B bankroll. Same constants as engine.py.</p>
-</section>
+
+
 
 
 
@@ -713,6 +704,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     if (dir < 0) s.querySelectorAll('.frag').forEach(f => f.classList.add('on'));
     s.querySelectorAll('.count').forEach(countUp);
     if (s.id === 'live') runAuction();
+    if (s.id === 's7') runCross();
     if (s.id === 's10') runKelly();
     if (cur > 0 && !clockStart) clockStart = performance.now();
     history.replaceState(null, '', '#' + (cur + 1));
@@ -730,7 +722,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
       case 'q': case 'Q': go(QA_START, 1); break;
       case 'p': case 'P': clockOn = !clockOn; presenter.classList.toggle('on', clockOn); if (clockOn && !clockStart) clockStart = performance.now(); break;
       case 'f': case 'F': document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); break;
-      case 'r': case 'R': if (slides[cur].id === 'live') runAuction(); break;
+      case 'r': case 'R': if (slides[cur].id === 'live') runAuction(); if (slides[cur].id === 's7') runCross(); break;
       case 'Escape': if (document.fullscreenElement) document.exitFullscreen(); break;
     }
   });
@@ -957,7 +949,77 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     lab.appendChild(el('text', { x: L, y: y(52.4), fill: '#a1a1a6', 'font-size': 16, 'font-family': 'inherit' }, 'between these, buyers and sellers set the price'));
     svg.appendChild(lab);
   }
-  ladder(document.getElementById('ladder'));
+  if (document.getElementById('ladder')) ladder(document.getElementById('ladder'));
+
+  // ---------- the clearing rule, animated (slide 10) ----------
+  let crossTimer = null;
+  function runCross() {
+    const svg = document.getElementById('cross'); if (!svg) return;
+    const say = document.getElementById('cross-say');
+    if (crossTimer) { clearTimeout(crossTimer); crossTimer = null; }
+    svg.innerHTML = '';
+    const bids = [[60.5, 40], [59.8, 30], [59.2, 25], [58.7, 20], [58.0, 60]];   // price, shares
+    const asks = [[58.6, 25], [59.0, 30], [59.5, 20], [60.2, 35], [61.0, 50]];
+    const prices = [...new Set([...bids, ...asks].map(o => o[0]))].sort((a, b) => a - b);
+    const D = p => bids.filter(b => b[0] >= p).reduce((t, b) => t + b[1], 0);
+    const S = p => asks.filter(a => a[0] <= p).reduce((t, a) => t + a[1], 0);
+    const pts = prices.map(p => ({ p, d: D(p), s: S(p), v: Math.min(D(p), S(p)) }));
+    const star = pts.reduce((b, q) => (q.v > b.v ? q : b), pts[0]);
+    const W = 740, H = 520, L = 60, R = 24, T = 30, B = 56;
+    const pmin = 57.6, pmax = 61.4, qmax = 200;
+    const x = p => L + (p - pmin) / (pmax - pmin) * (W - L - R);
+    const y = q => H - B - q / qmax * (H - T - B);
+    const mk = (t, a, txt) => { const e = document.createElementNS('http://www.w3.org/2000/svg', t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; };
+    // axes
+    svg.appendChild(mk('line', { x1: L, x2: W - R, y1: y(0), y2: y(0), stroke: 'rgba(255,255,255,0.25)' }));
+    for (let q = 50; q <= qmax; q += 50) { svg.appendChild(mk('line', { x1: L, x2: W - R, y1: y(q), y2: y(q), stroke: 'rgba(255,255,255,0.07)' })); svg.appendChild(mk('text', { x: L - 8, y: y(q) + 5, 'text-anchor': 'end', fill: '#a1a1a6', 'font-size': 13, 'font-family': 'inherit' }, q)); }
+    for (const p of [58, 59, 60, 61]) svg.appendChild(mk('text', { x: x(p), y: H - B + 22, 'text-anchor': 'middle', fill: '#a1a1a6', 'font-size': 14, 'font-family': 'inherit' }, '$' + p.toFixed(2)));
+    svg.appendChild(mk('text', { x: L - 8, y: T - 10, 'text-anchor': 'end', fill: '#a1a1a6', 'font-size': 13, 'font-family': 'inherit' }, 'shares'));
+    // step curves
+    const dPath = ['M', x(pmin), y(pts[0].d)]; pts.forEach((q, i) => { dPath.push('H', x(q.p)); if (pts[i + 1]) dPath.push('V', y(pts[i + 1].d)); }); dPath.push('H', x(pmax), 'V', y(0));
+    const sPath = ['M', x(pmin), y(0)]; pts.forEach(q => { sPath.push('H', x(q.p), 'V', y(q.s)); }); sPath.push('H', x(pmax));
+    const dEl = mk('path', { d: dPath.join(' '), fill: 'none', stroke: '#30D158', 'stroke-width': 2.5, 'stroke-linejoin': 'round', 'pathLength': 1, style: 'stroke-dasharray:1; stroke-dashoffset:1; transition: stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)' });
+    const sEl = mk('path', { d: sPath.join(' '), fill: 'none', stroke: '#f5f5f7', 'stroke-width': 2.5, 'stroke-linejoin': 'round', 'pathLength': 1, style: 'stroke-dasharray:1; stroke-dashoffset:1; transition: stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)' });
+    svg.appendChild(dEl); svg.appendChild(sEl);
+    const dLab = mk('text', { x: x(58.05), y: y(pts[0].d) - 10, fill: '#30D158', 'font-size': 15, 'font-weight': 600, 'font-family': 'inherit', opacity: 0 }, 'buyers would take');
+    const sLab = mk('text', { x: x(61.35), y: y(160) - 10, 'text-anchor': 'end', fill: '#f5f5f7', 'font-size': 15, 'font-weight': 600, 'font-family': 'inherit', opacity: 0 }, 'sellers would give');
+    svg.appendChild(dLab); svg.appendChild(sLab);
+    // scanner
+    const scan = mk('line', { x1: x(pmin), x2: x(pmin), y1: T, y2: y(0), stroke: 'rgba(255,255,255,0.5)', 'stroke-dasharray': '4 4', opacity: 0 });
+    const bar = mk('rect', { x: x(pmin) - 7, width: 14, y: y(0), height: 0, fill: 'rgba(48,209,88,0.55)', opacity: 0 });
+    const read = mk('text', { x: x(pmin), y: T - 8, 'text-anchor': 'middle', fill: '#f5f5f7', 'font-size': 15, 'font-family': 'inherit', opacity: 0 }, '');
+    svg.appendChild(bar); svg.appendChild(scan); svg.appendChild(read);
+    const fill = mk('rect', { x: x(pmin), y: y(star.v), width: 0, height: y(0) - y(star.v), fill: 'rgba(48,209,88,0.12)' });
+    const starLine = mk('line', { x1: x(star.p), x2: x(star.p), y1: T, y2: y(0), stroke: '#30D158', 'stroke-width': 2, opacity: 0 });
+    const starDot = mk('circle', { cx: x(star.p), cy: y(star.v), r: 6, fill: '#30D158', opacity: 0 });
+    const starLab = mk('text', { x: x(star.p), y: T - 8, 'text-anchor': 'middle', fill: '#30D158', 'font-size': 19, 'font-weight': 700, 'font-family': 'inherit', opacity: 0 }, 'p* = $' + star.p.toFixed(2) + ' · ' + star.v + ' shares');
+    svg.appendChild(fill); svg.appendChild(starLine); svg.appendChild(starDot); svg.appendChild(starLab);
+    const finish = () => {
+      dEl.style.strokeDashoffset = 0; sEl.style.strokeDashoffset = 0; dLab.setAttribute('opacity', 1); sLab.setAttribute('opacity', 1);
+      scan.setAttribute('opacity', 0); bar.setAttribute('opacity', 0); read.setAttribute('opacity', 0);
+      fill.setAttribute('width', x(star.p) - x(pmin)); starLine.setAttribute('opacity', 1); starDot.setAttribute('opacity', 1); starLab.setAttribute('opacity', 1);
+      say.innerHTML = `At <b>$${star.p.toFixed(2)}</b> buyers want ${star.d} shares and sellers offer ${star.s}. <b>${star.v} trade</b>, every one of them at $${star.p.toFixed(2)}. The buyer who bid $60.50 pays $${star.p.toFixed(2)} too.`;
+    };
+    if (STILL) { finish(); return; }
+    say.textContent = 'Five bids, five asks, sealed until the clock hits zero.';
+    const step = (fn, ms) => { crossTimer = setTimeout(fn, ms); };
+    step(() => { dEl.style.strokeDashoffset = 0; dLab.setAttribute('opacity', 1); say.textContent = 'Green: at each price, how many shares buyers would take. Lower price, more takers.'; }, 400);
+    step(() => { sEl.style.strokeDashoffset = 0; sLab.setAttribute('opacity', 1); say.textContent = 'White: how many shares sellers would give. Higher price, more sellers.';
+      step(() => {
+        scan.setAttribute('opacity', 1); bar.setAttribute('opacity', 1); read.setAttribute('opacity', 1);
+        const t0 = performance.now(), dur = 3200;
+        const tick = now => {
+          const u = Math.min(1, (now - t0) / dur); const p = pmin + (pmax - pmin) * u;
+          const d = D(p), sup = S(p), v = Math.min(d, sup);
+          scan.setAttribute('x1', x(p)); scan.setAttribute('x2', x(p)); bar.setAttribute('x', x(p) - 7); bar.setAttribute('y', y(v)); bar.setAttribute('height', y(0) - y(v));
+          read.setAttribute('x', x(p)); read.textContent = '$' + p.toFixed(2) + ': ' + Math.min(d, sup) + ' would trade';
+          say.textContent = 'Try every price. At $' + p.toFixed(2) + ', buyers want ' + d + ', sellers offer ' + sup + ', so ' + v + ' could trade.';
+          if (u < 1) requestAnimationFrame(tick); else step(finish, 200);
+        };
+        requestAnimationFrame(tick);
+      }, 1100);
+    }, 1400);
+  }
 
   // ---------- live marketplace (slide 8) ----------
   const PEOPLE = [

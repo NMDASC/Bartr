@@ -9,7 +9,7 @@ URL="file://$PWD/index.html"
 echo "wrote Bartr.pdf"
 if command -v node >/dev/null; then
   mkdir -p .stills
-  for n in $(seq 1 21); do
+  for n in $(seq 1 19); do
     "$CH" --headless=new --disable-gpu --hide-scrollbars --window-size=1920,1080 --virtual-time-budget=8000 \
       --screenshot="$PWD/.stills/s$n.png" "$URL?slide=$n&still" >/dev/null 2>&1
   done
