@@ -4,9 +4,10 @@ const pptxgen = require('pptxgenjs');
 const path = require('path');
 const NOTES = [
   'The laundromat on Murray Avenue is worth 570,768 dollars, give or take 22 percent. Today you can buy 20 shares of it. That is Bartr.',
-  'Who here is from CMU? Who has eaten at Grapow? Ever thought about putting money into it? There is no way to. Thirty-six million small businesses, half of all jobs, and you cannot invest in any of them unless you buy the whole thing. Half are owned by someone over 55. Four out of five that try to sell never find a buyer. Most are profitable. They close because nobody can write a check for the whole thing.',
-  'We connect buyers and sellers. Owners get cash for 30 percent and keep the keys. Investors get 20 shares with a price and a way out. Acquirers get the owner s ear and a letter of intent.',
-  'Six things, all running: connect buyers and sellers, find businesses, appraise with a range, run the market, keep it fair, watch every trade.',
+  'Who here is from CMU? Who has eaten at Grapow? Ever thought about putting money into it? There is no way to. Thirty-six million small businesses in this country.',
+  'And when the owner retires, four out of five of the ones that try to sell never find a buyer. They shut down. Most of them are profitable. They close because nobody can write a check for the whole thing, and nobody is allowed to buy part of it.',
+  'These places employ half the American workforce. So this is not a niche. It is the economy.',
+  'We connect buyers and sellers. Owners sell 30 percent and keep running the place. Investors buy 20 shares with a price and a way out. Acquirers get the owner s ear and a letter of intent. Six things, all built and running: connect, find, appraise, trade, keep it fair, watch every trade.',
   'Type laundromat in Pittsburgh. Places, Querit, Grok. Every number keeps the sentence it came from. 53 real businesses priced.',
   'Nothing is typed in by hand. Grok reads the brief. Google Places lists every business in the city. Querit finds twelve pages about them and reads the best six. Grok turns pages into profiles where every figure keeps its sentence and its URL. Ranked by evidence, valued five ways, on the page as it happens.',
   'Squirrel Hill Wash and Fold: 570,768 dollars, range 475 to 686 thousand.',
@@ -35,14 +36,14 @@ const NOTES = [
   'Security: rules create flags and models review them. The current audit log is application append-only, not cryptographically immutable.',
   'Hard questions: owner trust is the core assumption. State the tests that could validate or disprove the exchange thesis.',
 ];
-const TOTAL = 31;
+const TOTAL = 32;
 const pptx = new pptxgen();
 pptx.defineLayout({ name: 'W', width: 13.333, height: 7.5 });
 pptx.layout = 'W';
 pptx.title = 'Bartr';
 for (let i = 1; i <= TOTAL; i++) {
   const s = pptx.addSlide();
-  s.background = { color: i <= 7 ? 'FFFFFF' : '000000' };
+  s.background = { color: i <= 8 ? 'FFFFFF' : '000000' };
   s.addImage({ path: path.join(__dirname, '.stills', `s${i}.png`), x: 0, y: 0, w: 13.333, h: 7.5 });
   s.addNotes(NOTES[i - 1]);
 }
