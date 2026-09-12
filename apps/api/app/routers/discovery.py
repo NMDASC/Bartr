@@ -5,6 +5,7 @@ Places + Querit + Grok extractions after the cached results.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 
 from fastapi import APIRouter, Header, HTTPException
@@ -21,7 +22,13 @@ router = APIRouter(prefix="/discovery", tags=["discovery"])
 async def search(body: DiscoveryRequest):
     from app.services.agents import intent as intent_agent
     try:
-        job = service().start(body, intent=await intent_agent.parse(body.q))
+        if not body.q.strip():
+            raise ValueError("Enter a search query")
+        try:
+            intent = await asyncio.wait_for(intent_agent.parse(body.q), timeout=10)
+        except TimeoutError:
+            intent = None
+        job = service().start(body, intent=intent)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     return {"job_id": job.id, "intent": job.intent}

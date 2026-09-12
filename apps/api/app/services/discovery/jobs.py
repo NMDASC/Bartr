@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 from app import llm
 from app.views import iso
-from .intent import parse_intent
+from .intent import parse_intent, merge_intent
 from .models import DiscoveryRequest, ExtractedCompanies, ParsedIntent
 from .pricing import save_company, verified_company
 from .querit import Querit
@@ -27,6 +27,7 @@ class Job:
     id: str
     request: DiscoveryRequest
     intent: dict
+    intent_enriched: bool = False
     created: float = field(default_factory=time.monotonic)
     status: str = "running"
     events: list[dict] = field(default_factory=list)
@@ -65,7 +66,7 @@ class DiscoveryJobs:
             if not completed:
                 raise ValueError("Discovery is busy; retry shortly")
             del self.jobs[min(completed, key=lambda j: j.created).id]
-        job = Job(id="job_" + uuid.uuid4().hex, request=request, intent=intent or parse_intent(request.q))
+        job = Job(id="job_" + uuid.uuid4().hex, request=request, intent=merge_intent(request.q, intent), intent_enriched=intent is not None)
         self.jobs[job.id] = job
         job.task = asyncio.create_task(self.run(job))
         return job
@@ -118,22 +119,8 @@ class DiscoveryJobs:
 
     async def live(self, job: Job):
         async with self.live_slots:
-            parsed = await asyncio.wait_for(llm.complete([
-                {"role": "system", "content": "Parse business search intent. Only explicit constraints go in must_have; soft preferences remain in the query. Use canonical snake_case business categories (laundromat, car_wash, machine_shop, restaurant, hvac, auto_repair, manufacturing, retail, default). Use two-letter US states. Budget means whole-business estimated value in USD, not share price. Do not relax explicit constraints. Do not invent location or budget. Pittsburgh includes Homestead and McKees Rocks."},
-                {"role": "user", "content": job.request.q}], schema=ParsedIntent), timeout=25)
-            intent = parsed.model_dump()
-            # Deterministic explicit constraints take precedence if the model drops them.
-            fallback = parse_intent(job.request.q)
-            for key in ("state", "city", "min_value", "max_value"):
-                if fallback.get(key) is not None:
-                    intent[key] = fallback[key]
-            if fallback["category"] != "default":
-                intent["category"] = fallback["category"]
-            if intent.get("state"):
-                intent["state"] = intent["state"].upper()
-            job.intent = intent
-            job.emit({"type": "intent", "intent": intent})
-            self.rank(job)
+            if not job.intent_enriched:
+                await self.enrich_intent(job)
             query = retrieval_query(job.request.q, job.intent)
             pages = await self.provider.search(query, count=12)
             try:
@@ -153,6 +140,8 @@ class DiscoveryJobs:
             self.rank(job)
             # Budgeted targeted enrichment, important for business financials.
             for item in initial.companies[:min(3, job.request.limit)]:
+                if not _matches(item.model_dump(), {**job.intent, "min_value": None, "max_value": None}):
+                    continue
                 try:
                     more = await self.provider.search(f'"{item.name}" {item.city or ""} {item.state or ""} revenue cash flow asking price', count=3)
                     more = await self.provider.contents(more)
@@ -164,6 +153,21 @@ class DiscoveryJobs:
                         self.rank(job)
                 except Exception:
                     job.warnings.append("Financial enrichment was unavailable for one company")
+
+    async def enrich_intent(self, job: Job):
+        try:
+            parsed = await asyncio.wait_for(llm.complete([
+                {"role": "system", "content": "Parse business search intent. Only explicit constraints go in must_have; soft preferences remain in the query. Use canonical snake_case business categories (laundromat, car_wash, machine_shop, restaurant, hvac, auto_repair, manufacturing, retail, default). Use two-letter US states. Budget means whole-business estimated value in USD, not share price. Do not relax explicit constraints. Do not invent location or budget. Pittsburgh includes Homestead and McKees Rocks."},
+                {"role": "user", "content": job.request.q}], schema=ParsedIntent), timeout=25)
+            intent = merge_intent(job.request.q, parsed.model_dump())
+            if intent.get("state"):
+                intent["state"] = intent["state"].upper()
+            job.intent = intent
+            job.intent_enriched = True
+            job.emit({"type": "intent", "intent": intent})
+            self.rank(job)
+        except Exception:
+            job.warnings.append("Some search preferences could not be interpreted")
 
     async def run(self, job: Job):
         try:

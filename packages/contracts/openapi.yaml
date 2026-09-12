@@ -137,6 +137,86 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/companies/{cid}/appraise:
+    post:
+      tags:
+      - companies
+      summary: Appraise
+      description: 'Grok researches the business on the web and gives a value with sources; K2 gives a
+        second number.
+
+        Both feed the ensemble''s `llm` estimator and the valuation is recomputed. The market prior is
+
+        re-anchored only if nothing has traded yet; after that the belief already reflects the market.'
+      operationId: appraise_api_v1_companies__cid__appraise_post
+      parameters:
+      - name: cid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Cid
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/companies/{cid}/ask:
+    post:
+      tags:
+      - companies
+      summary: Ask Owner
+      description: Talk to the AI version of the owner, grounded in the file (profile, valuation, sources).
+      operationId: ask_owner_api_v1_companies__cid__ask_post
+      parameters:
+      - name: cid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Cid
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AskIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/discovery/search:
     post:
       tags:
@@ -147,7 +227,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SearchIn'
+              $ref: '#/components/schemas/DiscoveryRequest'
         required: true
       responses:
         '202':
@@ -175,6 +255,14 @@ paths:
         schema:
           type: string
           title: Job Id
+      - name: last-event-id
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last-Event-Id
       responses:
         '200':
           description: Successful Response
@@ -491,6 +579,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/markets/{mid}/narrative:
+    get:
+      tags:
+      - markets
+      summary: Narrative
+      description: Two lines of Grok tape commentary for this market, refreshed when a new round clears.
+      operationId: narrative_api_v1_markets__mid__narrative_get
+      parameters:
+      - name: mid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Mid
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/portfolio:
     get:
       tags:
@@ -521,6 +635,84 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Portfolio'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/portfolio/profile/parse:
+    post:
+      tags:
+      - portfolio
+      summary: Parse Profile
+      description: Free text about yourself and your goals -> RiskProfile (Grok structured). Stored for
+        suggest().
+      operationId: parse_profile_api_v1_portfolio_profile_parse_post
+      parameters:
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/portfolio/profile:
+    get:
+      tags:
+      - portfolio
+      summary: Get Profile
+      operationId: get_profile_api_v1_portfolio_profile_get
+      parameters:
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
         '422':
           description: Validation Error
           content:
@@ -697,6 +889,8 @@ paths:
       tags:
       - surveillance
       summary: Flags
+      description: Rules flags, each reviewed by Grok and K2 when keys are set (cached per flag). Disagreement
+        marks `disputed`.
       operationId: flags_api_v1_surveillance_flags_get
       parameters:
       - name: market_id
@@ -723,6 +917,76 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/surveillance/redteam:
+    post:
+      tags:
+      - surveillance
+      summary: Red Team
+      description: 'Grok plays a manipulator against one market; the surveillance layer has to catch it.
+
+        Returns the attack plan and the orders it placed. Flags appear over the next rounds.'
+      operationId: red_team_api_v1_surveillance_redteam_post
+      parameters:
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/RedTeamIn'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - surveillance
+      summary: Red Team Log
+      operationId: red_team_log_api_v1_surveillance_redteam_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/surveillance/report:
+    get:
+      tags:
+      - surveillance
+      summary: Report
+      description: Regulator style market health memo (Grok) over the last hour of the audit log.
+      operationId: report_api_v1_surveillance_report_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /api/v1/agent/chat:
     post:
       tags:
@@ -765,6 +1029,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /graphql:
+    get:
+      summary: Handle Http Get
+      operationId: handle_http_get_graphql_get
+      responses:
+        '200':
+          description: The GraphiQL integrated development environment.
+          content:
+            application/json:
+              schema: {}
+        '404':
+          description: Not found if GraphiQL or query via GET are not enabled.
+    post:
+      summary: Handle Http Post
+      operationId: handle_http_post_graphql_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /health:
     get:
       summary: Health
@@ -855,6 +1140,22 @@ components:
       - role
       - content
       title: AgentMessage
+    AskIn:
+      properties:
+        question:
+          type: string
+          title: Question
+        history:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: History
+          default: []
+      type: object
+      required:
+      - question
+      title: AskIn
     Band:
       properties:
         pct:
@@ -1060,6 +1361,11 @@ components:
       title: ChecklistItem
     Company:
       properties:
+        evidence:
+          items:
+            $ref: '#/components/schemas/FieldEvidence'
+          type: array
+          title: Evidence
         _id:
           type: string
           title: Id
@@ -1286,36 +1592,44 @@ components:
         revenue:
           anyOf:
           - type: number
+            exclusiveMinimum: 0.0
           - type: 'null'
           title: Revenue
         sde:
           anyOf:
           - type: number
+            exclusiveMinimum: 0.0
           - type: 'null'
           title: Sde
         asking_price:
           anyOf:
           - type: number
+            exclusiveMinimum: 0.0
           - type: 'null'
           title: Asking Price
         employees:
           anyOf:
           - type: integer
+            minimum: 0.0
           - type: 'null'
           title: Employees
         rating:
           anyOf:
           - type: number
+            maximum: 5.0
+            minimum: 0.0
           - type: 'null'
           title: Rating
         review_count:
           anyOf:
           - type: integer
+            minimum: 0.0
           - type: 'null'
           title: Review Count
         years_operating:
           anyOf:
           - type: integer
+            minimum: 0.0
           - type: 'null'
           title: Years Operating
         owner_operated:
@@ -1326,21 +1640,26 @@ components:
         llm_estimate:
           anyOf:
           - type: number
+            exclusiveMinimum: 0.0
           - type: 'null'
           title: Llm Estimate
         llm_confidence:
           anyOf:
           - type: number
+            maximum: 1.0
+            minimum: 0.0
           - type: 'null'
           title: Llm Confidence
         llm2_estimate:
           anyOf:
           - type: number
+            exclusiveMinimum: 0.0
           - type: 'null'
           title: Llm2 Estimate
         machines:
           anyOf:
           - type: integer
+            minimum: 0.0
           - type: 'null'
           title: Machines
         sources:
@@ -1405,6 +1724,28 @@ components:
       required:
       - name
       title: CompanyIn
+    DiscoveryRequest:
+      properties:
+        q:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Q
+        live:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Live
+        limit:
+          type: integer
+          maximum: 50.0
+          minimum: 1.0
+          title: Limit
+          default: 20
+      type: object
+      required:
+      - q
+      title: DiscoveryRequest
     Estimate:
       properties:
         name:
@@ -1426,6 +1767,53 @@ components:
       - sigma
       - note
       title: Estimate
+    FieldEvidence:
+      properties:
+        field:
+          type: string
+          title: Field
+        value:
+          anyOf:
+          - type: number
+          - type: string
+          - type: boolean
+          - type: 'null'
+          title: Value
+        source_url:
+          type: string
+          title: Source Url
+        quote:
+          type: string
+          title: Quote
+        status:
+          type: string
+          enum:
+          - reported
+          - inferred
+          title: Status
+          default: reported
+        currency:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Currency
+        period:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Period
+        fetched_at:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Fetched At
+      type: object
+      required:
+      - field
+      - value
+      - source_url
+      - quote
+      title: FieldEvidence
     Financials:
       properties:
         revenue_est:
@@ -1781,6 +2169,24 @@ components:
       - value
       - pnl
       title: Position
+    ProfileIn:
+      properties:
+        text:
+          type: string
+          title: Text
+      type: object
+      required:
+      - text
+      title: ProfileIn
+    RedTeamIn:
+      properties:
+        market_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Market Id
+      type: object
+      title: RedTeamIn
     Review:
       properties:
         reviewer:
@@ -1803,15 +2209,6 @@ components:
       - reviewer
       - severity
       title: Review
-    SearchIn:
-      properties:
-        q:
-          type: string
-          title: Q
-      type: object
-      required:
-      - q
-      title: SearchIn
     SearchIntent:
       properties:
         category:
@@ -2101,6 +2498,35 @@ components:
       title: ValidationError
     Valuation:
       properties:
+        version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Version
+        calibration_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Calibration Version
+        benchmark_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Benchmark Version
+        benchmark_status:
+          type: string
+          title: Benchmark Status
+          default: provisional
+        opening_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Opening Price
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
         v0:
           type: number
           title: V0

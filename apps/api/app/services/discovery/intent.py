@@ -49,3 +49,16 @@ def _matches(c: dict, intent: dict) -> bool:
     if intent["min_value"] is not None and (v0 is None or v0 < intent["min_value"]):
         return False
     return True
+
+
+def merge_intent(query: str, proposed: dict | None) -> dict:
+    """Model interpretation may add detail, but cannot drop explicit constraints."""
+    fallback = parse_intent(query)
+    result = {**fallback, **(proposed or {})}
+    for field in ("state", "city", "min_value", "max_value"):
+        if fallback[field] is not None:
+            result[field] = fallback[field]
+    if fallback["category"] != "default":
+        result["category"] = fallback["category"]
+    result["must_have"] = list(dict.fromkeys([*fallback["must_have"], *(result.get("must_have") or [])]))
+    return result
