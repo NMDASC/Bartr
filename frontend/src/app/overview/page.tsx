@@ -2,7 +2,6 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import type { Portfolio, Suggestion } from "@contracts/types";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Suggestions } from "@/components/portfolio/suggestions";
 import { AUTH_COOKIE, readSessionToken } from "@/lib/auth/session";
@@ -11,8 +10,6 @@ import { cn } from "@/lib/cn";
 import { px, signed, usd } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
-
-const STARTERS = ["laundromat in Pittsburgh", "car wash in Waco", "machine shop in McKees Rocks"];
 
 /**
  * Hierarchy is carried by size, rules and one surface step. Nothing on this page
@@ -139,16 +136,6 @@ export default async function OverviewPage() {
         <Suggestions initial={suggestions} bankroll={portfolio.cash} />
       </section>
 
-      <section className="mt-12 border-t border-line pt-6">
-        <Label className="mb-3 block">Start a search</Label>
-        <div className="flex flex-wrap gap-2">
-          {STARTERS.map((q) => (
-            <Button key={q} size="sm" href={`/search?q=${encodeURIComponent(q)}`}>
-              {q}
-            </Button>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
