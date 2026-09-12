@@ -69,5 +69,5 @@ async function mockChat(sessionId: string, message: string): Promise<AgentReply>
     turns.set(sessionId, 0);
     return { content: "Reset. Ask me for a business." };
   }
-  return script[i] ?? { content: "That is the end of the mock script. Point JB_API_URL at the API for the real agent." };
+  return script[i] ?? { content: "Ask for a business by type and place, or name one you already hold." };
 }
