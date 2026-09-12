@@ -49,9 +49,14 @@ def cancel_order(oid: str, uid: str = Depends(current_user)):
 
 
 @router.get("/{mid}/batches", response_model=list[Batch], response_model_by_alias=True)
-def batches(mid: str, limit: int = 60, snapshot: bool = False):
+def batches(mid: str, limit: int = 60, snapshot: bool = False, all: bool = False):
+    """Price history. By default only rounds that carry a price (trades or limit up/down steps),
+    which is what the chart wants; `all=true` includes quiet rounds with clearing_price null."""
     _market(mid)
-    return [views.batch(b, snapshot) for b in store.batches(mid, limit)]
+    rows = store.batches(mid, limit * 4 if not all else limit)
+    if not all:
+        rows = [b for b in rows if b["clearing_price"] is not None][-limit:]
+    return [views.batch(b, snapshot) for b in rows]
 
 
 @router.get("/{mid}/trades", response_model=list[Trade], response_model_by_alias=True)

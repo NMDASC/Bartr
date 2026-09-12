@@ -106,3 +106,15 @@ def test_no_cross_no_trade_and_interval_adapts():
     b = e.run_batch(mid)
     assert b["clearing_price"] is None and b["volume"] == 0
     assert e.store.get_market(mid)["batch_interval_s"] >= 10
+
+
+def test_batches_endpoint_shape_never_null_price():
+    from app.store import MemoryStore
+    e = Engine(MemoryStore())
+    c = e.create_company({"name": "Q", "category": "hvac", "sde": 250000})
+    mid = c["id"]
+    e.run_batch(mid)  # quiet round
+    m = e.store.get_market(mid)
+    e.place_order("z", mid, "buy", 5, m["treasury"]["ask_ladder"][0]["price"]); e.run_batch(mid)
+    rows = e.store.batches(mid)
+    assert rows[0]["clearing_price"] is None and rows[1]["clearing_price"] is not None
