@@ -267,11 +267,13 @@ companies    { _id, name, category, naics_guess, address, city, state, lat, lng,
                valuation: { v0, sigma, low, high, multiple_used, comps[], as_of },
                sources[]: { url, title, snippet, fetched_at },
                embedding: [384 floats], status: "stub"|"ready"|"failed", created_at }
-markets      { _id: company_id, shares_outstanding: 10000, tick: 0.01, last_price, ref_price,
+markets      { _id: company_id, shares_outstanding: 10000, float: 3000, retained: 7000, tick: 0.01, last_price, ref_price,
                batch_interval_s: 10, next_batch_at, band_pct: 0.10,
-               mm: { inventory, cash, gamma, k, sigma, max_depth }, halted: false }
+               treasury: { unsold_float, proceeds },
+               mm: { inventory (signed, borrow from retained when < 0), cash, pnl, gamma, k, sigma, max_depth, cap: 450 },
+               fees_collected, halted: false }
 orders       { _id, market_id, user_id, side: "buy"|"sell", qty, limit_price, status: "open"|"filled"|"partial"|"cancelled",
-               filled_qty, created_at, cancelled_at, origin: "user"|"mm"|"agent" }
+               filled_qty, created_at, cancelled_at, origin: "user"|"mm"|"treasury"|"bot"|"agent" }
 batches      { _id, market_id, t, clearing_price, volume, imbalance, n_buy, n_sell, book_snapshot: {bids[], asks[]} }
 trades       { _id, market_id, batch_id, buyer_id, seller_id, qty, price, t }
 positions    { _id, user_id, market_id, qty, avg_cost }
@@ -327,8 +329,16 @@ Pydantic models live in `apps/api/app/schemas.py`; `packages/contracts/openapi.y
 
 The problem: 56 bidders (or fewer) per asset, no history, no fundamentals on file. A continuous limit order book would be empty most of the time and trivially manipulable. Design principles: one price per batch, always a counterparty, prices anchored to a valuation with an honest uncertainty, and bounded house loss.
 
-### 8.1 Units
+### 8.1 Units, issuance, and the two house accounts
 Each company has 10,000 shares. Price per share `p = V / 10000`. Fractional shares to 0.01. Tick 0.01 USD. Users start with 100,000 play dollars.
+
+Two house accounts per market, with different jobs. Keep them separate in code and on screen.
+
+**Treasury (the issuer). Only sells.** Stands in for the business owner. Holds all 10,000 shares at listing, offers a float of 3,000 for sale, keeps 7,000 as the owner retained stake (not tradable except through the acquisition flow in 9.6). At listing it posts sell orders for the float on a ladder from `0.90 p0` to `1.10 p0`; unsold float stays on the ask side in later rounds. It never places a buy. Its proceeds are "what the owner received" and only go up.
+
+**Market maker. Buys and sells (posts both, takes whichever side the round clears against).** Separate cash account, starts with zero inventory. Positive inventory means it bought from players and is holding. Negative inventory means it sold shares borrowed from the Treasury's retained stake and must buy them back (an ordinary short, so it can never sell more than exists). Inventory capped at +/- 15% of the float (450 shares). Its P&L is the bounded liquidity subsidy and can go negative. Quotes come from 8.4.
+
+Neither account is a profit center. If this were real, platform revenue would be a per fill fee (0.5%), listing fees, and an acquisition success fee; show a fee counter on the surveillance page next to the two P&Ls.
 
 ### 8.2 Valuation anchor `V0` and uncertainty `sigma`
 `valuation.py` returns a lognormal belief `ln V ~ N(ln V0, sigma^2)`.
@@ -369,7 +379,7 @@ bid_1  = r - delta/2, ask_1 = r + delta/2
 ladder = 5 levels each side, price step = delta/2, qty at level i = D * exp(-0.5 i) where D = base depth in shares
 ```
 
-`sigma_p` is the per batch price vol implied by the belief `sigma`. Depth `D` scales with confidence (a well documented business gets deep quotes, a stub gets thin ones). The house has an inventory cap (+/- 15% of shares); at the cap it quotes one side only. House PnL is tracked and shown on the surveillance page as "liquidity provider P&L", which is also the bound on how much the platform can lose per company (this is the LMSR idea: bounded subsidy in exchange for liquidity).
+`q` is the market maker account's signed inventory from 8.1 (negative = borrowed from Treasury). `sigma_p` is the per batch price vol implied by the belief `sigma`. Depth `D` scales with confidence (a well documented business gets deep quotes, a stub gets thin ones). At the inventory cap it quotes only the side that reduces inventory. The market maker can never fill both sides in one round (one clearing price, bid below ask), so spread capture happens across rounds: buy in a round where sellers dominate, sell in a later round where buyers dominate, and it gets price improvement whenever `p*` clears past its quote. It loses in a sustained one directional repricing (adverse selection); the skew slows that and the cap bounds it. Market maker PnL is shown on the surveillance page as "liquidity provider P&L", which is the bound on how much the platform can lose per company (this is the LMSR idea: bounded subsidy in exchange for liquidity).
 
 ### 8.5 Anti arbitrage and fairness rules (enforced in `book.py`, tested)
 - Uniform price per batch, no order sees a different price than another in the same round.
@@ -377,7 +387,7 @@ ladder = 5 levels each side, price step = delta/2, qty at level i = D * exp(-0.5
 - Self trade prevention: a user's buys and sells never match each other; the later order is cancelled.
 - Order limits: max qty per order 5% of shares, max open notional per user per market 25% of their cash.
 - Server timestamps only, orders are immutable once placed (cancel creates a new event), everything mirrored to `audit_log`.
-- The house never trades against its own quotes and its ladder is recomputed only between batches (no look ahead at the current round's orders).
+- The market maker never trades against its own quotes and its ladder is recomputed only between batches (no look ahead at the current round's orders). The Treasury never buys, so the account that owns the float cannot bid the price up.
 - Limit prices are clamped to [0.5x, 2x] of the reference so fat fingers do not print absurd prices.
 
 ### 8.6 Kelly sizing for the portfolio builder
@@ -391,6 +401,8 @@ usd   = f * bankroll
 ```
 
 Across N suggestions, treat covariance as diagonal (thin markets, no shared history), so the vector is elementwise, then rescale so the sum is at most 80% of budget. Show the user `edge`, `sigma`, `f`, and one sentence from Grok on why this company matches their profile. Negative `mu` means "overpriced", shown as a sell candidate if they hold it. A risk slider maps to the Kelly multiplier (0.25 to 1.0).
+
+Who uses Kelly: players (and the demo bots, each with a private noisy valuation `v_i = v e^{eps}` so the tape shows heterogeneous opinions). Never the house accounts. Add a "your value" field on the order ticket and portfolio tab, defaulting to the model value, so Kelly sizes off the user's own opinion when they have one.
 
 Matching before sizing: candidate set = Atlas Vector Search top 30 on the embedding of the user's profile text (sectors, states, horizon, free text) filtered by state and budget, minus companies they already hold.
 
