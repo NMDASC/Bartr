@@ -28,9 +28,10 @@ def main():
             return json.load(response)
 
     readiness = get("/readiness")
-    if not readiness.get("querit") or not readiness.get("llm_xai"):
-        missing = [name for name, field in [("Querit", "querit"), ("Grok", "llm_xai")] if not readiness.get(field)]
-        parser.exit(1, f"Configure {' and '.join(missing)} on the API and restart it before warming cities.\n")
+    live_sources = [name for name, field in [("Google Places", "google_places"), ("Querit", "querit"), ("Grok", "llm_xai")] if readiness.get(field)]
+    if not live_sources:
+        parser.exit(1, "Configure Google Places, Querit, or Grok on the API and restart it before warming cities.\n")
+    print("Live sources:", ", ".join(live_sources), flush=True)
     failed = False
     for city in args.city or DEFAULT_CITIES:
         query = f"{args.category} in {city}"
@@ -64,7 +65,9 @@ def main():
         print(json.dumps({"city": city, "companies": len(companies), "with_sources": sourced,
             "status": terminal.get("status") if terminal else "interrupted",
             "warnings": terminal.get("warnings", []) if terminal else []}), flush=True)
-        failed |= terminal is None or terminal.get("status") != "done"
+        # Partial means at least one optional enrichment source failed. It is a
+        # useful search result when sourced companies still reached the UI.
+        failed |= terminal is None or terminal.get("status") == "failed" or not companies
     return int(failed)
 
 

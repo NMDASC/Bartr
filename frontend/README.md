@@ -22,8 +22,10 @@ Everything goes through `src/lib/api.ts`. No screen imports fixtures or fetch di
 ## Live discovery
 
 Set `NEXT_PUBLIC_API_URL=http://127.0.0.1:8000` in `frontend/.env.local` and restart the
-existing development server. Put `QUERIT_API_KEY`, `XAI_API_KEY`, and `DISCOVERY_LIVE=1`
-in the repository root `.env` for the API. Provider keys must never use `NEXT_PUBLIC_`.
+existing development server. Put `DISCOVERY_LIVE=1` and at least one of
+`GOOGLE_PLACES_API_KEY`, `QUERIT_API_KEY`, or `XAI_API_KEY` in the repository root
+`.env` for the API. Grok performs its own cited web search when xAI is available;
+the other providers keep live search useful during a model outage. Provider keys must never use `NEXT_PUBLIC_`.
 Search uses POST `/api/v1/discovery/search` followed by replayable SSE. The shared
 GraphQL API is available separately; screens continue to use the existing API adapter.
 

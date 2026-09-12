@@ -28,7 +28,7 @@ Env: `SEED=1` loads `seeds/companies.json` (default on). `BOTS=1` runs 20 demo t
 | GET | /markets/{id}/trades | tape |
 | POST | /markets/{id}/batch/run | clear a round now (demo) |
 | WS | **/ws/markets/{id}** (app root, not under /api/v1) | frames `book`, `batch`, `halt` |
-| POST | /discovery/search | `{q, live?, limit?}` -> 202 `{job_id, intent}`; starts a reusable job; live defaults to `DISCOVERY_LIVE=1` |
+| POST | /discovery/search | `{q, live?, limit?}` -> 202 `{job_id, intent}`; starts a reusable job; live defaults to `DISCOVERY_LIVE=1` and uses any configured Places, Querit, or Grok source |
 | GET | /discovery/jobs/{id} | Replayable SSE with `Last-Event-ID`: `intent`, `ranking`, `company_ready`, `done`; terminal status/warnings preserve partial results |
 | GET | /portfolio | cash, positions, equity, pnl {realized, unrealized, total} |
 | POST | /portfolio/suggest | half Kelly over markets; `own_values` overrides the model value per market |

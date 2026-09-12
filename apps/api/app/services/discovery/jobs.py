@@ -19,6 +19,7 @@ from .querit import Querit, ContentsUnavailable
 from .ranking import rank_companies
 from .locations import retrieval_query
 from .places import text_search, sourced_company
+from .grok_search import GrokWebSearch
 from .intent import _matches
 
 
@@ -48,9 +49,10 @@ class Job:
 
 
 class DiscoveryJobs:
-    def __init__(self, engine, provider: Querit | None = None):
+    def __init__(self, engine, provider: Querit | None = None, grok_provider: GrokWebSearch | None = None):
         self.engine = engine
         self.provider = provider or Querit()
+        self.grok_provider = grok_provider or GrokWebSearch()
         self.jobs: dict[str, Job] = {}
         self.live_slots = asyncio.Semaphore(2)
 
@@ -109,7 +111,11 @@ class DiscoveryJobs:
         return {}
 
     async def source_pages(self, pages: list[dict], job: Job) -> list[dict]:
+        if not pages or not os.getenv("QUERIT_API_KEY"):
+            return pages
         try:
+            # When Grok supplied the URLs, Querit can replace its cited
+            # synthesis with the underlying page text before extraction.
             return await self.provider.contents(pages)
         except ContentsUnavailable:
             job.warnings.append("Full page retrieval is not enabled; search excerpts were used")
@@ -149,22 +155,67 @@ class DiscoveryJobs:
                 job.status_line("intent", "Reading the brief")
                 await self.enrich_intent(job)
             query = retrieval_query(job.request.q, job.intent)
-            job.status_line("sourcing", f"Looking for {cat}s in {where}: Google Places and the open web")
-            pages = await self.provider.search(query, count=12)
+            source_names = []
+            if os.getenv("GOOGLE_PLACES_API_KEY"):
+                source_names.append("Google Places")
+            if os.getenv("QUERIT_API_KEY"):
+                source_names.append("Querit")
+            if llm.is_configured("xai"):
+                source_names.append("Grok")
+            job.status_line("sourcing", f"Looking for {cat}s in {where}: {', '.join(source_names) or 'live sources'}")
+
+            async def querit_search():
+                if not os.getenv("QUERIT_API_KEY"):
+                    return []
+                try:
+                    return await self.provider.search(query, count=12)
+                except Exception:
+                    job.warnings.append("Open-web search was partially unavailable")
+                    return []
+
+            async def grok_search():
+                if not llm.is_configured("xai"):
+                    return []
+                try:
+                    return await self.grok_provider.search(query, count=12)
+                except Exception:
+                    job.warnings.append("Grok web search was unavailable")
+                    return []
+
+            async def places_search():
+                try:
+                    return await text_search(query, count=8)
+                except Exception:
+                    job.warnings.append("Some location details were unavailable")
+                    return []
+
+            # Let map results reach the UI while the slower Grok agent is still
+            # researching the open web.
+            grok_task = asyncio.create_task(grok_search())
             try:
-                places = await text_search(query, count=6)
-            except Exception:
-                places = []
-                job.warnings.append("Some location details were unavailable")
+                querit_pages, places = await asyncio.gather(querit_search(), places_search())
+                if querit_pages or places:
+                    job.status_line("sourcing", f"Found {len(places)} on the map and {len(querit_pages)} web pages", places=len(places), pages=len(querit_pages))
+                place_pages = [{"url": p["source_url"], "title": p["name"], "content": json.dumps(p)} for p in places]
+                structured_places = [company for p in places if (company := sourced_company(p)) is not None]
+                for p in places[:6]:
+                    job.status_line("appraising", f"Appraising {p.get('name', 'a business')} from its footprint: reviews, tenure, category benchmarks")
+                self.ingest(ExtractedCompanies(companies=structured_places), place_pages, job)
+                grok_pages = await grok_task
+            except BaseException:
+                if not grok_task.done():
+                    grok_task.cancel()
+                    await asyncio.gather(grok_task, return_exceptions=True)
+                raise
+            pages = [*querit_pages, *grok_pages]
             if not pages and not places:
                 job.status_line("sourcing", f"Nothing new turned up for {cat}s in {where}")
                 return
-            job.status_line("sourcing", f"Found {len(places)} on the map and {len(pages)} pages worth reading", places=len(places), pages=len(pages))
-            place_pages = [{"url": p["source_url"], "title": p["name"], "content": json.dumps(p)} for p in places]
-            structured_places = [company for p in places if (company := sourced_company(p)) is not None]
-            for p in places[:6]:
-                job.status_line("appraising", f"Appraising {p.get('name', 'a business')} from its footprint: reviews, tenure, category benchmarks")
-            self.ingest(ExtractedCompanies(companies=structured_places), place_pages, job)
+            if grok_pages:
+                job.status_line("sourcing", f"Grok added {len(grok_pages)} cited pages", pages=len(pages))
+            if not llm.is_configured("xai"):
+                job.warnings.append("Grok enrichment unavailable; map results were retained")
+                return
             job.status_line("reading", f"Reading {min(len(pages), 6)} pages about {cat}s in {where}")
             pages = await self.source_pages(pages[:6], job)
             pages.extend(place_pages)
@@ -178,7 +229,11 @@ class DiscoveryJobs:
                     continue
                 try:
                     job.status_line("financials", f"Looking for revenue, cash flow or a listing for {item.name}")
-                    more = await self.provider.search(f'"{item.name}" {item.city or ""} {item.state or ""} revenue cash flow asking price', count=3)
+                    financial_query = f'"{item.name}" {item.city or ""} {item.state or ""} revenue cash flow asking price'
+                    if os.getenv("QUERIT_API_KEY"):
+                        more = await self.provider.search(financial_query, count=3)
+                    else:
+                        more = await self.grok_provider.search(financial_query, count=3)
                     more = await self.source_pages(more, job)
                     if more:
                         job.status_line("financials", f"Reading {len(more)} pages about {item.name}")
@@ -213,7 +268,7 @@ class DiscoveryJobs:
                 job.emit({"type": "company_ready", "company": {**hit["company"], "relevance": hit["relevance"]}})
             where = job.intent.get("city") or job.intent.get("state") or "the area"
             job.status_line("stored", f"{len(job.results)} already appraised in {where}" if job.results else f"Nothing on file yet for {where}", count=len(job.results))
-            configured = bool(os.getenv("QUERIT_API_KEY")) and llm.is_configured("xai")
+            configured = bool(os.getenv("QUERIT_API_KEY") or os.getenv("GOOGLE_PLACES_API_KEY")) or llm.is_configured("xai")
             if job.request.live and not configured:
                 job.warnings.append("Live search unavailable")
             elif not job.request.live:

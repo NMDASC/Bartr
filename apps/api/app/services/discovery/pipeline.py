@@ -1,4 +1,4 @@
-"""Optional live discovery: Places + Querit + Grok, then Store upsert. Seeds still stream first."""
+"""Legacy live-event adapter. DiscoveryJobs is the REST/GraphQL implementation."""
 from __future__ import annotations
 
 import os
@@ -13,7 +13,9 @@ from .querit import Querit
 
 
 def live_enabled() -> bool:
-    return os.getenv("DISCOVERY_LIVE", "0") == "1" and bool(os.getenv("QUERIT_API_KEY")) and is_configured("xai")
+    return os.getenv("DISCOVERY_LIVE", "0") == "1" and bool(
+        os.getenv("QUERIT_API_KEY") or os.getenv("GOOGLE_PLACES_API_KEY") or is_configured("xai")
+    )
 
 
 async def live_events(query: str, intent: dict):

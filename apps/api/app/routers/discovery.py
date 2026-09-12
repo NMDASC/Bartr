@@ -1,7 +1,8 @@
 """Discovery: POST /discovery/search -> 202 {job_id, intent}; GET /discovery/jobs/{id} streams SSE.
 
-Jobs rank seeds first. Set DISCOVERY_LIVE=1 with Querit and xAI keys to append
-Places + Querit + Grok extractions after the cached results.
+Jobs rank seeds first. Set DISCOVERY_LIVE=1 to append results from any configured
+live source. Grok uses its server-side web search and enriches cited results;
+Querit and Google Places remain independent fallbacks.
 """
 from __future__ import annotations
 

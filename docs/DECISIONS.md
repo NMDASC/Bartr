@@ -178,3 +178,6 @@ Bidding page rebuilt around the round, in the deck's language but the app's desi
 
 ## 026  Sat 00:50  author: A  affects: frontend
 Company navigation now separates research from transaction controls. `/company/{id}` is the pre-bid overview with ownership, financial coverage, appraisal confidence, visible risk gaps, and expandable evidence. The additive `/company/{id}/bid` route contains the existing market, order, and owner-offer experience. Discovery links stay unchanged and the overview's `Bid for acquisition` action opens the bid route. No API, shared type, or database shape changed.
+
+## 027  Sat 12:36  author: Codex  affects: A, B, D
+Live discovery no longer requires Querit and Grok together. `DISCOVERY_LIVE=1` starts when any of Google Places, Querit or xAI is configured. Grok now uses the xAI Responses API server-side web search through the existing audited model wrapper; inline-cited business paragraphs are normalized into discovery pages and pass the existing evidence gate. Places results stream and persist before slower Grok research completes. Provider failures remain warnings and do not discard results from another source. The nationwide smoke script accepts sourced partial results as a successful search while still failing on zero results or terminal failure. No route, shared type or collection shape changed.
