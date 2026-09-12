@@ -232,6 +232,42 @@ svg.flow.light .lg { filter: none; }
 .qa-rule b { color: var(--green); font-size: 26px; }
 .qa-rule span { color: var(--paper-2); font-size: 25px; line-height: 1.4; }
 
+.board {
+  position: absolute;
+  left: 140px;
+  right: 140px;
+  top: 168px;
+  bottom: 88px;
+  overflow: hidden;
+  background: #0b0b0c;
+}
+.board img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+.paper {
+  position: absolute;
+  left: 140px;
+  right: 140px;
+  top: 168px;
+  bottom: 88px;
+  overflow: hidden;
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.14);
+}
+.paper iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+@media print {
+  .paper { overflow: hidden; }
+}
+
 #presenter { position: absolute; left: 40px; bottom: 32px; font-size: 28px; font-weight: 500; color: #8e8e93; display: none; z-index: 5; }
 #presenter.on { display: block; }
 #presenter b { font-weight: 600; }
@@ -464,6 +500,14 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   </div>
 </section>
 
+<!-- Kelly derivation, from the board. Public because this is the originality beat. -->
+<section class="slide" data-theme="dark" id="s10b">
+  <p class="kicker fu">Portfolio</p>
+  <p class="kicker right muted fu">Kelly, from first principles</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:118px; font-size:36px; max-width:1640px;">The stake is not a heuristic. It is the fraction that maximizes log wealth, then cut in half because the edge is estimated.</h2>
+  <div class="board fu"><img src="assets/kelly-board.png" alt="Whiteboard derivation of the Kelly fraction"></div>
+</section>
+
 <!-- 11 Acquire -->
 <section class="slide" data-theme="dark" id="s11">
   <p class="kicker fu">Acquire</p>
@@ -560,7 +604,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   <p class="kicker right muted fu">Press Q from anywhere</p>
   <div style="position:absolute; left:140px; right:140px; top:150px;">
     <h1 class="display fu" style="font-size:118px;">Q&amp;A preparation</h1>
-    <p class="fu" style="font-size:34px; color:var(--paper-2); margin:20px 0 50px;">Stop the public presentation on slide 16. Use this appendix only for questions.</p>
+    <p class="fu" style="font-size:34px; color:var(--paper-2); margin:20px 0 50px;">Stop the public presentation on the close slide. Press End. Use this appendix only for questions.</p>
     <div class="qa-rule fu"><b>Answer first</b><span>Give the conclusion in one sentence. Explain the mechanism only if the judge wants more.</span></div>
     <div class="qa-rule fu"><b>Name the limit</b><span>Say what works today, what is simulated, and what requires a production partner.</span></div>
     <div class="qa-rule fu"><b>Do not bluff</b><span>If you do not know, state the assumption and describe the test that would answer it.</span></div>
@@ -615,6 +659,16 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     <div class="qa-item fu"><div class="qq"><b>Q</b>Have you proven that the estimates are accurate?</div><div class="aa"><strong>Not yet at production scale.</strong> We built a holdout calibration path that hides known listing prices and measures each estimator's error, but we do not yet have enough completed observations to claim empirical calibration. That is an explicit next validation milestone.</div></div>
     <div class="qa-item fu"><div class="qq"><b>Q</b>What stops Grok from hallucinating revenue?</div><div class="aa"><strong>A number only enters verified evidence when the exact supporting sentence, source URL, unit, and date are present.</strong> Grok is one estimator, not the final answer. K2 gives a blind second opinion, deterministic methods remain in the blend, and disagreement widens the range.</div></div>
     <div class="qa-item fu"><div class="qq"><b>Q</b>Does market price create a circular valuation?</div><div class="aa"><strong>It can if thin trades receive too much weight.</strong> The model begins with an evidence-based prior and weights market updates by volume. Production should also cap the influence of concentrated or flagged volume and keep the model value separate from the traded price.</div></div>
+    <div class="qa-item fu"><div class="qq"><b>Q</b>Where does the Kelly fraction come from?</div><div class="aa"><strong>From the log-wealth derivation on the board, not from a blog post.</strong> Wealth after a win is W(1+bf), after a loss W(1-f). Maximizing E[ln W] gives f* = (pb-q)/b. We use half of that, capped at 20 percent, because the edge is estimated. Scroll the paper on the next slide.</div></div>
+  </div>
+</section>
+
+<!-- Kelly paper, scrollable. Q&A only. -->
+<section class="slide qa-slide" data-theme="dark" id="qa-kelly">
+  <p class="kicker fu">Q&amp;A · Kelly derivation</p>
+  <p class="kicker right muted fu">Scroll the paper. Arrows still change slides.</p>
+  <div class="paper no-advance fu">
+    <iframe src="assets/kelly-derivation.pdf#view=FitH" title="Kelly Criterion derivation"></iframe>
   </div>
 </section>
 
@@ -717,8 +771,8 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   const slides = Array.from(document.querySelectorAll('.slide'));
   const stage = document.getElementById('stage');
   const presenter = document.getElementById('presenter');
-  const MAIN_END = 15;
-  const QA_START = 16;
+  const QA_START = slides.findIndex(s => s.id === 'qa-start');
+  const MAIN_END = QA_START > 0 ? QA_START - 1 : slides.length - 1;
   document.getElementById('pt').textContent = slides.length;
   let cur = -1, clockStart = null, clockOn = false;
   slides.forEach(s => s.querySelectorAll('.fu').forEach((el, i) => el.style.setProperty('--i', i)));
@@ -779,7 +833,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
       case 'Escape': if (document.fullscreenElement) document.exitFullscreen(); break;
     }
   });
-  addEventListener('click', e => { if (e.target.closest('a')) return; (e.clientX < innerWidth / 3) ? prev() : next(); });
+  addEventListener('click', e => { if (e.target.closest('a, .paper, .no-advance')) return; (e.clientX < innerWidth / 3) ? prev() : next(); });
   setInterval(() => {
     if (!clockOn) return;
     const s = clockStart ? Math.floor((performance.now() - clockStart) / 1000) : 0;
