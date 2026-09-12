@@ -6,6 +6,7 @@ kelly.py; this module is the state machine around them.
 from __future__ import annotations
 
 import math
+import os
 import time
 import uuid
 from dataclasses import asdict
@@ -93,6 +94,7 @@ class Engine:
         """listed=False: the business was discovered and appraised but the owner has not put it on the
         exchange. No quotes, no orders, no rounds; the page shows our estimate and an offer button."""
         ref = round(val.v0 / SHARES, 2)
+        interval = float(os.getenv("BATCH_INTERVAL_S", str(interval)))
         m = {
             "id": cid, "listed": listed, "shares_outstanding": SHARES, "float_shares": SHARES * FLOAT_FRAC, "retained": SHARES * (1 - FLOAT_FRAC),
             "last_price": None, "ref_price": ref, "batch_interval_s": interval, "next_batch_at": _now() + interval,
@@ -203,7 +205,15 @@ class Engine:
         bids = sorted([{"price": p, "qty": q, "origin": og} for (sd, p, og), q in agg.items() if sd == "buy"], key=lambda l: -l["price"])
         asks = sorted([{"price": p, "qty": q, "origin": og} for (sd, p, og), q in agg.items() if sd == "sell"], key=lambda l: l["price"])
         ind, _, _ = auction.clearing_price(auction.self_trade_filter(orders), m["last_price"], m["band_pct"], anchor=m["ref_price"])
-        return views.book(m, bids, asks, ind, len(orders))
+        out = views.book(m, bids, asks, ind, len(orders))
+        # who is in the round, anonymously: one entry per participant and side, quantity summed
+        who: dict[tuple[str, str], float] = {}
+        for o in orders:
+            if o.user_id == TREASURY:
+                continue
+            who[(o.user_id, o.side)] = round(who.get((o.user_id, o.side), 0.0) + o.qty, 2)
+        out["participants"] = [{"alias": views.alias(u), "uid_hash": views.uid_hash(u), "side": sd, "qty": q} for (u, sd), q in sorted(who.items(), key=lambda kv: -kv[1])]
+        return out
 
     # ---------- batch ----------
     def run_batch(self, mid: str) -> dict:
@@ -225,7 +235,8 @@ class Engine:
         else:
             res = auction.clear(orders, m["last_price"], m["band_pct"], anchor=m["ref_price"])
             m["band_pct"] = BAND
-        batch = {"id": _id("b"), "market_id": mid, "t": t0, "clearing_price": res.price if res.volume > 0 else None,
+        m["round"] = m.get("round", 0) + 1
+        batch = {"id": _id("b"), "market_id": mid, "t": t0, "round": m["round"], "clearing_price": res.price if res.volume > 0 else None,
                  "volume": res.volume, "demand": res.demand, "supply": res.supply, "band_hit": res.band_hit,
                  "n_buy": sum(1 for o in orders if o.side == "buy"), "n_sell": sum(1 for o in orders if o.side == "sell"),
                  "book_snapshot": snapshot, "halted": halted_now, "ref_moved": False}
@@ -235,6 +246,12 @@ class Engine:
             m["last_price"] = res.price
             batch["ref_moved"] = True
             batch["clearing_price"] = res.price  # the stepped reference; contract wants a number on every batch the UI sees
+        fills: dict[tuple[str, str], float] = {}
+        for f in res.fills:
+            fills[(f.user_id, f.side)] = round(fills.get((f.user_id, f.side), 0.0) + f.qty, 2)
+        from app import views as _v
+        batch["fills"] = [{"alias": _v.alias(u), "uid_hash": _v.uid_hash(u), "side": sd, "qty": q, "price": res.price}
+                          for (u, sd), q in sorted(fills.items(), key=lambda kv: -kv[1])]
         if res.volume > 0:
             self._apply_fills(m, batch, res)
             m["last_price"] = res.price
@@ -246,7 +263,12 @@ class Engine:
                 self.store.audit({"t": t0, "actor": "system", "action": "halt", "payload": {"market_id": mid}})
         self._requote(m)
         n_open = len(self.store.open_orders(mid))
-        m["batch_interval_s"] = auction.next_interval(n_open + len(self._treasury_orders(m)))
+        # Demo runs a fixed round (BATCH_INTERVAL_S, default 10) so the clock on the page is the clock
+        # in the engine; BATCH_ADAPTIVE=1 restores the sparse-market stretch to 60s (Plan.md 8.3).
+        if os.getenv("BATCH_ADAPTIVE", "0") == "1":
+            m["batch_interval_s"] = auction.next_interval(n_open + len(self._treasury_orders(m)))
+        else:
+            m["batch_interval_s"] = float(os.getenv("BATCH_INTERVAL_S", "10"))
         m["next_batch_at"] = _now() + m["batch_interval_s"]
         self.store.put_market(m)
         self.store.add_batch(batch)
@@ -254,7 +276,7 @@ class Engine:
         if self.hub:
             from app import views
             if batch["clearing_price"] is not None:   # quiet rounds only refresh the book (countdown); the chart never sees a null price
-                self.hub.publish(mid, {"type": "batch", "batch": views.batch(batch)})
+                self.hub.publish(mid, {"type": "batch", "batch": views.batch(batch, with_snapshot=True)})
             self.hub.publish(mid, {"type": "book", "book": self.book(mid)})
             if m["halted"]:
                 self.hub.publish(mid, {"type": "halt", "market_id": mid, "until_batch": 1, "reason": "two consecutive band hits"})

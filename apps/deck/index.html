@@ -325,6 +325,21 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   </div>
 </section>
 
+<!-- 4b How search works -->
+<section class="slide" data-theme="light" id="s4b">
+  <p class="kicker fu">How search works</p>
+  <p class="kicker right muted fu">Three services, one pipeline, streamed to the page as it runs</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:150px; font-size:60px; max-width:1640px;">Nothing is typed in by hand. Every business, every number, every source comes from a call we can show you.</h2>
+  <div class="fu" style="position:absolute; left:140px; top:330px;">
+    <svg class="flow light" data-flow="search" viewBox="0 0 1640 360" width="1640" height="360"></svg>
+  </div>
+  <div class="cols3 fu" style="position:absolute; left:140px; right:140px; bottom:64px;">
+    <div><h3>Google Places Text Search</h3><p>Every matching business in the city: name, address, rating, review count, hours, website. This is the list that exists nowhere else in one place.</p></div>
+    <div><h3>Querit search and contents</h3><p>Twelve pages per query, then the full text of the best six. Listings, the business&rsquo;s own site, news, reviews. A targeted second search for the top three looks for revenue, cash flow and an asking price.</p></div>
+    <div><h3>Grok, twice</h3><p>A fast model reads the brief in under a second. A stronger one turns pages into profiles with structured output: every figure keeps the sentence it came from and its URL. Pages are evidence, never instructions.</p></div>
+  </div>
+</section>
+
 <!-- 5 One company -->
 <section class="slide" data-theme="light" id="s5">
   <p class="kicker fu">One company</p>
@@ -869,6 +884,21 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
         { id: 'v', x: 0, y: 600, w: 500, h: 84, t: 'Valuation', s: 'A value and a range, shown as each business is priced', acc: true },
       ],
       edges: [{ a: 'q', b: 'p' }, { a: 'p', b: 'w' }, { a: 'w', b: 'g' }, { a: 'g', b: 'v' }],
+    },
+    search: {
+      nodes: [
+        { id: 'q', x: 0, y: 0, w: 300, h: 120, t: 'The brief', s: ['"laundromat in Pittsburgh". Grok', 'reads it: kind of business, city,', 'budget, must-haves. Under a second'], glyph: 'ticket', acc: true },
+        { id: 's', x: 335, y: 0, w: 300, h: 120, t: 'Already appraised', s: ['what we have on file for that', 'city and category shows in two', 'seconds, ranked'], glyph: 'ledger' },
+        { id: 'p', x: 670, y: 0, w: 300, h: 120, t: 'Google Places', s: ['every matching business:', 'address, rating, reviews, hours,', 'website'], logo: 'googlemaps' },
+        { id: 'w', x: 1005, y: 0, w: 300, h: 120, t: 'Querit search', s: ['twelve pages about them:', 'listings, their own site, news'], glyph: 'book' },
+        { id: 'c', x: 1340, y: 0, w: 300, h: 120, t: 'Querit contents', s: ['full text of the six best', 'pages'], glyph: 'book' },
+        { id: 'x', x: 1340, y: 230, w: 300, h: 120, t: 'Grok extraction', s: ['businesses, owners, figures.', 'Structured output; every number', 'keeps its sentence and URL'], glyph: 'ticket', acc: true },
+        { id: 'f', x: 1005, y: 230, w: 300, h: 120, t: 'Financials, top three', s: ['a second search per business for', 'revenue, cash flow, asking price'], glyph: 'gauge' },
+        { id: 'r', x: 670, y: 230, w: 300, h: 120, t: 'Ranked by evidence', s: ['relevance, then how many', 'independent sources back it.', 'A must-have needs a quote'], glyph: 'split' },
+        { id: 'v', x: 335, y: 230, w: 300, h: 120, t: 'Valued five ways', s: ['income, listing, footprint, model', 'opinion, base rate: a value and', 'a range'], glyph: 'line', acc: true },
+        { id: 'o', x: 0, y: 230, w: 300, h: 120, t: 'On the page, live', s: ['each step streams a status line;', 'a business appears the moment it', 'is priced'], glyph: 'clock', acc: true },
+      ],
+      edges: [{ a: 'q', b: 's' }, { a: 's', b: 'p' }, { a: 'p', b: 'w' }, { a: 'w', b: 'c' }, { a: 'c', b: 'x', acc: true }, { a: 'x', b: 'f' }, { a: 'f', b: 'r' }, { a: 'r', b: 'v', acc: true }, { a: 'v', b: 'o', acc: true }],
     },
     fair: {
       nodes: [

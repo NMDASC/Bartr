@@ -235,10 +235,20 @@ class Band(BaseModel):
     high: float | None
 
 
+class Participant(BaseModel):
+    alias: str
+    uid_hash: str
+    side: Side
+    qty: float
+    price: float | None = None
+
+
 class Book(BaseModel):
     market_id: str
     bids: list[BookLevel]
     asks: list[BookLevel]
+    participants: list[Participant] = []
+    you: str | None = None
     last: float | None
     ref: float | None
     indicative_price: float | None
@@ -269,11 +279,15 @@ class Batch(BaseModel):
     t: str
     clearing_price: float | None
     volume: float
+    demand: float = 0
+    supply: float = 0
     imbalance: float
     n_buy: int
     n_sell: int
     band_hit: bool
     ref_moved: bool
+    round: int | None = None
+    fills: list[Participant] = []
     book_snapshot: dict | None = None
     model_config = {"populate_by_name": True}
 

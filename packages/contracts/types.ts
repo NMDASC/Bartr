@@ -88,6 +88,10 @@ export interface Belief {
   sigma: number;
   s_m: number;
   n_rounds: number;
+  /** e^prior mu: the ensemble's value before any trading */
+  model_value?: number;
+  /** e^posterior mu: value after blending in cleared rounds */
+  market_value?: number;
 }
 
 /** Owner liquidity (decision 003). The platform never trades. */
@@ -216,7 +220,21 @@ export interface BookLevel {
   origin: Origin;
 }
 
+/** One participant in a round, anonymized: a stable word-and-number alias, never a name or id. */
+export interface Participant {
+  alias: string;
+  uid_hash: string;
+  side: Side;
+  qty: number;
+  /** on a batch's fills: the clearing price */
+  price?: number | null;
+}
+
 export interface Book {
+  /** who has sealed orders in the round in progress (owner excluded), largest first */
+  participants?: Participant[];
+  /** uid_hash of the caller, so the page can mark "you" */
+  you?: string | null;
   indicative_price?: number | null;
   n_open_orders?: number;
   market_id: string;
@@ -247,14 +265,21 @@ export interface Batch {
   _id: string;
   market_id: string;
   t: Iso;
+  /** 1-based round counter per market */
+  round?: number | null;
   clearing_price: number | null;
   volume: number;
+  /** demand(p*) and supply(p*) at the clearing price; the smaller one is the volume, the larger was rationed */
+  demand?: number;
+  supply?: number;
   /** demand minus supply at the clearing price. Signed. */
   imbalance: number;
   n_buy: number;
   n_sell: number;
   band_hit?: boolean;
   ref_moved?: boolean;
+  /** who traded in this round, anonymized */
+  fills?: Participant[];
   book_snapshot?: { bids: BookLevel[]; asks: BookLevel[] };
 }
 

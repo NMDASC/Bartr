@@ -1,4 +1,4 @@
-// Builds Bartr.pptx from the 28 slide stills in .stills/ with the talk track and Q&A prompts as speaker notes.
+// Builds Bartr.pptx from the 29 slide stills in .stills/ with the talk track and Q&A prompts as speaker notes.
 // Run via ./export.sh (it installs pptxgenjs into .stills/ and renders the stills first).
 const pptxgen = require('pptxgenjs');
 const path = require('path');
@@ -8,6 +8,7 @@ const NOTES = [
   'We connect buyers and sellers. Owners get cash for 30 percent and keep the keys. Investors get 20 shares with a price and a way out. Acquirers get the owner s ear and a letter of intent.',
   'Six things, all running: connect buyers and sellers, find businesses, appraise with a range, run the market, keep it fair, watch every trade.',
   'Type laundromat in Pittsburgh. Places, Querit, Grok. Every number keeps the sentence it came from. 53 real businesses priced.',
+  'Nothing is typed in by hand. Grok reads the brief. Google Places lists every business in the city. Querit finds twelve pages about them and reads the best six. Grok turns pages into profiles where every figure keeps its sentence and its URL. Ranked by evidence, valued five ways, on the page as it happens.',
   'Squirrel Hill Wash and Fold: 570,768 dollars, range 475 to 686 thousand.',
   'Five ways to value it, each with its own typical miss. Weighted by one over the miss squared. Each method is a bit off and they disagree; we add both. A range, never a bare number.',
   'The owner is the seller. Five lots above our value, a buyback below. Every round, one price for everyone, and the owner requotes from the updated value.',
@@ -32,14 +33,14 @@ const NOTES = [
   'Security: rules create flags and models review them. The current audit log is application append-only, not cryptographically immutable.',
   'Hard questions: owner trust is the core assumption. State the tests that could validate or disprove the exchange thesis.',
 ];
-const TOTAL = 28;
+const TOTAL = 29;
 const pptx = new pptxgen();
 pptx.defineLayout({ name: 'W', width: 13.333, height: 7.5 });
 pptx.layout = 'W';
 pptx.title = 'Bartr';
 for (let i = 1; i <= TOTAL; i++) {
   const s = pptx.addSlide();
-  s.background = { color: i <= 6 ? 'FFFFFF' : '000000' };
+  s.background = { color: i <= 7 ? 'FFFFFF' : '000000' };
   s.addImage({ path: path.join(__dirname, '.stills', `s${i}.png`), x: 0, y: 0, w: 13.333, h: 7.5 });
   s.addNotes(NOTES[i - 1]);
 }

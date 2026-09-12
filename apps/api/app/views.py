@@ -8,6 +8,25 @@ from datetime import datetime, timezone
 from app.services.market.treasury import SHARES
 
 
+import hashlib
+
+WORDS = ["Alder", "Birch", "Cedar", "Dune", "Ember", "Fern", "Grove", "Harbor", "Iris", "Juniper", "Kestrel", "Lark", "Maple", "North",
+         "Otter", "Pine", "Quill", "Reed", "Slate", "Tern", "Umber", "Vale", "Wren", "Yarrow", "Zephyr", "Aster", "Basil", "Cove", "Delta", "Elm"]
+
+
+def alias(uid: str) -> str:
+    """Stable, anonymous name for a participant. The owner is the owner; everyone else is a word and a
+    number, so two people can never be told apart by anything but their orders."""
+    if uid == "treasury":
+        return "Owner"
+    h = hashlib.sha1(uid.encode()).hexdigest()
+    return f"{WORDS[int(h[:2], 16) % len(WORDS)]} {int(h[2:4], 16) % 90 + 10}"
+
+
+def uid_hash(uid: str) -> str:
+    return hashlib.sha1(uid.encode()).hexdigest()[:12]
+
+
 def iso(t: float | None) -> str | None:
     return None if t is None else datetime.fromtimestamp(t, tz=timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -87,8 +106,9 @@ def order(o: dict) -> dict:
 
 def batch(b: dict, with_snapshot: bool = False) -> dict:
     out = {"_id": b["id"], "market_id": b["market_id"], "t": iso(b["t"]), "clearing_price": b["clearing_price"],
-           "volume": b["volume"], "imbalance": round(b["demand"] - b["supply"], 2), "n_buy": b["n_buy"], "n_sell": b["n_sell"],
-           "band_hit": b["band_hit"], "ref_moved": b.get("ref_moved", False)}
+           "volume": b["volume"], "demand": round(b["demand"], 2), "supply": round(b["supply"], 2),
+           "imbalance": round(b["demand"] - b["supply"], 2), "n_buy": b["n_buy"], "n_sell": b["n_sell"],
+           "band_hit": b["band_hit"], "ref_moved": b.get("ref_moved", False), "round": b.get("round"), "fills": b.get("fills", [])}
     if with_snapshot:
         out["book_snapshot"] = {"bids": b["book_snapshot"]["bids"], "asks": b["book_snapshot"]["asks"]}
     return out

@@ -81,7 +81,7 @@ export function LandingValuation({ valuation, name }: { valuation: Valuation; na
     const head = `M${x(mark).toFixed(1)},${yBase}`;
     const top = above.map((p) => `L${x(p.v).toFixed(1)},${(yBase - p.d * (yBase - yTop)).toFixed(1)}`).join(" ");
     return `${head} L${x(mark).toFixed(1)},${(yBase - Math.exp(-0.5 * Math.pow((Math.log(mark) - Math.log(v0)) / sigma, 2)) * (yBase - yTop)).toFixed(1)} ${top} L${x(hi).toFixed(1)},${yBase} Z`;
-  }, [curve, mark, x, v0, sigma, yBase, yTop]);
+  }, [curve, mark, x, v0, sigma, yBase, yTop, hi]);
 
   const pAbove = 1 - phi((Math.log(mark) - Math.log(v0)) / sigma);
 

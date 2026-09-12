@@ -45,7 +45,8 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 | 0:17 | 3 Who it is for | "We connect buyers and sellers. Owners get cash for 30 percent and keep the keys. Investors get 20 shares with a price and a way out. Acquirers get the owner's ear and a letter of intent." |
 | 0:30 | 4 What it does | "Six things, all running: connect buyers and sellers, find businesses, appraise with a range, run the market, keep it fair, watch every trade." |
 | 0:40 | 5 Discover | "Type laundromat in Pittsburgh. Places, Querit, Grok. Every number keeps the sentence it came from. 53 real businesses priced." |
-| 0:50 | 6 One company | "Squirrel Hill Wash and Fold: $570,768, range 475 to 686 thousand." |
+| 0:47 | 6 How search works | "Nothing is typed in by hand. Grok reads the brief. Places lists every business in the city. Querit finds twelve pages and reads the best six. Grok turns pages into profiles where every figure keeps its sentence and its URL. Ranked by evidence, valued five ways, on the page as it happens." |
+| 0:58 | 7 One company | "Squirrel Hill Wash and Fold: $570,768, range 475 to 686 thousand." |
 | 0:58 | 7 Pricing | "Five ways to value it, each with its own typical miss. Weighted by one over the miss squared. Each method is a bit off and they disagree; we add both. A range, never a bare number." |
 | 1:12 | 8 Market | "The owner is the seller. Five lots above our value, a buyback below. Every round, one price for everyone, and the owner requotes from the updated value." |
 | 1:25 | 9 Live | Let two rounds run. "Everyone paid 58.67, including Jonas who bid 64.20. Round two: the value moved, the owner requoted, Jonas sold part of his stake at the same price the new buyers paid." |

@@ -204,6 +204,13 @@
 .bartr-level-ask { animation: bartr-flash-down 700ms var(--ease-out) 1; }
 
 /* the last seconds before a clear */
+@keyframes bartr-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.bartr-pop { transform-box: fill-box; transform-origin: center; animation: bartr-pop 500ms var(--ease-out) 1; }
+
 @keyframes bartr-imminent {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.45; }
@@ -211,7 +218,7 @@
 .bartr-imminent { animation: bartr-imminent 700ms var(--ease-in-out) infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bartr-draw, .bartr-clear, .fade-up, .bartr-up, .bartr-down, .bartr-print, .bartr-level-bid, .bartr-level-ask, .bartr-imminent { animation: none !important; }
+  .bartr-draw, .bartr-clear, .bartr-pop, .fade-up, .bartr-up, .bartr-down, .bartr-print, .bartr-level-bid, .bartr-level-ask, .bartr-imminent { animation: none !important; }
   .bartr-draw { stroke-dashoffset: 0; }
   * { transition: none !important; }
 }

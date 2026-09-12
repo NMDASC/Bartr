@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCountdown } from "@/hooks/use-market";
 import type { Book, Order, Side } from "@contracts/types";
 import { placeOrder } from "@/lib/api";
 import { px, usd } from "@/lib/format";
@@ -10,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Callout } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
 
-export function OrderTicket({ marketId, book }: { marketId: string; book: Book | null }) {
+export function OrderTicket({ marketId, book, nextBatchAt, round }: { marketId: string; book: Book | null; nextBatchAt?: string | null; round?: number }) {
+  const secs = useCountdown(nextBatchAt);
   const [side, setSide] = useState<Side>("buy");
   const [qty, setQty] = useState("50");
   const [limit, setLimit] = useState("");
@@ -20,7 +22,9 @@ export function OrderTicket({ marketId, book }: { marketId: string; book: Book |
 
   const bestBid = book?.bids[0]?.price ?? null;
   const bestAsk = book?.asks[0]?.price ?? null;
-  const suggested = side === "buy" ? bestAsk : bestBid;
+  // where the round would clear right now; in a batch auction that is the price you actually pay
+  const expected = book?.indicative_price ?? (side === "buy" ? bestAsk : bestBid);
+  const suggested = expected;
   const q = Number(qty);
   const l = limit === "" ? suggested : Number(limit);
   const notional = q > 0 && l ? q * l : null;
@@ -87,13 +91,26 @@ export function OrderTicket({ marketId, book }: { marketId: string; book: Book |
           <dt className="uppercase tracking-[0.08em] text-muted-foreground">Band</dt>
           <dd className="text-right">{book ? `${px(book.band.low)} to ${px(book.band.high)}` : "\u2014"}</dd>
         </dl>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => { setSide("buy"); setLimit(expected !== null ? px(Math.round(expected * 1.01 * 100) / 100) : ""); }} disabled={expected === null}
+            className="h-9 border border-line font-mono text-[11px] tabular-nums text-up hover:bg-up/[0.06] disabled:opacity-40 transition-colors duration-150">
+            Buy, expect {expected !== null ? px(expected) : "—"}
+          </button>
+          <button type="button" onClick={() => { setSide("sell"); setLimit(expected !== null ? px(Math.round(expected * 0.99 * 100) / 100) : ""); }} disabled={expected === null}
+            className="h-9 border border-line font-mono text-[11px] tabular-nums text-down hover:bg-down/[0.06] disabled:opacity-40 transition-colors duration-150">
+            Sell, expect {expected !== null ? px(expected) : "—"}
+          </button>
+        </div>
         <Button type="submit" variant="primary" size="lg" disabled={disabled} className="w-full">
-          {busy ? "Placing" : `Place ${side} order`}
+          {busy ? "Sealing" : `Seal ${side} order for round ${(round ?? 0) + 1}`}
         </Button>
+        <p className="text-[12px] secondary leading-[1.45]">
+          Orders are sealed until the clock hits zero{nextBatchAt ? ` (${Math.ceil(secs)}s)` : ""}. Everyone in the round trades at one price; a limit is the most you will pay or the least you will take, and the round usually clears inside it.
+        </p>
         {placed ? (
           <Callout tone={placed.side === "buy" ? "up" : "down"}>
             <span className="font-mono text-[11px] tabular-nums">
-              {placed.side} {placed.qty} @ {px(placed.limit_price)} resting
+              {placed.side} {placed.qty} @ {px(placed.limit_price)} sealed for round {(round ?? 0) + 1}
             </span>
           </Callout>
         ) : null}
