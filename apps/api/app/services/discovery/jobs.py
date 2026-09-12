@@ -197,7 +197,11 @@ class DiscoveryJobs:
                 if querit_pages or places:
                     job.status_line("sourcing", f"Found {len(places)} on the map and {len(querit_pages)} web pages", places=len(places), pages=len(querit_pages))
                 place_pages = [{"url": p["source_url"], "title": p["name"], "content": json.dumps(p)} for p in places]
-                structured_places = [company for p in places if (company := sourced_company(p)) is not None]
+                structured_places = [
+                    company
+                    for p in places
+                    if (company := sourced_company(p, job.intent.get("category"))) is not None
+                ]
                 for p in places[:6]:
                     job.status_line("appraising", f"Appraising {p.get('name', 'a business')} from its footprint: reviews, tenure, category benchmarks")
                 self.ingest(ExtractedCompanies(companies=structured_places), place_pages, job)
@@ -260,6 +264,10 @@ class DiscoveryJobs:
             job.warnings.append("Some search preferences could not be interpreted")
 
     async def run(self, job: Job):
+        # Let the request that created this task flush its 202 response before
+        # Mongo-backed ranking begins. Otherwise a large catalog can delay the
+        # browser long enough to trip its search-start timeout.
+        await asyncio.sleep(0.05)
         try:
             job.emit({"type": "intent", "intent": job.intent})
             job.status_line("stored", "Checking businesses we have already found and appraised")

@@ -22,8 +22,8 @@ class Bots:
 
     def _pv(self, bot: str, m: dict) -> float:
         key = (bot, m["id"])
+        model = math.exp(m["prior"]["mu"]) / SHARES
         if key not in self.private:
-            model = math.exp(m["prior"]["mu"]) / SHARES
             self.private[key] = model * math.exp(self.rng.gauss(0, self.noise * m["prior"]["sigma"]))
         # slow random walk of opinion, pulled gently toward the last print so bots follow the market, not fight it
         last = m["last_price"] or model

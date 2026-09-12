@@ -68,6 +68,8 @@ export function useMarket(id: string, enabled = true): MarketView {
     let alive = true;
     let flash: number | undefined;
     let flash2: number | undefined;
+    let retry: number | undefined;
+    let attempts = 0;
     const adopt = (b: Book) => {
       const next = { ...b, you: you.current };
       setBook((old) => {
@@ -78,15 +80,33 @@ export function useMarket(id: string, enabled = true): MarketView {
       shownAt.current = count(next);
       setPending(0);
     };
-    (async () => {
-      const [b, h] = await Promise.all([getBook(id), getBatches(id, 120)]);
+    const loadSnapshot = async () => {
+      attempts += 1;
+      const [bookResult, batchesResult] = await Promise.allSettled([
+        getBook(id),
+        getBatches(id, 120),
+      ]);
       if (!alive) return;
-      you.current = b.you ?? null;
-      adopt(b);
-      setBatches(h);
-      setRoundsSeen(h.at(-1)?.round ?? h.length);
-      setReady(true);
-    })();
+
+      if (bookResult.status === "fulfilled") {
+        you.current = bookResult.value.you ?? null;
+        adopt(bookResult.value);
+        setReady(true);
+      }
+      if (batchesResult.status === "fulfilled") {
+        const history = batchesResult.value;
+        setBatches(history);
+        setRoundsSeen(history.at(-1)?.round ?? history.length);
+      }
+
+      if (
+        attempts < 3 &&
+        (bookResult.status === "rejected" || batchesResult.status === "rejected")
+      ) {
+        retry = window.setTimeout(loadSnapshot, 750);
+      }
+    };
+    void loadSnapshot();
     const off = subscribeMarket(id, (f) => {
       if (!alive) return;
       if (f.type === "book") {
@@ -117,6 +137,7 @@ export function useMarket(id: string, enabled = true): MarketView {
       alive = false;
       window.clearTimeout(flash);
       window.clearTimeout(flash2);
+      window.clearTimeout(retry);
       off();
     };
   }, [id, enabled]);

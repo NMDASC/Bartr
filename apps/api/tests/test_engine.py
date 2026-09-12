@@ -1,5 +1,6 @@
 import math
 from app.services.market.engine import Engine, STARTING_CASH, TREASURY
+from app.services.market.bots import Bots
 from app.services.market.treasury import SHARES
 from app.store import MemoryStore
 
@@ -118,3 +119,15 @@ def test_batches_endpoint_shape_never_null_price():
     e.place_order("z", mid, "buy", 5, m["treasury"]["ask_ladder"][0]["price"]); e.run_batch(mid)
     rows = e.store.batches(mid)
     assert rows[0]["clearing_price"] is None and rows[1]["clearing_price"] is not None
+
+
+def test_bot_private_value_can_update_after_initialization():
+    e, mid = make()
+    bot = Bots(e, n=1, wash=False)
+    market = e.store.get_market(mid)
+
+    first = bot._pv("bot00", market)
+    second = bot._pv("bot00", market)
+
+    assert first > 0
+    assert second > 0

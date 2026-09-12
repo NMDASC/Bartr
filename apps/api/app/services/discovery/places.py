@@ -12,14 +12,15 @@ from .models import Evidence, ExtractedCompany
 PLACE_CATEGORIES = {"laundry": "laundromat", "car_wash": "car_wash", "restaurant": "restaurant", "car_repair": "auto_repair"}
 
 
-def sourced_company(place: dict) -> ExtractedCompany | None:
+def sourced_company(place: dict, fallback_category: str | None = None) -> ExtractedCompany | None:
     """Structured Places facts can be displayed before model enrichment finishes."""
-    if place.get("country") != "US" or not all(place.get(k) for k in ("city", "state", "category")):
+    category = place.get("category") or fallback_category
+    if place.get("country") != "US" or not place.get("city") or not place.get("state") or not category:
         return None
     evidence = [Evidence(field=key, value=place[key], source_url=place["source_url"],
                          quote=f'"{key}": {json.dumps(place[key])}')
                 for key in ("rating", "review_count") if place.get(key) is not None]
-    return ExtractedCompany(name=place["name"], category=place["category"], city=place["city"], state=place["state"],
+    return ExtractedCompany(name=place["name"], category=category, city=place["city"], state=place["state"],
         address=place.get("address"), website=place.get("website"), phone=place.get("phone"), description=None, evidence=evidence)
 
 

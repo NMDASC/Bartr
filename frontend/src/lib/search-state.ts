@@ -44,8 +44,9 @@ export function reduceDiscovery(state: SearchState, event: DiscoveryEvent | { ty
     }
     case "error": return { ...state, phase: "error", error: event.message, cards: finishCards(state.cards) };
     case "done": {
-      // live discovery being off is a mode, not a failure: keep it as a note, never as "partial"
-      const OFF = new Set(["Live search unavailable", "Live search is paused"]);
+      // An intentionally paused search is a mode, not a failure. A configured
+      // live search that is unavailable is still partial and must remain visible.
+      const OFF = new Set(["Live search is paused"]);
       const all = [...new Set([...state.warnings, ...(event.warnings ?? [])])];
       const warnings = all.filter((w) => !OFF.has(w));
       const liveOff = all.some((w) => OFF.has(w));

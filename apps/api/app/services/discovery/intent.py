@@ -31,7 +31,11 @@ def parse_intent(q: str) -> dict:
         number, unit = match.groups()
         return float(number.replace(",", "")) * ({"m": 1e6, "million": 1e6, "k": 1e3, "thousand": 1e3}.get(unit, 1))
     max_value, min_value = amount("under|below|less than"), amount("over|above|more than")
-    must_have = ["absentee ownership"] if "absentee" in ql and "prefer" not in ql else []
+    must_have = []
+    if "absentee" in ql and "prefer" not in ql:
+        must_have.append("absentee ownership")
+    if re.search(r"\bcnc\b", ql):
+        must_have.append("CNC")
     return {"category": category, "naics_guess": None, "state": state, "city": city, "min_value": min_value, "max_value": max_value, "must_have": must_have}
 
 

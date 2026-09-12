@@ -111,7 +111,7 @@ export function streamSearch(
     onEvent({ type: "error", message });
     stop();
   };
-  timer = setTimeout(() => fail("Search timed out. Try again."), 15000);
+  timer = setTimeout(() => fail("Search timed out. Try again."), 60000);
   (async () => {
     try {
       const { job_id, intent } = await j<SearchJobAccepted>(
@@ -198,7 +198,9 @@ export async function startAcquisition(companyId: string, buyerName?: string) {
 
 export async function getFlags() {
   if (IS_MOCK) return mock.flags();
-  return j<Flag[]>("/surveillance/flags");
+  const res = await fetch("/api/admin/surveillance", { cache: "no-store" });
+  if (!res.ok) throw new Error(`GET /api/admin/surveillance -> ${res.status}`);
+  return res.json() as Promise<Flag[]>;
 }
 
 // ---------------------------------------------------------------- offers (discovered businesses)

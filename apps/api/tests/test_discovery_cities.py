@@ -162,7 +162,7 @@ async def test_places_results_survive_model_timeout_without_relaxing_city(monkey
     from app.services.discovery import jobs
     engine = Engine(MemoryStore())
     place = {"name": "NYC Test Laundry", "source_url": "https://maps.google.com/?cid=123",
-             "city": "New York", "state": "NY", "country": "US", "category": "laundromat",
+             "city": "New York", "state": "NY", "country": "US", "category": None,
              "address": "123 Test Street, New York, NY", "rating": 4.5, "review_count": 20}
 
     class Provider:

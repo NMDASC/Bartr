@@ -6,7 +6,6 @@ Querit and Google Places remain independent fallbacks.
 """
 from __future__ import annotations
 
-import asyncio
 import json
 
 from fastapi import APIRouter, Header, HTTPException
@@ -21,15 +20,13 @@ router = APIRouter(prefix="/discovery", tags=["discovery"])
 
 @router.post("/search", response_model=SearchJobAccepted, status_code=202)
 async def search(body: DiscoveryRequest):
-    from app.services.agents import intent as intent_agent
     try:
         if not body.q.strip():
             raise ValueError("Enter a search query")
-        try:
-            intent = await asyncio.wait_for(intent_agent.parse(body.q), timeout=10)
-        except TimeoutError:
-            intent = None
-        job = service().start(body, intent=intent)
+        # Return the job immediately. The deterministic parser supplies the
+        # initial intent, while model enrichment continues inside the job and
+        # streams an updated intent without delaying this 202 response.
+        job = service().start(body)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     return {"job_id": job.id, "intent": job.intent}
