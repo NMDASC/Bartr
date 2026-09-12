@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { createChart, ColorType, LineSeries, LineType, type IChartApi, type ISeriesApi, type UTCTimestamp } from "lightweight-charts";
+import { createChart, createSeriesMarkers, ColorType, LineSeries, LineType, type IChartApi, type ISeriesApi, type ISeriesMarkersPluginApi, type Time, type UTCTimestamp } from "lightweight-charts";
 import type { Batch } from "@contracts/types";
 
 /** Step line: one price per batch, held until the next round clears. */
-export function PriceChart({ batches, refPrice }: { batches: Batch[]; refPrice: number | null }) {
+export function PriceChart({ batches, refPrice, dir }: { batches: Batch[]; refPrice: number | null; dir?: "up" | "down" | null }) {
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
   const series = useRef<ISeriesApi<"Line"> | null>(null);
   const refLine = useRef<ReturnType<ISeriesApi<"Line">["createPriceLine"]> | null>(null);
+  const markers = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
 
   useEffect(() => {
     if (!el.current) return;
@@ -44,11 +45,17 @@ export function PriceChart({ batches, refPrice }: { batches: Batch[]; refPrice: 
     });
     chart.current = c;
     series.current = s;
+    try {
+      markers.current = createSeriesMarkers(s, []);
+    } catch {
+      markers.current = null;
+    }
     return () => {
       c.remove();
       chart.current = null;
       series.current = null;
       refLine.current = null;
+      markers.current = null;
     };
   }, []);
 
@@ -57,7 +64,23 @@ export function PriceChart({ batches, refPrice }: { batches: Batch[]; refPrice: 
     if (!s) return;
     s.setData(batches.map((b) => ({ time: Math.floor(Date.parse(b.t) / 1000) as UTCTimestamp, value: b.clearing_price })));
     chart.current?.timeScale().fitContent();
-  }, [batches]);
+
+    // one marker, always on the newest print, so the eye lands on what just happened
+    const latest = batches.at(-1);
+    if (markers.current && latest) {
+      const traded = latest.volume > 0;
+      markers.current.setMarkers([
+        {
+          time: Math.floor(Date.parse(latest.t) / 1000) as UTCTimestamp,
+          position: "inBar",
+          shape: "circle",
+          size: traded ? 2 : 1,
+          color: dir === "up" ? "#2bc392" : dir === "down" ? "#ee5557" : "#755cfe",
+          text: traded ? `${latest.volume}` : "",
+        },
+      ]);
+    }
+  }, [batches, dir]);
 
   useEffect(() => {
     const s = series.current;

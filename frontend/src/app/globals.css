@@ -177,8 +177,43 @@
   animation: bartr-clear 600ms var(--ease-out) 1;
 }
 
+/* a batch cleared: direction carries the meaning, so green up and red down */
+@keyframes bartr-flash-up {
+  0% { background-color: rgb(43 195 146 / 0.26); }
+  100% { background-color: transparent; }
+}
+@keyframes bartr-flash-down {
+  0% { background-color: rgb(238 85 87 / 0.26); }
+  100% { background-color: transparent; }
+}
+.bartr-up { animation: bartr-flash-up 700ms var(--ease-out) 1; }
+.bartr-down { animation: bartr-flash-down 700ms var(--ease-out) 1; }
+
+/* the print: what just traded, shown briefly then gone */
+@keyframes bartr-print {
+  0% { opacity: 0; transform: translateY(3px); }
+  10% { opacity: 1; transform: none; }
+  72% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: none; }
+}
+.bartr-print { animation: bartr-print 1800ms var(--ease-out) 1 both; }
+
+/* an order book level whose size changed in this round */
+@keyframes bartr-level {
+  0% { background-color: rgb(117 92 254 / 0.20); }
+  100% { background-color: transparent; }
+}
+.bartr-level { animation: bartr-level 700ms var(--ease-out) 1; }
+
+/* the last seconds before a clear */
+@keyframes bartr-imminent {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.bartr-imminent { animation: bartr-imminent 700ms var(--ease-in-out) infinite; }
+
 @media (prefers-reduced-motion: reduce) {
-  .bartr-draw, .bartr-clear, .fade-up { animation: none !important; }
+  .bartr-draw, .bartr-clear, .fade-up, .bartr-up, .bartr-down, .bartr-print, .bartr-level, .bartr-imminent { animation: none !important; }
   .bartr-draw { stroke-dashoffset: 0; }
   * { transition: none !important; }
 }

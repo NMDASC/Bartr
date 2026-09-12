@@ -24,6 +24,7 @@ export function MarketPanel({ company }: { company: Company }) {
   const shares = company.market?.shares_outstanding ?? 10000;
   const ref = company.valuation ? company.valuation.v0 / shares : null;
   const change = m.last !== null && m.prev !== null ? m.last - m.prev : null;
+  const lastPrint = m.tick > 0 ? m.batches.at(-1) : null;
 
   return (
     <>
@@ -38,7 +39,14 @@ export function MarketPanel({ company }: { company: Company }) {
               </div>
               <div className="pb-1">
                 <Label tracking="tight" className="block mb-1">Change</Label>
-                <div className={cn("font-mono text-[14px] tabular-nums", change === null ? "text-muted-foreground" : change >= 0 ? "text-up" : "text-down")}>
+                <div
+                  key={`chg-${m.tick}`}
+                  className={cn(
+                    "font-mono text-[14px] tabular-nums px-1 -mx-1",
+                    change === null ? "text-muted-foreground" : change >= 0 ? "text-up" : "text-down",
+                    m.dir === "up" ? "bartr-up" : m.dir === "down" ? "bartr-down" : "",
+                  )}
+                >
                   {change === null ? "\u2014" : signed(change)}
                 </div>
               </div>
@@ -79,12 +87,28 @@ export function MarketPanel({ company }: { company: Company }) {
             <div className="bg-card border border-line">
               <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
                 <Label>Clearing price by batch</Label>
-                
+                {lastPrint ? (
+                  <span
+                    key={m.tick}
+                    className={cn(
+                      "bartr-print font-mono text-[11px] tabular-nums",
+                      m.dir === "up" ? "text-up" : m.dir === "down" ? "text-down" : "text-muted-foreground",
+                    )}
+                  >
+                    {lastPrint.volume > 0 ? (
+                      <>
+                        {m.dir === "up" ? "\u25b2" : m.dir === "down" ? "\u25bc" : "\u25cf"} {px(lastPrint.clearing_price)} × {lastPrint.volume}
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">{px(lastPrint.clearing_price)} · no trade</span>
+                    )}
+                  </span>
+                ) : null}
               </div>
-              {live ? <PriceChart batches={m.batches} refPrice={ref} /> : <div className="h-[260px]" />}
+              {live ? <PriceChart batches={m.batches} refPrice={ref} dir={m.dir} /> : <div className="h-[260px]" />}
             </div>
             <div className="grid gap-4 md:grid-cols-[1fr_1fr]">
-              <OrderBook book={m.book} last={m.last} tick={m.tick} />
+              <OrderBook book={m.book} last={m.last} tick={m.tick} dir={m.dir} changed={m.changed} />
               <DepthPlate book={m.book} tick={m.tick} last={m.last} />
             </div>
             <Sources sources={company.sources} />
