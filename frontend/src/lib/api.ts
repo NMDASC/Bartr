@@ -28,6 +28,16 @@ import * as mock from "./mock";
 export const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/$/, "") || null;
 export const IS_MOCK = API_URL === null;
 const BASE = `${API_URL}/api/v1`;
+const CACHED_DEMO_EMAIL = "hackcmu@gmail.com";
+
+function isCachedDemoUser(userId?: string) {
+  return userId?.trim().toLowerCase() === CACHED_DEMO_EMAIL;
+}
+
+function isCachedPittsburghLaundrySearch(q: string, userId?: string) {
+  const normalized = q.toLowerCase().replace(/[^a-z]+/g, " ").trim();
+  return isCachedDemoUser(userId) && normalized.includes("pittsburgh") && /\blaundr(?:y|omat)s?\b/.test(normalized);
+}
 
 /** Demo auth: judges trade from phones without logging in. Matches Plan.md section 7. */
 export function demoUser(): string {
@@ -75,7 +85,14 @@ export async function getCompany(id: string): Promise<Company | null> {
  * Streams a discovery job. Resolves when `done` arrives. Returns an abort function.
  * Real mode: POST /discovery/search then SSE on /discovery/jobs/{id}.
  */
-export function streamSearch(q: string, onEvent: (e: DiscoveryEvent) => void): () => void {
+export function streamSearch(
+  q: string,
+  onEvent: (e: DiscoveryEvent) => void,
+  userId?: string,
+): () => void {
+  if (isCachedPittsburghLaundrySearch(q, userId)) {
+    return mock.streamSearch(q, onEvent, { cached: true });
+  }
   if (IS_MOCK) return mock.streamSearch(q, onEvent);
 
   let es: EventSource | null = null;
@@ -97,9 +114,11 @@ export function streamSearch(q: string, onEvent: (e: DiscoveryEvent) => void): (
   timer = setTimeout(() => fail("Search timed out. Try again."), 15000);
   (async () => {
     try {
-      const { job_id, intent } = await j<SearchJobAccepted>("/discovery/search", {
-        method: "POST", body: JSON.stringify({ q, limit: 50 }), signal: controller.signal,
-      });
+      const { job_id, intent } = await j<SearchJobAccepted>(
+        "/discovery/search",
+        { method: "POST", body: JSON.stringify({ q, limit: 50 }), signal: controller.signal },
+        userId,
+      );
       if (stopped) return;
       clearTimeout(timer);
       timer = setTimeout(() => fail("Search timed out. Try again."), 210000);
@@ -163,12 +182,12 @@ export function subscribeMarket(id: string, onFrame: (f: MarketFrame) => void): 
 // ---------------------------------------------------------------- portfolio / acquire / surveillance
 
 export async function getPortfolio(userId?: string) {
-  if (IS_MOCK) return mock.getPortfolio();
+  if (IS_MOCK || isCachedDemoUser(userId)) return mock.getPortfolio(userId);
   return j<Portfolio>("/portfolio", undefined, userId);
 }
 
 export async function suggestPortfolio(userId?: string) {
-  if (IS_MOCK) return mock.suggest();
+  if (IS_MOCK || isCachedDemoUser(userId)) return mock.suggest(userId);
   return j<Suggestion[]>("/portfolio/suggest", { method: "POST", body: "{}" }, userId);
 }
 

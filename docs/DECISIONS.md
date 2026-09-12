@@ -172,3 +172,6 @@ its five trending markets by explicit id, all of which exist in both the fixture
 
 ## 024  Sat 06:30  author: Aditya (with Claude)  affects: A
 Deck: new slide 3 "We connect buyers and sellers" (owner, businesses not for sale, acquirer, investor, and the five Bartr steps between them, including the offer letter flow from 022) and slide 4 "Six things, each one built and running". Security slide redrawn as three layers (rules, two models separately, Grok red team). 16 slides. Not claimed anywhere: kicking a company off the exchange (no delist route exists; halts are the only enforcement).
+
+## 026  Sat 00:50  author: A  affects: frontend
+Company navigation now separates research from transaction controls. `/company/{id}` is the pre-bid overview with ownership, financial coverage, appraisal confidence, visible risk gaps, and expandable evidence. The additive `/company/{id}/bid` route contains the existing market, order, and owner-offer experience. Discovery links stay unchanged and the overview's `Bid for acquisition` action opens the bid route. No API, shared type, or database shape changed.

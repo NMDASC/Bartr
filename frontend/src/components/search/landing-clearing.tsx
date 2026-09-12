@@ -112,27 +112,33 @@ export function LandingClearing() {
   const x = (q: number) => PL + (q / qMax) * (W - PL - PR);
   const y = (v: number) => H - PB - ((v - LO) / (HI - LO)) * (H - PB - PT);
 
-  const step = p < 0.34 ? 0 : p < 0.68 ? 1 : 2;
-  const queue = Math.min(1, Math.max(0, (p - 0.1) / 0.36)); // orders take their place
-  const cross = Math.min(1, Math.max(0, (p - 0.64) / 0.22)); // the cross is marked
+  const queue = Math.min(1, Math.max(0, (p - 0.06) / 0.36)); // orders take their place
+  const cross = Math.min(1, Math.max(0, (p - 0.48) / 0.2)); // the cross is marked
+  const acquired = Math.min(1, Math.max(0, (p - 0.8) / 0.14));
 
   const resting = orders.reduce((a, o) => a + o.qty, 0);
   const steps = [
-    { id: "01", label: "Orders", stat: `${orders.length} resting` },
-    // both sides, because qMax is only the larger of the two and reads as the book
-    { id: "02", label: "Depth", stat: `${resting.toLocaleString()} shares` },
-    { id: "03", label: "Cleared", stat: `${cleared.price.toFixed(2)} \u00d7 ${cleared.matched}` },
+    { id: "01", label: "Live orders", stat: `${orders.length} active` },
+    { id: "02", label: "Bids meet asks", stat: `${resting.toLocaleString()} shares` },
+    { id: "03", label: "Live price", stat: `$${cleared.price.toFixed(2)} / share` },
+    { id: "04", label: "Company acquired", stat: `$${Math.round(cleared.price * 10_000).toLocaleString()}` },
   ];
+  const segment = 1 / steps.length;
+  const step = Math.min(steps.length - 1, Math.floor(p / segment));
 
-  /** Staircase through the cumulative points, drawn only as far as `t`. */
+  /**
+   * Expand the cumulative curves and their order points with the same x
+   * transform. Keeping one source of geometry prevents the points from
+   * drifting away from the paths while the page is scrolled or zoomed.
+   */
   const path = (list: ReturnType<typeof curve>, t: number) => {
     if (!list.length) return "";
-    const n = Math.max(1, Math.ceil(list.length * t));
-    let d = `M${x(0)},${y(list[0].o.price)}`;
-    for (let i = 0; i < n; i++) {
+    const flowX = (q: number) => PL + (x(q) - PL) * t;
+    let d = `M${flowX(0)},${y(list[0].o.price)}`;
+    for (let i = 0; i < list.length; i++) {
       const c = list[i];
-      d += ` L${x(c.to)},${y(c.o.price)}`;
-      if (i + 1 < n) d += ` L${x(c.to)},${y(list[i + 1].o.price)}`;
+      d += ` L${flowX(c.to)},${y(c.o.price)}`;
+      if (i + 1 < list.length) d += ` L${flowX(c.to)},${y(list[i + 1].o.price)}`;
     }
     return d;
   };
@@ -147,7 +153,7 @@ export function LandingClearing() {
           <div className="grid items-center gap-10 lg:grid-cols-[300px_1fr]">
             <div>
               <Label className="mb-2 block">Clearing</Label>
-              <h2 className="text-[30px] md:text-[36px] 3xl:text-[44px] leading-[1.2]">One price, every ten seconds.</h2>
+              <h2 className="text-[30px] md:text-[36px] 3xl:text-[44px] leading-[1.2]">Live price updates, every 10 seconds.</h2>
 
               <ol className="mt-8 flex flex-col">
                 {steps.map((s, i) => {
@@ -160,7 +166,7 @@ export function LandingClearing() {
                         className="absolute left-0 top-0 h-px w-full bg-accent transition-transform duration-300 ease-out"
                         style={{
                           transformOrigin: "left",
-                          transform: `scaleX(${now ? Math.min(1, Math.max(0, (p - i * 0.34) / 0.34)) : on ? 1 : 0})`,
+                          transform: `scaleX(${now ? Math.min(1, Math.max(0, (p - i * segment) / segment)) : on ? 1 : 0})`,
                         }}
                       />
                       <span className={`font-mono text-[10px] tabular-nums ${on ? "text-accent" : "text-tint-400"}`}>{s.id}</span>
@@ -220,9 +226,7 @@ export function LandingClearing() {
                 {[...bids, ...asks].map((c, i) => {
                   const restX = x(c.to);
                   const restY = y(c.o.price);
-                  // they all start on the price axis: a limit, with no size accounted for yet
-                  const arriveX = PL + 3 + c.o.jx * 5;
-                  const cx = arriveX + (restX - arriveX) * queue;
+                  const cx = PL + (restX - PL) * queue;
                   return (
                     <circle
                       key={i}
@@ -249,6 +253,19 @@ export function LandingClearing() {
                   </text>
                   <text x={qx + 6} y={H - PB - 6} fontSize="10" fill="#755CFE" fontFamily="var(--font-mono)">
                     {cleared.matched}
+                  </text>
+                </g>
+
+                <g opacity={acquired}>
+                  <rect x={W - 252} y={28} width={226} height={76} fill="#FFFFFF" stroke="#755CFE" strokeWidth="0.75" />
+                  <text x={W - 238} y={47} fontSize="8" fill="#755CFE" fontFamily="var(--font-mono)" letterSpacing="1.1">
+                    COMPANY ACQUIRED
+                  </text>
+                  <text x={W - 238} y={69} fontSize="11" fill="#1D1956">
+                    Squirrel Hill Wash and Fold
+                  </text>
+                  <text x={W - 238} y={90} fontSize="10" fill="#6C6991" fontFamily="var(--font-mono)">
+                    ${Math.round(cleared.price * 10_000).toLocaleString()}
                   </text>
                 </g>
               </svg>
