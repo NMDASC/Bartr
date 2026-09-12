@@ -7,7 +7,6 @@ export function Sources({ sources }: { sources: Source[] }) {
     <div className="bg-card border border-line">
       <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
         <Label>Sources</Label>
-        <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{sources.length}</span>
       </div>
       {sources.length === 0 ? (
         <p className="p-3 text-[14px] secondary">No sources yet.</p>
@@ -22,7 +21,6 @@ export function Sources({ sources }: { sources: Source[] }) {
                 </a>
               </div>
               <div className="mt-0.5 pl-6 font-mono text-[10px] text-muted-foreground">{domain(s.url)}</div>
-              {s.fetched_at ? <div className="mt-0.5 pl-6 font-mono text-[10px] text-muted-foreground">Retrieved {s.fetched_at.slice(0, 10)}</div> : null}
               <p className="mt-1 pl-6 text-[13px] secondary">{s.snippet}</p>
             </li>
           ))}

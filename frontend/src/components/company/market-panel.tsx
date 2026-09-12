@@ -22,7 +22,6 @@ export function MarketPanel({ company }: { company: Company }) {
   const shares = company.market?.shares_outstanding ?? 10000;
   const ref = company.valuation ? company.valuation.v0 / shares : null;
   const change = m.last !== null && m.prev !== null ? m.last - m.prev : null;
-  const lastBatch = m.batches.at(-1);
 
   return (
     <>
@@ -51,12 +50,6 @@ export function MarketPanel({ company }: { company: Company }) {
                   {company.market?.treasury ? `${company.market.treasury.unsold_float} unsold · floor ${px(company.market.treasury.floor_price)}` : "\u2014"}
                 </div>
               </div>
-              <div className="pb-1 hidden md:block">
-                <Label tracking="tight" className="block mb-1">Last batch</Label>
-                <div className="font-mono text-[14px] tabular-nums">
-                  {lastBatch ? `${lastBatch.volume} sh · ${lastBatch.n_buy}b/${lastBatch.n_sell}s` : "\u2014"}
-                </div>
-              </div>
             </div>
             {live ? <Countdown nextBatchAt={m.book?.next_batch_at} interval={company.market?.batch_interval_s ?? 10} /> : <Label>Not listed yet</Label>}
           </div>
@@ -67,7 +60,7 @@ export function MarketPanel({ company }: { company: Company }) {
         <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
           {/* right rail first on mobile so judges can bid without scrolling */}
           <div className="flex flex-col gap-4 order-first lg:order-none lg:col-start-2">
-            {live ? <OrderTicket marketId={company._id} book={m.book} last={m.last} /> : null}
+            {live ? <OrderTicket marketId={company._id} book={m.book} /> : null}
             <Valuation company={company} last={m.last} />
             <div className="flex gap-2">
               <Button variant="primary" size="lg" href={`/company/${company._id}/acquire`} className="flex-1">
@@ -83,7 +76,7 @@ export function MarketPanel({ company }: { company: Company }) {
             <div className="bg-card border border-line">
               <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
                 <Label>Clearing price by batch</Label>
-                <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{m.batches.length} batches · {company.market?.batch_interval_s ?? 10}s</span>
+                
               </div>
               {live ? <PriceChart batches={m.batches} refPrice={ref} /> : <div className="h-[260px]" />}
             </div>
