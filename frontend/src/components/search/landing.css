@@ -65,6 +65,21 @@
   animation: bl-wipe-up 400ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
+/* a readout row that refreshes many times a second: opacity only, and fast
+   enough that it always lands before the next refresh */
+@keyframes bl-row-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.bl-row-in {
+  animation: bl-row-in 130ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
 /* ---------------------------------------------------------------- the field */
 
 /*
@@ -221,6 +236,7 @@
   .bl-shine-host:hover .bl-shine,
   .bl-rise,
   .bl-wipe-up,
+  .bl-row-in,
   .bl-cell-face,
   .bl-scan,
   .bl-tick-up,

@@ -1,37 +1,55 @@
 import Link from "next/link";
 import { SearchBar } from "@/components/search/search-bar";
 import { CityShortcuts } from "@/components/search/city-shortcuts";
+import { LandingProgress } from "@/components/search/landing-progress";
+import { LandingTape } from "@/components/search/landing-tape";
+import { LandingCoverage } from "@/components/search/landing-coverage";
+import { LandingTrending } from "@/components/search/landing-trending";
+import { LandingClearing } from "@/components/search/landing-clearing";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { listCompanies } from "@/lib/api";
-import { px, usd, pct } from "@/lib/format";
 
 const examples = ["laundromat in Pittsburgh", "car wash on McKnight Road", "machine shop in McKees Rocks", "restaurant on the South Side"];
 
 export default async function Home() {
-  const trending = (await listCompanies().catch(() => [])).filter((c) => c.status === "ready").slice(0, 6);
+  const all = await listCompanies().catch(() => []);
+  const trending = all.filter((c) => c.status === "ready").slice(0, 6);
+
   return (
     <>
+      <LandingProgress />
+
       <section className="bg-background">
         <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
-          <div className="mx-auto max-w-2xl pt-20 pb-16 md:pt-28 md:pb-24">
-            <Label className="mb-4 block">Discovery engine and exchange</Label>
-            <h1 className="text-[33px] lg:text-[40px] 3xl:text-[48px] leading-[1.1] tracking-[-0.01em]">
-              Small businesses have no price. We built one.
-            </h1>
-            <p className="mt-subhead text-[18px] leading-[1.3] secondary max-w-xl">
-              Search the laundromats, car washes, and family manufacturers that will never be listed. Price them like a stock, buy a
-              fraction, or acquire the whole thing.
-            </p>
-            <SearchBar className="mt-8" autoFocus />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {examples.map((e) => (
-                <Button key={e} size="sm" href={`/search?q=${encodeURIComponent(e)}`}>
-                  {e}
-                </Button>
-              ))}
+          <div className="grid gap-12 pt-20 pb-16 md:pt-28 md:pb-24 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-16 3xl:grid-cols-[minmax(0,1fr)_440px]">
+            <div className="max-w-2xl">
+              <Label className="bl-rise mb-4 block">Discovery engine and exchange</Label>
+              <h1 className="bl-shine-host bl-rise text-[33px] lg:text-[40px] 3xl:text-[48px] leading-[1.1] tracking-[-0.01em]" style={{ animationDelay: "60ms" }}>
+                Small businesses have no price. <span className="bl-shine">We built one.</span>
+              </h1>
+              <p className="bl-rise mt-subhead text-[18px] leading-[1.3] secondary max-w-xl" style={{ animationDelay: "120ms" }}>
+                Search the laundromats, car washes, and family manufacturers that will never be listed. Price them like a stock, buy a
+                fraction, or acquire the whole thing.
+              </p>
+              <SearchBar className="bl-rise mt-8" autoFocus chips={examples} />
+              <CityShortcuts />
             </div>
-            <CityShortcuts />
+
+            <div className="bl-rise hidden lg:block lg:pt-10" style={{ animationDelay: "220ms" }}>
+              <LandingTape />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-line">
+        <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-14 md:py-20 xl:border-l xl:border-r xl:border-line">
+          <div className="max-w-2xl">
+            <Label className="mb-2 block">Coverage</Label>
+            <h2 className="text-[30px] md:text-[32px] leading-[1.2]">Thirty three million of them. Almost none have a number.</h2>
+          </div>
+          <div className="mt-10">
+            <LandingCoverage />
           </div>
         </div>
       </section>
@@ -43,44 +61,21 @@ export default async function Home() {
               <Label className="mb-2 block">Trending</Label>
               <h2 className="text-[30px] md:text-[32px] leading-[1.2]">Markets clearing right now.</h2>
             </div>
-            <Link href="/search?q=laundromat%20in%20Pittsburgh" className="hidden sm:inline font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground hover:text-accent">
+            <Link
+              href="/search?q=laundromat%20in%20Pittsburgh"
+              className="hidden sm:inline font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground transition-colors duration-150 ease-out hover:text-accent"
+            >
               All markets
             </Link>
           </div>
 
-          <div className="hidden md:grid grid-cols-[1fr_120px_96px_96px_96px_80px] gap-4 px-3 pb-2">
-            <Label>Company</Label>
-            <Label className="text-right">Value</Label>
-            <Label className="text-right">Bid</Label>
-            <Label className="text-right">Ask</Label>
-            <Label className="text-right">Last</Label>
-            <Label className="text-right">Conf</Label>
-          </div>
-          <ul className="flex flex-col gap-px">
-            {trending.map((c) => (
-              <li key={c._id}>
-                <Link
-                  href={`/company/${c._id}`}
-                  className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_120px_96px_96px_96px_80px] items-center gap-x-4 gap-y-1 bg-surface px-3 py-3 transition-colors duration-150 ease-out hover:bg-surface-hover"
-                >
-                  <div className="min-w-0">
-                    <div className="truncate text-[16px]">{c.name}</div>
-                    <div className="text-[13px] secondary">
-                      {c.city}, {c.state} · {c.category}
-                    </div>
-                  </div>
-                  <div className="font-mono text-[13px] tabular-nums text-right">{usd(c.v0_per_share! * 10000, { compact: true })}</div>
-                  <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-up">{px(c.bid)}</div>
-                  <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-down">{px(c.ask)}</div>
-                  <div className="hidden md:block font-mono text-[13px] tabular-nums text-right">{px(c.last)}</div>
-                  <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-muted-foreground">{pct(c.confidence)}</div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <LandingTrending companies={trending} />
         </div>
       </section>
 
+      <section className="border-t border-line">
+        <LandingClearing />
+      </section>
     </>
   );
 }
