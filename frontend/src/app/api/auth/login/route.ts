@@ -4,7 +4,7 @@ import {
   AUTH_COOKIE,
   adminCredentialsMatch,
   createSessionToken,
-  isAdminEmail,
+  isAdminIdentifier,
   sessionCookie,
 } from "@/lib/auth/session";
 import type { AuthSession } from "@/lib/auth/types";
@@ -16,20 +16,23 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as typeof body;
   } catch {
-    return NextResponse.json({ error: "Enter your email and password." }, { status: 400 });
+    return NextResponse.json({ error: "Enter your email or username and password." }, { status: 400 });
   }
 
   const email = body.email?.trim().toLowerCase() ?? "";
   const password = body.password ?? "";
-  if (!EMAIL.test(email) || password.length < 8) {
+  const isConfiguredAdmin = isAdminIdentifier(email);
+  const isAdmin = adminCredentialsMatch(email, password);
+
+  if (password.length < 8 || (!isConfiguredAdmin && !EMAIL.test(email))) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
-  if (isAdminEmail(email) && !adminCredentialsMatch(email, password)) {
+  if (isConfiguredAdmin && !isAdmin) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
-  const session: AuthSession = adminCredentialsMatch(email, password)
+  const session: AuthSession = isAdmin
     ? { name: "Admin", email, role: "admin" }
     : { name: email.split("@")[0], email, role: "user" };
 

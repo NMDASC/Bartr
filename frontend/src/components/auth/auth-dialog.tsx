@@ -121,13 +121,13 @@ export function AuthDialog({
               htmlFor="auth-email"
               className="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground"
             >
-              Email
+              {isSignup ? "Email" : "Email or username"}
             </label>
             <Input
               id="auth-email"
               name="email"
-              type="email"
-              autoComplete="email"
+              type={isSignup ? "email" : "text"}
+              autoComplete={isSignup ? "email" : "username"}
               required
               autoFocus={!isSignup}
             />

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import {
   AUTH_COOKIE,
   createSessionToken,
-  isAdminEmail,
+  isAdminIdentifier,
   sessionCookie,
 } from "@/lib/auth/session";
 import type { AuthSession } from "@/lib/auth/types";
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   if (password.length < 8) {
     return NextResponse.json({ error: "Use at least 8 characters." }, { status: 400 });
   }
-  if (isAdminEmail(email)) {
+  if (isAdminIdentifier(email)) {
     return NextResponse.json({ error: "Use login for this account." }, { status: 409 });
   }
 

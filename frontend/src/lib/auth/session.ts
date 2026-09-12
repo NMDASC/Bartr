@@ -2,7 +2,10 @@ import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+import { isAdminIdentifier } from "./admin-accounts";
 import type { AuthSession } from "./types";
+
+export { adminCredentialsMatch, isAdminIdentifier } from "./admin-accounts";
 
 export const AUTH_COOKIE = "bartr_session";
 export const AUTH_MAX_AGE = 60 * 60 * 8;
@@ -60,14 +63,8 @@ export function readSessionToken(token: string | undefined): AuthSession | null 
   }
 }
 
-export function adminCredentialsMatch(email: string, password: string) {
-  const adminEmail = (process.env.DEMO_ADMIN_EMAIL || "admin@gmail.com").toLowerCase();
-  const adminPassword = process.env.DEMO_ADMIN_PASSWORD || "admin1234";
-  return email.toLowerCase() === adminEmail && password === adminPassword;
-}
-
 export function isAdminEmail(email: string) {
-  return email.toLowerCase() === (process.env.DEMO_ADMIN_EMAIL || "admin@gmail.com").toLowerCase();
+  return isAdminIdentifier(email);
 }
 
 export const sessionCookie = {
