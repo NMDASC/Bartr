@@ -1,132 +1,135 @@
-SUBMISSION FORM:
+# HackCMU 2026 Submission Form — Bartr
 
-// this is the official submission form of the project.
+This is a copy-ready draft based on the repository. Replace every `TODO` before submitting.
 
-email:
+## Page 1
 
-Hi everyone,
-Submission forms are now open! Please read the form introduction very thoroughly. There are many optional sections that we recommend to fill in as they will be used when deciding sponsor prizes. Sponsor will be judging your submissions based on your video link, your project link, your Github repo (if you have one), and any other information you submit. 
-You have until 4 PM to submit. You can keep working on your code after you submit, so I recommend submitting early to ensure you don't miss the deadline.  Be sure to read through the questions on the form thoroughly! 
+### Team
 
-This slide deck has FAQs about judging and the judging schedule. 
+**Team Name:** JB
 
+**Team Member 1 Name:** Nico Dascombe
 
-******************* IMPORTANT. PLEASE READ THE WHOLE THING  ******************* 
-Judging will promptly begin at 4pm. Please treat 3:30pm as the actual deadline to handle any unseen issues. Anything submitted after 4pm, even by a second late, will not be accepted because we must begin judging immediately.
+**Team Member 1 AndrewID:** ndascomb
 
-At 4:00-4:10pm, we will release the room schedule that will tell everyone when their presentation time is and at what room. Be on the look out because the earliest judging slot may be at 4:15 pm. You MUST be at your room on time. If you cannot make it live, please send us a discord message in the "Cannot make demo" channel AFTER you submit your project and we can play a video of your demo/presentation instead. We will NOT reschedule any pitch so if you cannot be available for the entire judging time, DO NOT sign up for a live pitch. Having a video pitch will not decrease your score.
+**Team Member 2 Name:** Vir Toolsidass
 
-We have no restriction on the presentation format of the project pitch. Do whatever feels best for you. There is no designated Q&A. If you want or expect one, please allocate it in your 3 minute pitch. If you go over the 3 minutes, we may cut you off so be prepared for that.
+**Team Member 2 AndrewID:** TODO — not available in the repository
 
-We also cannot guarantee you will get a certain judge you want. If you want to demo to the sponsors, feel free to find them yourself and give your demo to them. If you sign up for a sponsor prize, please submit as many resources as you can to help them determine how you used their product, as they will not be judging your live demo.
+**Team Member 3 Name:** Aditya Dewan
 
-Any participant may go to any of the judging rooms and watch other teams' pitches live. Please be respectful to other participants and make sure to not miss your own project pitch time.
+**Team Member 3 AndrewID:** TODO — not available in the repository
 
-You should receive an email of your response after you submit it. Please only submit once per team.
+**Team Member 4 Name:** Zhiyuan Guo
 
+**Team Member 4 AndrewID:** zguoliau
 
-Questions:
+### Project
 
-Page 1:
+**Project Name:** Bartr
 
-Team Name
-*
-Team Member 1 Name
-*
-Team Member 1 AndrewID
-*
-Team Member 2 Name
-Team Member 2 AndrewID
-Team Member 3 Name
-Team Member 3 AndrewID
-Team Member 4 Name
-Team Member 4 AndrewID
-Project Name
-*
-Project Summary
-*
+**Project Summary:**
 
-Will you be available for a live pitch? Live pitches are 4:15 PM–7:00 PM. (Remember that time slots are random and NOT negotiable so only sign-up for live pitch if enough team members (at least one) will be available to pitch at any given time.)
-*
-YES
-No
-If you answered "YES" to the above, you will be live pitching so put "N/A" here.
+Bartr discovers independent businesses that are not publicly for sale, researches and prices them from sourced evidence, and helps buyers make offers. Once an owner accepts, Bartr opens a fractional exchange using fair uniform-price batch auctions, valuation-aware owner liquidity, portfolio sizing, and an AI-assisted market-surveillance console.
 
-If you answered "NO" to the above, please provide a link to a video of your pitch. We will play your video pitch during your time slot. Please make sure the link is accessible to ANYONE.
-*
+**Will you be available for a live pitch?**
 
-Project Details
-While these are all optional, these are the only things that the sponsors (other than IFM) will base their prize selection off of.
+TODO — confirm whether at least one team member is available continuously from 4:15 PM to 7:00 PM.
 
-For main judging, your 3 minute presentation will be the most important part, while anything extra submitted here will be supplemental.
+**Pitch video link if not presenting live:**
 
-For sponsor judging, these details you submit below will be the most important part, along with some later, prize specific questions.
-Source Code Link [Highly Encouraged]
-Project Link [Optional]
-Video Link [Optional] (Can be the same video as above.)
-Tracks
-*
-Optimization Track
-Multiplayer Track
-Food Track
-Traveling Track
-Track Justification
-*
+TODO — add a public link, or enter `N/A` if presenting live.
 
-Do you want to be in the IFM Sponsor Track as well? (You must have used IFM models in you project.)
-*
-Yes
-No
-How did you use AI to build your project (if at all)? (We used Codex, ClaudeCode, Grok Build, etc.)
-*
+### Project details
 
-How did you integrate AI into your project (if at all)? (Integrated like OpenAI APIs, Voice Transcription APIs, etc.)
+**Source Code Link:**
 
-page 2:
+https://github.com/NMDASC/JB
 
-Make it Legendary with SpaceXAI Prize
-*
-Yes
-No
-How did you use Grok products in your project and how you use Cursor to build your project? (SpaceXAI)
+**Project Link:**
 
-Why is your project "legendary"? (SpaceXAI)
+TODO — no public deployment URL is recorded in the repository.
 
-Sandia National Laboratories Prize
-*
-Yes
-No
-How is your project cybersecurity related? (Sandia)
+**Video Link:**
 
-Best Use of Gemini API
-*
-Yes
-No
-How did you use the Gemini API? (Gemini API)
+TODO — no public video URL is recorded in the repository.
 
-Best Use of ElevenLabs
-*
-Yes
-No
-How did you use ElevenLabs? (ElevenLabs)
+**Track:** Optimization Track
 
-Best Use of Vultr
-*
-Yes
-No
-How did you use Vultr? (Vultr)
+**Track Justification:**
 
-Best Use of Auth0
-*
-Yes
-No
-How did you use the Auth0? (Auth0)
+Bartr optimizes an illiquid market at three layers: a uniform-price batch auction selects the price that maximizes executable volume; a Bayesian ensemble combines independent business-value estimates and their uncertainty; and a half-Kelly portfolio engine sizes positions while respecting each buyer's budget, risk tolerance, and concentration limits.
 
-Best Use of MongoDB Atlas
-*
-Yes
-No
-How did you use MongoDB Atlas? (MongoDB Atlas)
+**Do you want to be in the IFM Sponsor Track as well?**
 
+No. The repository contains an IFM-compatible provider and K2 review path, but the submitted configuration does not show completed IFM model use, so we should not claim this track.
 
+**How did you use AI to build your project?**
 
+We built Bartr with Cursor, OpenAI Codex, Claude Code, and AI review agents. They helped us work across frontend and API lanes, implement and test features, reconcile shared contracts, review the product and pitch, and fact-check claims. We kept a shared decision log and treated the code, contracts, tests, and manual demo checks as the source of truth for accepting generated work.
+
+**How did you integrate AI into your project?**
+
+At runtime, xAI Grok performs web research and structured business appraisal, parses discovery intent, answers questions through a grounded owner persona, narrates market activity, parses investor risk profiles, explains portfolio suggestions, reviews surveillance flags, generates adversarial red-team scenarios, writes market-health reports, drafts acquisition materials, and powers an agent with search, portfolio, and order tools. Every call goes through one audited provider layer with structured outputs, secret redaction, usage accounting, timeouts, caching, and deterministic fallbacks. Local sentence-transformer embeddings and a Bayesian valuation ensemble also support discovery and pricing.
+
+## Page 2
+
+### Make it Legendary with SpaceXAI Prize
+
+**Apply:** Yes
+
+**How did you use Grok products and Cursor?**
+
+Grok is a working layer of the product rather than a single chat box. Grok 4.6 performs slower, source-backed business research and appraisal, while a fast Grok model handles interactive intent parsing, owner-persona answers, market narration, risk-profile parsing, portfolio explanations, compliance review, red-team attack planning, health reports, acquisition drafting, and the tool-calling assistant. Model inputs, outputs, errors, latency, and token usage are recorded through a secret-redacting audit boundary, and critical paths have deterministic fallbacks. We used Cursor throughout development with repository steering rules and shared contracts to coordinate the Next.js frontend, FastAPI exchange, discovery pipeline, and security console.
+
+**Why is your project legendary?**
+
+Bartr turns a search for an ordinary local business into an end-to-end acquisition path: find a real company, inspect sourced evidence, estimate its value with honest uncertainty, make the owner an offer, list only after owner acceptance, buy a fractional stake, and eventually pursue the whole business. Underneath that simple flow is a real market mechanism: volume-maximizing uniform-price batch auctions, Bayesian valuation updates, owner liquidity, half-Kelly position sizing, live WebSockets, and an adversarial surveillance system. It brings public-market-quality discovery, pricing, and controls to the businesses most technology platforms overlook.
+
+### Sandia National Laboratories Prize
+
+**Apply:** Yes
+
+**How is your project cybersecurity related?**
+
+Bartr treats both trading activity and AI agents as security-sensitive systems. Its exchange prevents self-trades, constrains prices with volatility bands, and can halt after repeated band hits. A rules engine detects wash trading, spoofing, concentrated ownership, pump behavior, and volatility-halt candidates. Grok can plan controlled wash, spoof, or pump attacks against demo accounts so the defenses can be tested, and independent model review can assess rule-generated flags. The administrator console preserves evidence snapshots, links cases to complete trade and agent history, supports human dispositions, and protects security routes with a server-only admin token. Agent inputs, outputs, failures, and raw provider responses are logged with secret redaction in an append-only audit trail.
+
+### Best Use of Gemini API
+
+**Apply:** No
+
+**How did you use the Gemini API?**
+
+N/A
+
+### Best Use of ElevenLabs
+
+**Apply:** No
+
+**How did you use ElevenLabs?**
+
+N/A
+
+### Best Use of Vultr
+
+**Apply:** No. The API has a production-ready Docker image, but the repository does not evidence a completed Vultr deployment.
+
+**How did you use Vultr?**
+
+N/A
+
+### Best Use of Auth0
+
+**Apply:** No. Auth0 variables are scaffolded, but the implemented application uses a clearly labeled demo cookie session rather than Auth0.
+
+**How did you use Auth0?**
+
+N/A
+
+### Best Use of MongoDB Atlas
+
+**Apply:** Yes
+
+**How did you use MongoDB Atlas?**
+
+MongoDB Atlas is Bartr's durable primary store when `MONGODB_URI` is configured. It persists discovered companies and their evidence, valuation snapshots, markets, orders, auction rounds, trades, user portfolios, acquisition drafts, owner offers, agent conversations, append-only audit events, and security cases. The store uses natural IDs and idempotent upserts so discovery can enrich an existing company without recreating its market. Forward-only migrations create operational, identity, audit, security-case, and acquisition indexes, plus an Atlas Vector Search index for 384-dimensional company embeddings. The team exercised the real exchange against Atlas and verified that seeded markets, trades, positions, and audit records survived application restarts.
