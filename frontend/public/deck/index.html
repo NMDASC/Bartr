@@ -378,7 +378,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     <div class="bar"><i></i><i></i><i></i><span>bartr.app/company/co_squirrel_hill_wash</span></div>
     <div class="shot">
       <!-- SCREENSHOT: /company/co_squirrel_hill_wash -->
-      <img src="assets/company.png" alt="" onerror="this.remove()">
+      <img src="/deck/assets/company.png" alt="" onerror="this.remove()">
       <div class="ph"><div><b>screenshot 1440 x 900</b>/company/co_squirrel_hill_wash</div></div>
     </div>
   </div>
@@ -451,8 +451,8 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   <p class="kicker fu">The math, part two</p>
   <p class="kicker right muted fu">Kelly, from first principles</p>
   <h2 class="hl fu" style="position:absolute; left:140px; top:118px; font-size:34px; max-width:1640px; white-space:nowrap;">We backed the bidding price and the portfolio construction with industry-tested trading mathematics.</h2>
-  <div class="board fu" style="right:auto; width:980px; top:190px; bottom:60px;"><img src="assets/kelly-board.png" alt="Whiteboard derivation of the Kelly fraction"></div>
-  <div class="board fu" style="left:auto; width:620px; top:190px; bottom:60px; background:#fff;"><img src="assets/kelly-paper.png" alt="Kelly criterion derivation, written out"></div>
+  <div class="board fu" style="right:auto; width:980px; top:190px; bottom:60px;"><img src="/deck/assets/kelly-board.png" alt="Whiteboard derivation of the Kelly fraction"></div>
+  <div class="board fu" style="left:auto; width:620px; top:190px; bottom:60px; background:#fff;"><img src="/deck/assets/kelly-paper.png" alt="Kelly criterion derivation, written out"></div>
 </section>
 
 <!-- 8 Live -->
@@ -528,7 +528,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     <div class="bar"><i></i><i></i><i></i><span>bartr.app/company/co_squirrel_hill_wash/acquire</span></div>
     <div class="shot">
       <!-- SCREENSHOT: /company/co_squirrel_hill_wash/acquire -->
-      <img src="assets/acquire.png" alt="" onerror="this.remove()">
+      <img src="/deck/assets/acquire.png" alt="" onerror="this.remove()">
       <div class="ph"><div><b>screenshot 1440 x 900</b>/company/co_squirrel_hill_wash/acquire</div></div>
     </div>
   </div>
@@ -597,11 +597,11 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     <div class="sp"><span>Grok<small>xAI</small></span></div>
     <div class="sp"><span>IFM K2<small>Horizon</small></span></div>
     <div class="sp"><span>Querit<small>web search</small></span></div>
-    <div class="sp"><img class="logo" src="assets/logos/mongodb.svg" alt=""><span>MongoDB Atlas<small>database</small></span></div>
-    <div class="sp"><img class="logo" src="assets/logos/auth0.svg" alt=""><span>Auth0<small>login</small></span></div>
-    <div class="sp"><img class="logo" src="assets/logos/vultr.svg" alt=""><span>Vultr<small>API host</small></span></div>
-    <div class="sp"><img class="logo" src="assets/logos/vercel.svg" alt=""><span>Vercel<small>web host</small></span></div>
-    <div class="sp"><img class="logo" src="assets/logos/cursor.svg" alt=""><span>Cursor<small>editor</small></span></div>
+    <div class="sp"><img class="logo" src="/deck/assets/logos/mongodb.svg" alt=""><span>MongoDB Atlas<small>database</small></span></div>
+    <div class="sp"><img class="logo" src="/deck/assets/logos/auth0.svg" alt=""><span>Auth0<small>login</small></span></div>
+    <div class="sp"><img class="logo" src="/deck/assets/logos/vultr.svg" alt=""><span>Vultr<small>API host</small></span></div>
+    <div class="sp"><img class="logo" src="/deck/assets/logos/vercel.svg" alt=""><span>Vercel<small>web host</small></span></div>
+    <div class="sp"><img class="logo" src="/deck/assets/logos/cursor.svg" alt=""><span>Cursor<small>editor</small></span></div>
   </div>
   <p class="small muted fu" style="position:absolute; left:140px; bottom:70px; margin:0;">Nico &nbsp;&nbsp; Vir &nbsp;&nbsp; Aditya &nbsp;&nbsp; Zhiyuan &nbsp;&nbsp;·&nbsp;&nbsp; HackCMU 2026 &nbsp;&nbsp;·&nbsp;&nbsp; Discover, Exchange, Acquire</p>
 </section>
@@ -751,7 +751,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
       const g = el('g', { class: 'dg', style: `--i:${i++}` });
       g.appendChild(el('rect', { x: gr.x, y: gr.y, width: gr.w, height: gr.h, rx: 18, fill: 'none', stroke: light ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.16)', 'stroke-dasharray': '8 8' }));
       g.appendChild(el('text', { class: 't', x: gr.x + 18, y: gr.y + 30, style: 'font-size:19px; opacity:0.85' }, gr.t));
-      (gr.logos || []).forEach((lg, k) => g.appendChild(el('image', { class: 'lg', href: `assets/logos/${lg}.svg`, x: gr.x + gr.w - 46 - k * 40, y: gr.y + 12, width: 28, height: 28 })));
+      (gr.logos || []).forEach((lg, k) => g.appendChild(el('image', { class: 'lg', href: `/deck/assets/logos/${lg}.svg`, x: gr.x + gr.w - 46 - k * 40, y: gr.y + 12, width: 28, height: 28 })));
       svg.appendChild(g);
     }
     for (const lb of spec.labels || []) svg.appendChild(el('text', { class: 's dg', x: lb.x, y: lb.y, style: `--i:${i++}; font-size:17px; letter-spacing:0.08em; text-transform:uppercase` }, lb.t));
@@ -777,7 +777,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
       g.appendChild(el('text', { class: 't', x: n.x + pad, y: n.y + 34 }, n.t));
       (Array.isArray(n.s) ? n.s : (n.s ? [n.s] : [])).forEach((line, k) => g.appendChild(el('text', { class: 's', x: n.x + pad, y: n.y + 62 + k * 22 }, line)));
       const logos = n.logos || (n.logo ? [n.logo] : []);
-      logos.forEach((lg, k) => g.appendChild(el('image', { class: 'lg', href: `assets/logos/${lg}.svg`, x: n.x + n.w - 46 - k * 40, y: n.y + 14, width: 30, height: 30 })));
+      logos.forEach((lg, k) => g.appendChild(el('image', { class: 'lg', href: `/deck/assets/logos/${lg}.svg`, x: n.x + n.w - 46 - k * 40, y: n.y + 14, width: 30, height: 30 })));
       if (n.glyph && GLYPHS[n.glyph]) { const gg = el('g', { class: 'glyph', transform: `translate(${n.x + n.w - 50}, ${n.y + 12})` }); GLYPHS[n.glyph](gg); g.appendChild(gg); }
       svg.appendChild(g);
     }
