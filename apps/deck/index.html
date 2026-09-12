@@ -234,8 +234,8 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   <p class="kicker fu">What Bartr is</p>
   <div style="position:absolute; left:140px; right:140px; top:180px;">
     <h2 class="hl fu" style="font-size:64px;">Buyer: a price with an error bar, then 20 shares, then the keys.</h2>
-    <h2 class="hl fu" style="font-size:64px; margin-top:18px;">Owner: cash for 30% of the shop, keep the keys, no bank.</h2>
-    <p class="sub muted fu" style="margin-top:36px; max-width:1600px; font-size:30px;">Crowdfunding portals raise money for small businesses. BizBuySell sells them whole. Nobody prices them every day, and nobody lets you go from one share to the whole company. Bartr does both.</p>
+    <h2 class="hl fu" style="font-size:64px; margin-top:18px;">Owner: sell 30% of the shop to the crowd, keep the keys.</h2>
+    <p class="sub muted fu" style="margin-top:36px; max-width:1600px; font-size:30px;">Crowdfunding portals raise money for small businesses. BizBuySell sells them whole. Neither prices them every day or lets you go from one share to the whole company. Bartr does both.</p>
     <div class="cols3" style="margin-top:60px;">
       <div class="fu"><h3>Discover</h3><p>Type "laundromat in Pittsburgh". Businesses found on the web, each priced with a range and a σ.</p></div>
       <div class="fu"><h3>Exchange</h3><p>Every business is 10,000 shares. Buy 20 of the laundromat on Murray Avenue. The owner sells 30% and keeps the keys.</p></div>
@@ -357,7 +357,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   <div class="fu" style="position:absolute; left:140px; top:300px;">
     <svg class="flow" data-flow="fair" viewBox="0 0 1640 510" width="1640" height="510"></svg>
   </div>
-  <p class="legend fu" style="font-size:21px; color:var(--paper);">No continuous matching, so speed buys nothing. Two band hits in a row halt the market for a round. The owner requotes only between rounds, never bids above its floor, never asks below P55, so the account that holds the float cannot chase the price. Server timestamps only; every order event lands in the append only audit log. Tested in apps/api/tests.</p>
+  <p class="legend fu" style="font-size:21px; color:var(--paper);">No continuous matching, so speed buys nothing. Two band hits in a row halt the market for a round. The owner requotes only between rounds, never bids above its floor, never asks below P55, so the account that holds the float cannot chase the price. Server timestamps only; every order event lands in the append only audit log.</p>
 </section>
 
 <!-- 10 Make money -->
@@ -367,7 +367,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     <h2 class="hl fu">Find the edge. Size it. Keep an exit.</h2>
     <div style="margin-top:44px; font-size:24px; line-height:1.5;">
       <p class="fu" style="margin:0 0 18px;"><b>Edge on every suggestion.</b> Our model value next to the market price, on every row. Only names priced below our value are suggested.</p>
-      <p class="fu" style="margin:0 0 18px;"><b>Your risk, your dial.</b> The Kelly multiplier slider (0.25 to 1.0) sizes every stake to your appetite. Half Kelly by default, because the edge is an estimate.</p>
+      <p class="fu" style="margin:0 0 18px;"><b>Your risk, your dial.</b> The Kelly multiplier slider (0.25 to 1.0) sizes every stake. Half Kelly by default, because the edge is an estimate.</p>
       <p class="fu" style="margin:0;"><b>An exit that stands.</b> The owner's buyback bid is in every book: up to 1,000 shares at P20.</p>
     </div>
     <div class="math fu" style="margin-top:36px; font-size:25px;">$$\underbrace{\mu = \ln\tfrac{v}{p}}_{\text{gain if price meets value}}, \qquad \underbrace{f = m \cdot \tfrac{\mu}{\sigma^2}}_{\text{share of bankroll, capped at 20\% a name, 80\% overall}}$$</div>
@@ -414,16 +414,16 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
       <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">Rules: wash_a and wash_b have traded 9 times and only with each other. Volume prints, ownership never changes.</p>
     </div>
     <div class="fu" style="--d:400ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
-      <p class="label" style="margin:0;"><b>Grok</b>&nbsp;&nbsp;explains</p>
+      <p class="label" style="margin:0;"><b>Grok</b>&nbsp;&nbsp;explains (example)</p>
       <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">"Alternating sides at the clearing price with no other counterparties. No economic purpose; treat as manipulation."</p>
     </div>
     <div class="fu" style="--d:800ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
       <p class="label" style="margin:0;"><b>K2</b>&nbsp;&nbsp;agrees, high</p>
-      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">If the two models disagree the flag is marked disputed and both opinions show. Every event is in the append only audit log.</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">A separate call, same flag packet, never sees Grok's answer. Every event is in the append only audit log.</p>
     </div>
     <div class="fu" style="--d:1200ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
       <p class="label" style="margin:0;"><b>Red team</b>&nbsp;&nbsp;Grok attacks</p>
-      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">Grok plays the manipulator: it plans a wash, spoof or pump and runs it through bot accounts. The rules and the reviewers must catch it. Every attempt is logged.</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">Grok plans a wash, spoof or pump and runs it through bot accounts. Then we watch whether the rules catch it. Every attempt is logged.</p>
     </div>
   </div>
 </section>
@@ -431,17 +431,21 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
 <!-- 13 Grok -->
 <section class="slide" data-theme="dark" id="s13g">
   <p class="kicker fu">Grok inside Bartr</p>
-  <p class="kicker right muted fu">grok-4.6 through the xAI API, twelve call sites, one llm.py</p>
-  <h2 class="hl fu" style="position:absolute; left:140px; top:160px; font-size:64px;">Grok reads, appraises, reviews, attacks, and explains.</h2>
-  <div style="position:absolute; left:140px; right:140px; top:330px; display:grid; grid-template-columns: repeat(3, 1fr); gap:28px;">
-    <div class="gk fu"><h3>1. Reads and appraises</h3><p>Querit fetches pages; Grok returns a structured profile where every number carries a source URL and its quote. The appraiser then researches the business with Grok's web search and returns a value, a confidence and sources; K2 gives an independent number.</p></div>
-    <div class="gk fu acc"><h3>2. Kept only if provable</h3><p>Bartr keeps a fact only if the quote appears verbatim in the fetched page. Financial numbers must be in USD, dated, and appear in the quote. A fact Grok marks inferred can never become a financial input. This is what stops a hallucinated revenue from becoming a price.</p></div>
-    <div class="gk fu"><h3>3. An opinion with doubt built in</h3><p>The appraisal is one of five estimators. Its weight comes from its stated confidence: σ = 0.35 + 0.35 (1 − c). If K2 disagrees, σ widens by half the gap. A confident wrong number cannot dominate the price.</p></div>
-    <div class="gk fu"><h3>4. Reviews flags and attacks the market</h3><p>Each rule flag goes to Grok and to K2 in separate calls; neither sees the other. As red team, Grok plans a wash, spoof or pump and runs it through bot accounts so the rules are tested against a real adversary.</p></div>
-    <div class="gk fu"><h3>5. Talks to the user</h3><p>Chat agent with tools (search, company, book, place order, suggest); owner persona you can question on a company page; market narrator; portfolio profile parser and the "why" on each suggestion; LOI and diligence checklist drafting; a market health memo. iMessage talks to the same agent.</p></div>
-    <div class="gk fu"><h3>Never a single point of failure</h3><p>Every call goes through one function with a provider switch, so K2 takes any role by changing one argument. Every call has a deterministic fallback, so the demo never hangs on a key. /readiness lists each feature and its recent calls.</p></div>
+  <p class="kicker right muted fu">grok-4.6 through the xAI API, one llm.py, K2 as the second tier</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:160px; font-size:60px;">Two tier appraisal, on request for any listed company. Grok researches, K2 checks, the ensemble decides.</h2>
+  <div class="fu" style="position:absolute; left:140px; top:330px;">
+    <svg class="flow" data-flow="appraise" viewBox="0 0 900 640" width="900" height="640"></svg>
   </div>
-  <p class="legend fu" style="font-size:20px;">Grok runs inside the product through the API; it did not write the code. scripts/grok_smoke.py exercises every call site. Seeded demo companies carry a hand entered opinion until the appraiser is run on them.</p>
+  <div style="position:absolute; left:1100px; top:330px; width:680px;">
+    <p class="label fu" style="margin:0 0 14px;">Everywhere else Grok runs</p>
+    <div class="fu" style="font-size:20px; line-height:1.5; color:var(--paper-2);">
+      <p style="margin:0 0 10px;"><b style="color:var(--paper);">Extraction gate.</b> Profiles from Querit pages; a number survives only if its quote is verbatim in the page, financials must be USD and dated.</p>
+      <p style="margin:0 0 10px;"><b style="color:var(--paper);">Compliance.</b> Every rule flag goes to Grok and to K2 in separate calls.</p>
+            <p style="margin:0 0 10px;"><b style="color:var(--paper);">Talking to you.</b> Chat agent with tools (search, company, book, place order, suggest), the same one behind iMessage. API routes today: an owner persona per company, a market narrator, a market health memo.</p>
+      <p style="margin:0 0 10px;"><b style="color:var(--paper);">Portfolio and acquire.</b> Parses your profile into constraints, writes the why on each suggestion, drafts the LOI and the diligence checklist.</p>
+      <p style="margin:0;"><b style="color:var(--paper);">Fallbacks everywhere.</b> Every call has a deterministic fallback; calls through the shared wrapper are cached and listed on /readiness.</p>
+    </div>
+  </div>
 </section>
 
 <!-- 13 Architecture -->
@@ -628,9 +632,20 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
         { id: 'g', x: 690, y: 0, w: 300, h: 110, t: 'Grok  (xAI)', s: ['reads the flag, explains', 'it in plain words'] },
         { id: 'k', x: 690, y: 200, w: 300, h: 110, t: 'K2  (IFM)', s: ['independent second model,', 'never sees Grok’s answer'] },
         { id: 'v', x: 1060, y: 100, w: 260, h: 110, t: 'Verdict', s: ['agree, or disputed:', 'both opinions shown'] },
-        { id: 'a', x: 1380, y: 100, w: 260, h: 110, t: 'Feed and audit log', s: ['flag posted with both reviews;', 'two band hits halt a market'], acc: true },
+        { id: 'a', x: 1380, y: 100, w: 260, h: 110, t: 'Surveillance feed', s: ['flag shown with both reviews;', 'separately, two band hits halt a market'], acc: true },
       ],
       edges: [{ a: 't', b: 'r' }, { a: 'r', b: 'g' }, { a: 'r', b: 'k' }, { a: 'g', b: 'v' }, { a: 'k', b: 'v' }, { a: 'v', b: 'a', acc: true }],
+    },
+    appraise: {
+      nodes: [
+        { id: 'r', x: 240, y: 0, w: 420, h: 96, t: 'Tier 1: Grok researches', s: ['xAI web search: owners, tenure, revenue,', 'asking prices, reviews, each with its URL'] },
+        { id: 'a', x: 0, y: 136, w: 420, h: 96, t: 'Tier 1: Grok appraises', s: ['structured: value, confidence 0 to 1,', 'revenue, earnings, staff; sources only from the notes'] },
+        { id: 'k', x: 480, y: 136, w: 420, h: 96, t: 'Tier 2: K2 second opinion', s: ['same notes, separate model,', 'never sees Grok\u2019s number'] },
+        { id: 'c', x: 240, y: 272, w: 420, h: 96, t: 'Sanity clamp', s: ['both held to 0.2x to 5x the category base rate,', 'so one hallucinated number cannot poison the price'] },
+        { id: 'e', x: 240, y: 408, w: 420, h: 96, t: 'Into the ensemble', s: ['one of five estimators; σ = 0.35 + 0.35 (1 − c),', 'widened by half the Grok to K2 gap'], acc: true },
+        { id: 'p', x: 240, y: 544, w: 420, h: 96, t: 'Price, range, owner quotes', s: ['before the first trade the posterior sets the', 'opening price, the P20 floor and the P55 to P80 ladder'], acc: true },
+      ],
+      edges: [{ a: 'r', b: 'a', ox: 0 }, { a: 'r', b: 'k', ox: 0 }, { a: 'a', b: 'c', ox: 0 }, { a: 'k', b: 'c', ox: 0 }, { a: 'c', b: 'e', acc: true }, { a: 'e', b: 'p', acc: true }],
     },
     arch: {
       nodes: [
@@ -639,7 +654,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
         { id: 'im', x: 0, y: 560, w: 280, h: 110, t: 'iMessage bridge', s: ['text the agent,', 'same API underneath'] },
         { id: 'api', x: 860, y: 280, w: 340, h: 120, t: 'FastAPI', s: ['REST + WebSocket', 'auction engine, treasury, Kelly'], logo: 'fastapi', acc: true },
         { id: 'db', x: 1320, y: 280, w: 320, h: 120, t: 'MongoDB Atlas', s: ['companies, markets, orders,', 'append only audit log'], logo: 'mongodb' },
-        { id: 'pl', x: 900, y: 0, w: 260, h: 100, t: 'Google Places', s: 'real businesses', logo: 'googlemaps' },
+        { id: 'pl', x: 900, y: 0, w: 260, h: 100, t: 'Google Places', s: 'businesses, ratings, reviews', logo: 'googlemaps' },
         { id: 'qu', x: 1200, y: 0, w: 200, h: 100, t: 'Querit', s: 'reads the web' },
         { id: 'gr', x: 1440, y: 0, w: 200, h: 100, t: 'Grok  (xAI)', s: 'cited profile' },
         { id: 'ag', x: 860, y: 560, w: 340, h: 110, t: 'Agent panel', s: ['rules flag, Grok and K2 review;', 'chat agent for discovery and trading'] },

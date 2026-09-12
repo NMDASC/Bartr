@@ -5,7 +5,7 @@ const path = require('path');
 const NOTES = [
   'Bartr. Discover, exchange, acquire. A price and a market for the businesses nobody lists.',
   '33 million small businesses. Almost none has a price. If you wanted to buy a laundromat in Squirrel Hill tonight you could not even find the list.',
-  'For a buyer: a price with an error bar, then 20 shares, then the keys. For an owner: cash for 30 percent, keep the keys, no bank.',
+  'For a buyer: a price with an error bar, then 20 shares, then the keys. For an owner: sell 30 percent to the crowd, keep the keys.',
   'Type laundromat in Pittsburgh. Places finds them, Querit reads the web, Grok extracts a profile where every number carries its quote. The ensemble prices it with a range.',
   'Squirrel Hill Wash and Fold. 571 thousand, plus or minus 22 percent. Live book, countdown, order ticket.',
   'Five methods, each with a measured miss. Blend them, trusting the tighter ones. Doubt has two parts: the methods own error and how much they disagree. A range, never a bare number.',
@@ -15,7 +15,7 @@ const NOTES = [
   'Find the edge, size it, keep an exit. Model value next to market price, your own Kelly dial, the owner buyback bid standing in every book.',
   'From a share to the whole company. An LOI at the last clearing price and a Pittsburgh checklist that links to official sources.',
   'Rules scan every trade. Every flag goes to Grok and to K2 separately. If they disagree, we show it.',
-  'Grok reads the web, but a number is kept only if its quote is in the page. Grok gives a valuation opinion with its own doubt, reviews flags, and runs the agent.',
+  'Two tier appraisal: Grok researches with web search and appraises, K2 gives an independent number, both are clamped and go into the ensemble with their own doubt. Grok also reviews flags, red teams the market, and runs the agent.',
   'Next.js, FastAPI, MongoDB Atlas, Places, Querit, Grok, K2, an iMessage bridge to the same agent.',
   'Bartr. Discover. Exchange. Acquire.',
 ];

@@ -41,7 +41,7 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 |---|---|---|
 | 0:00 | 1 Title | "Bartr. Discover, exchange, acquire. A price and a market for the businesses nobody lists." |
 | 0:06 | 2 Problem | "33 million small businesses. Almost none has a price." Beat. "If you wanted to buy a laundromat in Squirrel Hill tonight, you could not even find the list." |
-| 0:18 | 3 What Bartr is | "For a buyer: a price with an error bar, then 20 shares, then the keys. For an owner: cash for 30 percent, keep the keys, no bank." |
+| 0:18 | 3 What Bartr is | "For a buyer: a price with an error bar, then 20 shares, then the keys. For an owner: sell 30 percent to the crowd, keep the keys." |
 | 0:30 | 4 Discover | "Type laundromat in Pittsburgh. Places finds them, Querit reads the web, Grok extracts a profile where every number carries its quote. The ensemble prices it with a range." |
 | 0:44 | 5 One company | "Squirrel Hill Wash and Fold. 571 thousand, plus or minus 22 percent. Live book, countdown, order ticket." |
 | 0:54 | 6 Pricing | "Five methods, each with a measured miss. Blend them, trusting the tighter ones. Doubt has two parts: the methods' own error and how much they disagree. We show a range, never a bare number." |
@@ -51,7 +51,7 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 | 2:00 | 10 Portfolio | "Find the edge, size it, keep an exit. Model value next to market price, your own Kelly dial, and the owner's buyback bid standing in every book." |
 | 2:12 | 11 Acquire | "From a share to the whole company. An LOI at the last clearing price and a Pittsburgh checklist that links to the official sources." |
 | 2:22 | 12 Security | "Rules scan every trade. Every flag goes to Grok and to K2 separately. If they disagree, we show it." |
-| 2:34 | 13 Grok | "Grok reads the web, but we keep a number only if its quote is in the page. Grok gives a valuation opinion with its own doubt, reviews flags, and runs the agent." |
+| 2:34 | 13 Grok | "Two tier appraisal: Grok researches with web search and appraises, K2 gives an independent number, both are clamped and go into the ensemble with their own doubt. Grok also reviews flags, red teams the market, and runs the agent." |
 | 2:46 | 14 Stack | "Next.js, FastAPI, MongoDB Atlas, Places, Querit, Grok, K2, an iMessage bridge to the same agent." |
 | 2:55 | 15 Close | "Bartr. Discover. Exchange. Acquire." |
 
