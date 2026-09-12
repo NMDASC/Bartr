@@ -42,9 +42,18 @@ def _remember(name: str, provider: str, ok: bool, ms: float, note: str = "") -> 
     del CALLS[:-50]
 
 
+def _model(provider: str, tier: str) -> str:
+    return llm.fast_model(provider) if tier == "fast" else llm.default_model(provider)  # type: ignore[arg-type]
+
+
+def _timeout(tier: str) -> float:
+    return float(os.getenv("GROK_TIMEOUT_S", "20")) if tier == "fast" else float(os.getenv("GROK_DEEP_TIMEOUT_S", "120"))
+
+
 async def structured(name: str, schema: type[M], system: str, user: str, *, provider: str = "xai",
-                     temperature: float = 0.2, cache: bool = True) -> M | None:
-    """One structured call. None if the provider is not configured or anything fails."""
+                     temperature: float = 0.2, cache: bool = True, tier: str = "fast") -> M | None:
+    """One structured call. None if the provider is not configured or anything fails.
+    tier="fast" (default) uses the non reasoning model for interactive latency; tier="deep" uses grok-4.6."""
     if not configured(provider):
         return None
     k = _key(name, provider, schema.__name__, system, user)
@@ -54,17 +63,17 @@ async def structured(name: str, schema: type[M], system: str, user: str, *, prov
     try:
         out = await asyncio.wait_for(
             llm.complete([{"role": "system", "content": system}, {"role": "user", "content": user}],
-                         provider=provider, schema=schema, temperature=temperature),  # type: ignore[arg-type]
-            timeout=float(os.getenv("GROK_TIMEOUT_S", "45")))
+                         provider=provider, model=_model(provider, tier), schema=schema, temperature=temperature),  # type: ignore[arg-type]
+            timeout=_timeout(tier))
         _cache[k] = (time.time(), out)
-        _remember(name, provider, True, (time.time() - t0) * 1000)
+        _remember(name, provider, True, (time.time() - t0) * 1000, _model(provider, tier))
         return out  # type: ignore[return-value]
     except Exception as e:  # noqa: BLE001
         _remember(name, provider, False, (time.time() - t0) * 1000, repr(e))
         return None
 
 
-async def text(name: str, system: str, user: str, *, provider: str = "xai", temperature: float = 0.4, cache: bool = True) -> str | None:
+async def text(name: str, system: str, user: str, *, provider: str = "xai", temperature: float = 0.4, cache: bool = True, tier: str = "fast") -> str | None:
     if not configured(provider):
         return None
     k = _key(name, provider, system, user)
@@ -74,8 +83,8 @@ async def text(name: str, system: str, user: str, *, provider: str = "xai", temp
     try:
         out = await asyncio.wait_for(
             llm.complete([{"role": "system", "content": system}, {"role": "user", "content": user}],
-                         provider=provider, temperature=temperature),  # type: ignore[arg-type]
-            timeout=float(os.getenv("GROK_TIMEOUT_S", "45")))
+                         provider=provider, model=_model(provider, tier), temperature=temperature),  # type: ignore[arg-type]
+            timeout=_timeout(tier))
         _cache[k] = (time.time(), out)
         _remember(name, provider, True, (time.time() - t0) * 1000)
         return out  # type: ignore[return-value]
@@ -100,7 +109,7 @@ async def researched(name: str, question: str, *, allowed_domains: list[str] | N
             tool["filters"] = {"allowed_domains": allowed_domains[:5]}
         resp = await asyncio.wait_for(
             c.responses.create(model=llm.default_model("xai"), input=[{"role": "user", "content": question}], tools=[tool]),
-            timeout=float(os.getenv("GROK_TIMEOUT_S", "90")))
+            timeout=_timeout("deep"))
         out = getattr(resp, "output_text", None) or ""
         if not out:
             # fall back to walking the output items

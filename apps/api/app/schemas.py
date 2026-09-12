@@ -348,6 +348,8 @@ class Acquisition(BaseModel):
     loi_md: str
     checklist: list[ChecklistItem]
     status: Literal["draft", "sent", "closed"] = "draft"
+    checklist_source: Literal["template", "grok"] = "template"
+    loi_source: Literal["template", "grok"] = "template"
 
 
 class Review(BaseModel):

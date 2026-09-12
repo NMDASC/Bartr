@@ -5,7 +5,7 @@ import json
 import math
 import re
 
-from app.llm import Completion, complete, is_configured
+from app.llm import Completion, complete, fast_model, is_configured
 from app.schemas import AgentMessage, ToolCallCard
 from app.services.discovery.intent import parse_intent
 from app.services.discovery.ranking import rank_companies
@@ -143,7 +143,7 @@ async def reply(message: str, uid: str, engine, store) -> AgentMessage:
     cards: list[ToolCallCard] = []
     try:
         for _ in range(4):
-            result = await complete(messages, tools=TOOLS)
+            result = await complete(messages, tools=TOOLS, model=fast_model("xai"))
             if not isinstance(result, Completion) or not result.tool_calls:
                 content = result.content if isinstance(result, Completion) else str(result)
                 return AgentMessage(role="assistant", content=content.strip() or local_reply(message, uid, engine, store).content, tool_calls=cards or None)

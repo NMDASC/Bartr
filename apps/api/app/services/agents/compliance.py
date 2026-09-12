@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from app.llm import LLMNotConfigured, complete, is_configured
+from app.llm import LLMNotConfigured, complete, fast_model, is_configured
 
 _CACHE: dict[str, dict] = {}
 SEVERITIES = ("benign", "low", "medium", "high")
@@ -34,6 +34,7 @@ async def _ask(provider: str, flag: dict) -> ReviewOpinion | None:
                 )},
             ],
             provider=provider,  # type: ignore[arg-type]
+            model=fast_model(provider),  # type: ignore[arg-type]
             schema=ReviewOpinion,
         )
     except (LLMNotConfigured, Exception):

@@ -5,8 +5,11 @@ official citations so the acquire demo does not wait on a model call.
 """
 from __future__ import annotations
 
+import asyncio
+import json
 import uuid
 from datetime import date
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -16,6 +19,28 @@ from app.services.market.treasury import SHARES
 
 router = APIRouter(prefix="/acquire", tags=["acquire"])
 ACQS: dict[str, dict] = {}
+
+# Researched checklists cached by (city, state, category). Pre-warmed from seeds/checklists.json
+# (scripts/warm_checklists.py) so the demo companies get the cited version instantly; anything
+# else gets the template now and the researched version a minute later via GET /acquire/{id}.
+CHECKLISTS: dict[str, list[dict]] = {}
+_CHECKLIST_FILE = Path(__file__).resolve().parent.parent.parent / "seeds" / "checklists.json"
+if _CHECKLIST_FILE.exists():
+    CHECKLISTS.update(json.loads(_CHECKLIST_FILE.read_text()))
+
+
+def _ck(c: dict) -> str:
+    return f"{c.get('city')}|{c.get('state')}|{c['category']}"
+
+
+async def _research_checklist(acq_id: str, c: dict) -> None:
+    from app.services.agents import acquire_agent
+    items = await acquire_agent.checklist(c)
+    if items:
+        CHECKLISTS[_ck(c)] = items
+        if acq_id in ACQS:
+            ACQS[acq_id]["checklist"] = items
+            ACQS[acq_id]["checklist_source"] = "grok"
 
 GENERIC = [
     ("Three years of tax returns and P&L", "Verify the SDE the price is built on"),
@@ -130,9 +155,13 @@ async def start(cid: str, uid: str = Depends(current_user)):
     seller = ", ".join(c.get("owners") or ["the owner"])
     where = c.get("address") or ", ".join(x for x in (c.get("city"), c.get("state")) if x)
     loi = await acquire_agent.loi(c, uid, seller, where, px, px * SHARES, date.today().strftime("%B %d, %Y")) or draft_loi(c, m, uid)
-    items = await acquire_agent.checklist(c) or checklist_for(c)
-    acq = {"acquisition_id": f"acq_{uuid.uuid4().hex[:8]}", "market_id": cid, "loi_md": loi,
-           "checklist": items, "status": "draft"}
+    acq_id = f"acq_{uuid.uuid4().hex[:8]}"
+    cached = CHECKLISTS.get(_ck(c))
+    acq = {"acquisition_id": acq_id, "market_id": cid, "loi_md": loi,
+           "checklist": cached or checklist_for(c), "status": "draft",
+           "checklist_source": "grok" if cached else "template", "loi_source": "grok" if loi != draft_loi(c, m, uid) else "template"}
+    if not cached:
+        asyncio.create_task(_research_checklist(acq_id, c))
     ACQS[acq["acquisition_id"]] = acq
     store.audit({"t": __import__("time").time(), "actor": uid, "action": "acquire_start", "payload": {"company": cid}})
     return acq

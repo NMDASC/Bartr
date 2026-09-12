@@ -50,6 +50,15 @@ def default_model(provider: Provider) -> str:
     return os.getenv(model_var) or model_default
 
 
+def fast_model(provider: Provider = "xai") -> str:
+    """Model for interactive calls. Measured Sat 03:00: grok-4.20-0309-non-reasoning answers a structured
+    parse in 0.8s vs 6.4s for grok-4.6 (and 20 to 45s on bigger prompts, because 4.6 reasons). Keep
+    grok-4.6 (default_model) for research with web_search, where quality matters more than latency."""
+    if provider == "xai":
+        return os.getenv("XAI_FAST_MODEL") or "grok-4.20-0309-non-reasoning"
+    return default_model(provider)
+
+
 def client(provider: Provider = "xai") -> AsyncOpenAI:
     if provider in _clients:
         return _clients[provider]
