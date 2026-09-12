@@ -2,6 +2,7 @@ import copy
 import math
 
 import pytest
+import httpx
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -85,6 +86,7 @@ def test_identical_first_refresh_has_one_snapshot_and_preserves_sources():
 @pytest.mark.parametrize("quote,amount", [
     ("Annual 2025 SDE is -$100,000 USD.", 100000),
     ("Annual 2025 SDE is $100,000 USD and revenue is $1 million USD.", 100000000000),
+    ("Annual 2025 SDE is $100,000 USD and revenue is $1 million USD.", 1000000),
     ("2025 SDE is $10,000 USD monthly.", 10000),
     ("Annual 2025 revenue is $100,000 USD.", 100000),
     ("Annual 2025 SDE is $100,000 CAD.", 100000),
@@ -138,6 +140,40 @@ def test_category_calibration_does_not_leak_into_other_categories(monkeypatch):
     other = preview({"category": "auto_repair"})
     assert other["calibration_version"] is None
     assert any("does not cover" in w for w in other["warnings"])
+
+
+@pytest.mark.asyncio
+async def test_querit_nested_results_and_cache_isolation(monkeypatch):
+    from app.services.discovery.querit import Querit
+    requests = []
+    def respond(request):
+        requests.append(request)
+        assert request.headers["authorization"] == "Bearer test-only"
+        return httpx.Response(200, json={"error_code": 0, "results": {"result": [
+            {"url": "https://example.com/business", "title": "Business", "sentence": ["Source excerpt"]},
+            {"url": "http://127.0.0.1/private", "sentence": ["Reject"]},
+        ]}})
+    monkeypatch.setenv("QUERIT_API_KEY", "test-only")
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
+        provider = Querit(client)
+        pages = await provider.search("laundry")
+        assert len(pages) == 1 and pages[0]["content"] == "Source excerpt"
+        pages[0]["content"] = "Mutated by a job"
+        assert (await provider.search("laundry"))[0]["content"] == "Source excerpt"
+        assert len(requests) == 1
+
+
+def test_ranking_does_not_use_valuation_confidence_or_count_repeated_publishers():
+    from app.services.discovery.ranking import rank_companies
+    e = Engine(MemoryStore())
+    company = e.create_company({"name": "Main Laundry", "category": "laundromat", "city": "Pittsburgh", "state": "PA"})
+    company["evidence"] = [{"field": "revenue", "status": "reported", "source_url": f"https://example.com/{i}"} for i in range(3)]
+    intent = parse_intent("laundromat in Pittsburgh")
+    before = rank_companies("laundromat in Pittsburgh", intent, [company])[0][1]
+    company["valuation"]["sigma"] = .89
+    after = rank_companies("laundromat in Pittsburgh", intent, [company])[0][1]
+    assert before == after
+    assert after["evidence"] == pytest.approx(1 / 3)
 
 
 @pytest.mark.asyncio

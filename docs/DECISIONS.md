@@ -82,3 +82,5 @@ Live discovery in the UI, Pittsburgh first and then cities nationwide. REST/SSE 
 
 ## 018  Sat  author: Nico (with Codex)  affects: platform, discovery
 `/graphql` is on the app: Strawberry router at `/graphql`, same DiscoveryJobs and pricing snapshots as REST. Search UI stays on REST/SSE. `strawberry-graphql` is an API dependency.
+
+Pricing/ranking verification follow-up: exact-quote and field-associated USD checks gate financial evidence; repeated inputs deduplicate snapshots while source documents merge; source hostnames, not repeated URLs, contribute corroboration. `calibrate_pricing.py` fits category-scoped sale-basis profiles on explicit training rows and reports held-out error/coverage without auto-activation. Mismatched category/benchmark profiles fall back with a warning. Export GraphQL SDL with `scripts/gen_graphql.py`; usage and limitations are in `docs/DISCOVERY_PRICING.md`. Legacy seeded/manual company creation is not repriced automatically. Runtime verified `/graphql` pricing preview; full live discovery still requires a configured xAI key.

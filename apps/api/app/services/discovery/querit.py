@@ -5,6 +5,7 @@ import asyncio
 import ipaddress
 import os
 import time
+from copy import deepcopy
 from urllib.parse import urlsplit, urlunsplit
 
 import httpx
@@ -71,7 +72,7 @@ class Querit:
         cache_key = (query.casefold().strip(), count)
         cached = self.cache.get(cache_key)
         if cached and time.monotonic() - cached[0] < 900:
-            return cached[1]["pages"]
+            return deepcopy(cached[1]["pages"])
         data = await self.request("search", {"query": query, "count": count, "needContent": True,
                                              "filters": {"languages": {"include": ["english"]}}})
         raw = data.get("results", {})
@@ -86,7 +87,7 @@ class Querit:
             pages.append({"url": url, "title": item.get("title", ""), "content": content[:12000]})
         if len(self.cache) >= 128:
             self.cache.pop(next(iter(self.cache)))
-        self.cache[cache_key] = (time.monotonic(), {"pages": pages})
+        self.cache[cache_key] = (time.monotonic(), {"pages": deepcopy(pages)})
         return pages
 
     async def contents(self, pages: list[dict]) -> list[dict]:

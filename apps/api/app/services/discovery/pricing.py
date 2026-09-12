@@ -30,6 +30,7 @@ def supported_amount(field: str, amount: float, quote: str) -> bool:
         return False
     if re.search(r"\b(CAD|AUD|EUR|GBP|monthly|weekly|daily)\b|per (month|week|day)", quote, re.I):
         return False
+    fields = [(name, match.span()) for name, pattern in labels.items() for match in re.finditer(pattern, quote, re.I)]
     for match in re.finditer(r"(?<![\w.])([-+]?\$?\s*\d[\d,]*(?:\.\d+)?)\s*(thousand|million|[km]\b)?", quote, re.I):
         raw, suffix = match.groups()
         numeric = float(raw.replace("$", "").replace(",", "").replace(" ", ""))
@@ -37,7 +38,12 @@ def supported_amount(field: str, amount: float, quote: str) -> bool:
         if not suffix and not any(c in raw for c in "$.,") and 1900 <= numeric <= 2100:
             continue
         scale = {"k": 1000, "thousand": 1000, "m": 1000000, "million": 1000000}.get((suffix or "").lower(), 1)
-        if math.isclose(numeric * scale, amount, rel_tol=1e-9):
+        def distance(item):
+            start, end = item[1]
+            return max(start - match.end(), match.start() - end, 0)
+        nearest = min(distance(item) for item in fields)
+        associated = {name for name, span in fields if distance((name, span)) == nearest}
+        if associated == {field} and math.isclose(numeric * scale, amount, rel_tol=1e-9):
             return True
     return False
 

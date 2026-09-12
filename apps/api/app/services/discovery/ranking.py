@@ -6,6 +6,7 @@ import os
 import re
 from collections import Counter
 from functools import lru_cache
+from urllib.parse import urlsplit
 
 from .intent import _matches
 from .models import RankInfo
@@ -67,7 +68,10 @@ def rank_companies(query: str, intent: dict, companies: list[dict]) -> list[tupl
         attrs = [str(v).lower() for v in (intent.get("category"), intent.get("city"), intent.get("state")) if v and v != "default"]
         preference = sum(v in text_for(c).lower() for v in attrs) / max(1, len(attrs))
         facts = c.get("evidence", [])
-        independent = {f.get("source_url") for f in facts if f.get("status") == "reported"}
+        # Multiple pages from the same publisher are not independent corroboration.
+        independent = {(urlsplit(f.get("source_url") or "").hostname or "").lower().removeprefix("www.")
+                       for f in facts if f.get("status") == "reported"}
+        independent.discard("")
         evidence = min(1., len(independent) / 3)
         matched = sorted(query_tokens & words)
         unknown = [k for k in ("revenue", "sde", "asking_price") if (c.get("observables") or {}).get(k) is None]
