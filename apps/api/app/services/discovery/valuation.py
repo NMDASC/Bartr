@@ -50,16 +50,18 @@ class Observables:
     def __post_init__(self):
         for name in ("revenue", "sde", "asking_price", "llm_estimate", "llm2_estimate"):
             val = getattr(self, name)
-            if val is not None and (not math.isfinite(val) or val <= 0):
+            if val is not None and (isinstance(val, bool) or not isinstance(val, (float, int)) or not math.isfinite(val) or val <= 0):
                 raise ValueError(f"{name} must be finite and positive")
         for name in ("employees", "review_count", "years_operating", "machines"):
             val = getattr(self, name)
-            if val is not None and (not math.isfinite(val) or val < 0 or int(val) != val):
+            if val is not None and (isinstance(val, bool) or not isinstance(val, (float, int)) or not math.isfinite(val) or val < 0 or int(val) != val):
                 raise ValueError(f"{name} must be a nonnegative integer")
         for name, high in (("rating", 5), ("llm_confidence", 1)):
             val = getattr(self, name)
-            if val is not None and (not math.isfinite(val) or not 0 <= val <= high):
+            if val is not None and (isinstance(val, bool) or not isinstance(val, (float, int)) or not math.isfinite(val) or not 0 <= val <= high):
                 raise ValueError(f"{name} must be between 0 and {high}")
+        if self.owner_operated is not None and not isinstance(self.owner_operated, bool):
+            raise ValueError("owner_operated must be a boolean")
 
 
 @dataclass

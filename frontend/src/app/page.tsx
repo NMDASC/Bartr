@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SearchBar } from "@/components/search/search-bar";
+import { CityShortcuts } from "@/components/search/city-shortcuts";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { listCompanies } from "@/lib/api";
@@ -8,7 +9,7 @@ import { px, usd, pct } from "@/lib/format";
 const examples = ["laundromat in Pittsburgh", "car wash on McKnight Road", "machine shop in McKees Rocks", "restaurant on the South Side"];
 
 export default async function Home() {
-  const trending = (await listCompanies()).filter((c) => c.status === "ready").slice(0, 6);
+  const trending = (await listCompanies().catch(() => [])).filter((c) => c.status === "ready").slice(0, 6);
   return (
     <>
       <section className="bg-background">
@@ -30,6 +31,7 @@ export default async function Home() {
                 </Button>
               ))}
             </div>
+            <CityShortcuts />
           </div>
         </div>
       </section>

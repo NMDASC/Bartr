@@ -9,6 +9,7 @@ from app.schemas import SearchIntent
 from app.services.discovery.jobs import service
 from app.services.discovery.models import DiscoveryRequest, RankInfo
 from app.services.discovery.pricing import preview
+from app.services.market.treasury import SHARES
 
 
 @strawberry.experimental.pydantic.type(model=SearchIntent, all_fields=True)
@@ -62,15 +63,18 @@ class Valuation:
     version: str
     calibration_version: str | None
     benchmark_status: str
+    benchmark_version: str
+    basis: str
     as_of: str | None
     warnings: list[str]
 
     @classmethod
     def from_dict(cls, v):
         return cls(v0=v["v0"], low=v["low"], high=v["high"], sigma=v["sigma"], method=v["method"],
-                   estimates=[Estimate(**e) for e in v["estimates"]], opening_price=v.get("opening_price", round(v["v0"]/10000, 2)),
+                   estimates=[Estimate(**e) for e in v["estimates"]], opening_price=v.get("opening_price", round(v["v0"]/SHARES, 2)),
                    version=v.get("version", "legacy-ensemble"), calibration_version=v.get("calibration_version"),
                    benchmark_status=v.get("benchmark_status", "provisional"), as_of=v.get("as_of"),
+                   benchmark_version=v.get("benchmark_version", "legacy-priors-2026-09-11"), basis=v.get("basis", "business-sale-estimate"),
                    warnings=v.get("warnings", ["Uncalibrated benchmark and uncertainty priors"]))
 
 

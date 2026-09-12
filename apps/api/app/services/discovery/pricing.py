@@ -8,6 +8,7 @@ import os
 import re
 import time
 from copy import deepcopy
+from dataclasses import asdict
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -19,6 +20,26 @@ from .benchmark_catalog import CATALOG
 
 VERSION = "evidence-ensemble-v1"
 FINANCIAL = {"revenue", "sde", "asking_price"}
+
+
+def supported_amount(field: str, amount: float, quote: str) -> bool:
+    """Conservative evidence gate, not a substitute for financial due diligence."""
+    labels = {"revenue": r"revenue|sales|turnover", "sde": r"sde|discretionary earnings|cash flow",
+              "asking_price": r"asking|list(?:ing)? price|priced at|sale price"}
+    if not re.search(labels[field], quote, re.I):
+        return False
+    if re.search(r"\b(CAD|AUD|EUR|GBP|monthly|weekly|daily)\b|per (month|week|day)", quote, re.I):
+        return False
+    for match in re.finditer(r"(?<![\w.])([-+]?\$?\s*\d[\d,]*(?:\.\d+)?)\s*(thousand|million|[km]\b)?", quote, re.I):
+        raw, suffix = match.groups()
+        numeric = float(raw.replace("$", "").replace(",", "").replace(" ", ""))
+        # A reporting year alone is not a quoted dollar amount.
+        if not suffix and not any(c in raw for c in "$.,") and 1900 <= numeric <= 2100:
+            continue
+        scale = {"k": 1000, "thousand": 1000, "m": 1000000, "million": 1000000}.get((suffix or "").lower(), 1)
+        if math.isclose(numeric * scale, amount, rel_tol=1e-9):
+            return True
+    return False
 
 
 def calibration_profile() -> CalibrationProfile | None:
@@ -36,8 +57,10 @@ def preview(data: dict) -> dict:
     profile = calibration_profile()
     benchmark = CATALOG.get(obs.category)
     benchmark_version = benchmark["version"] if benchmark else "legacy-priors-2026-09-11"
-    if profile and profile.benchmark_version != benchmark_version:
-        raise ValueError("Calibration benchmark version does not match the active pricing benchmark")
+    calibration_warnings = []
+    if profile and (profile.benchmark_version != benchmark_version or profile.category not in (None, obs.category)):
+        calibration_warnings.append("Calibration profile does not cover this category and benchmark; provisional uncertainty used")
+        profile = None
     val = value(obs, calibration={k: v.model_dump() for k, v in profile.estimators.items()} if profile else None, benchmark=benchmark)
     return {"v0": val.v0, "sigma": val.sigma, "low": val.low, "high": val.high, "method": val.method,
             "disagreement": val.disagreement,
@@ -46,7 +69,7 @@ def preview(data: dict) -> dict:
             "benchmark_version": benchmark_version, "basis": "business-sale-estimate",
             "benchmark_status": "historical-sold" if benchmark else "provisional", "benchmark": benchmark,
             "opening_price": round(val.v0 / SHARES, 2),
-            "warnings": ([] if profile else ["Uncalibrated uncertainty and quality adjustments"]) + ([] if benchmark else ["Provisional category benchmarks"])}
+            "warnings": calibration_warnings + ([] if profile else ["Uncalibrated uncertainty and quality adjustments"]) + ([] if benchmark else ["Provisional category benchmarks"])}
 
 
 def norm(text: str) -> str:
@@ -56,26 +79,27 @@ def norm(text: str) -> str:
 def verified_company(extracted: ExtractedCompany, pages: list[dict]) -> dict:
     by_url = {p["url"]: p["content"] for p in pages}
     # A returned schema is not proof that the company exists.
-    if not any(norm(extracted.name) in norm(text) for text in by_url.values()):
+    if not norm(extracted.name) or not any(norm(extracted.name) in norm(text) for text in by_url.values()):
         raise ValueError("Company name lacks supporting page text")
     data = extracted.model_dump(exclude={"evidence"})
     data["state"] = data["state"].upper() if data.get("state") else None
     data["sources"], evidence = [], []
     for fact in extracted.evidence:
         source = by_url.get(fact.source_url)
-        if not source or not fact.quote.strip() or norm(fact.quote) not in norm(source):
+        if not source or not fact.quote.strip() or " ".join(fact.quote.split()) not in " ".join(source.split()):
             continue
         entry = fact.model_dump()
         entry["fetched_at"] = iso(time.time())
         # Inferred values are preserved as evidence but cannot silently become financial facts.
         if fact.status == "reported" and fact.field in Observables.__dataclass_fields__ and fact.field not in {"category", "state", "sources", "llm_estimate", "llm2_estimate", "llm_confidence"}:
             if fact.field in FINANCIAL:
-                if fact.currency != "USD" or not fact.period:
+                if fact.currency != "USD" or not fact.period or fact.period.casefold() not in fact.quote.casefold():
+                    continue
+                if "$" not in fact.quote and "USD" not in fact.quote.upper():
                     continue
                 if not isinstance(fact.value, (float, int)) or isinstance(fact.value, bool):
                     continue
-                numbers = re.findall(r"\d[\d,]*(?:\.\d+)?", fact.quote)
-                if not any(float(n.replace(",", "")) * scale == fact.value for n in numbers for scale in (1, 1000 if re.search(r"\b(thousand|k)\b|\d[kK]\b", fact.quote) else 1, 1000000 if re.search(r"million|\d[mM]\b", fact.quote) else 1)):
+                if not supported_amount(fact.field, fact.value, fact.quote):
                     continue
             # Validate one input at a time; malformed evidence cannot poison an entire job.
             try:
@@ -115,25 +139,30 @@ def save_company(engine, data: dict) -> dict:
     data = {**data, "evidence": list(combined.values())}
     data["sources"] = sorted(set((previous.get("observables", {}).get("sources", []) if previous else []) + data.get("sources", [])))
     merged = {**(previous.get("observables", {}) if previous else {}), **{k: v for k, v in data.items() if v is not None}}
+    inputs = asdict(Observables(**{k: v for k, v in merged.items() if k in Observables.__dataclass_fields__}))
     snapshot = preview(merged)
     evidence = data.get("evidence", [])
-    fingerprint = hashlib.sha256(json.dumps({"inputs": {k: v for k, v in merged.items() if k not in ("evidence", "source_documents")},
+    fingerprint = hashlib.sha256(json.dumps({"inputs": inputs,
         "evidence": sorted(combined), "version": VERSION, "benchmark": snapshot["benchmark_version"],
         "calibration": snapshot["calibration_version"]}, sort_keys=True, default=str).encode()).hexdigest()
-    if previous and previous.get("valuation_fingerprint") == fingerprint:
-        return previous
     if previous:
         company = deepcopy(previous)
-        company.update({k: v for k, v in data.items() if v is not None and k not in ("id", "valuation", "evidence")})
-        company["observables"] = {k: v for k, v in merged.items() if k in Observables.__dataclass_fields__}
+        profile_fields = {"name", "category", "state", "city", "address", "website", "phone", "description"}
+        company.update({k: v for k, v in data.items() if v is not None and k in profile_fields})
     else:
         company = engine.create_company({**merged, "id": cid})
-    company["valuation"] = snapshot
+    company["observables"] = inputs
     company["evidence"] = evidence
-    company["source_documents"] = data.get("source_documents", previous.get("source_documents", []) if previous else [])
+    documents = {p["url"]: p for p in [*(previous.get("source_documents", []) if previous else []), *data.get("source_documents", [])]}
+    company["source_documents"] = list(documents.values())
+    if previous and previous.get("valuation_fingerprint") == fingerprint:
+        if company != previous:
+            engine.store.put_company(company)
+        return company
+    company["valuation"] = snapshot
     company["valuation_fingerprint"] = fingerprint
     history = company.get("valuation_history", [])
-    company["valuation_history"] = [*history[-19:], {**snapshot, "input_hash": fingerprint, "inputs": {k: v for k, v in merged.items() if k in Observables.__dataclass_fields__}, "evidence": evidence}]
+    company["valuation_history"] = [*history[-19:], {**snapshot, "input_hash": fingerprint, "inputs": inputs, "evidence": evidence}]
     engine.store.put_company(company)
     market = engine.store.get_market(cid)
     if market:

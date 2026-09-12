@@ -29,6 +29,17 @@ export interface Source {
   fetched_at: Iso;
 }
 
+export interface FieldEvidence {
+  field: string;
+  value: number | string | boolean | null;
+  source_url: string;
+  quote: string;
+  status: "reported" | "inferred";
+  currency?: string | null;
+  period?: string | null;
+  fetched_at?: Iso | null;
+}
+
 export interface Financials {
   revenue_est: number | null;
   sde_est: number | null;
@@ -108,6 +119,7 @@ export interface MarketSummary {
 }
 
 export interface Company {
+  evidence?: FieldEvidence[];
   _id: string;
   name: string;
   category: string;

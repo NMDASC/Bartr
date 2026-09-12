@@ -13,7 +13,7 @@ async def text_search(query: str, count: int = 8) -> list[dict]:
     body = {"textQuery": query, "pageSize": min(count, 20)}
     headers = {
         "X-Goog-Api-Key": key,
-        "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.websiteUri,places.nationalPhoneNumber,places.rating,places.userRatingCount,places.location",
+        "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.websiteUri,places.googleMapsUri,places.nationalPhoneNumber,places.rating,places.userRatingCount,places.location",
     }
     async with httpx.AsyncClient(timeout=15) as client:
         r = await client.post("https://places.googleapis.com/v1/places:searchText", json=body, headers=headers)
@@ -27,6 +27,7 @@ async def text_search(query: str, count: int = 8) -> list[dict]:
             continue
         out.append({
             "name": name,
+            "source_url": p.get("googleMapsUri") or p.get("websiteUri") or "https://maps.google.com/",
             "address": p.get("formattedAddress"),
             "website": p.get("websiteUri"),
             "phone": p.get("nationalPhoneNumber"),

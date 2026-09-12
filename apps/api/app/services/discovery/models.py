@@ -66,5 +66,6 @@ class CalibrationEntry(BaseModel):
 class CalibrationProfile(BaseModel):
     version: str = Field(min_length=1)
     target: Literal["asking", "sale"]
+    category: str | None = None
     benchmark_version: str = "legacy-priors-2026-09-11"
     estimators: dict[str, CalibrationEntry]

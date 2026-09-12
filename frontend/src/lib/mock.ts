@@ -18,6 +18,7 @@ import type {
   Flag,
   Order,
   Portfolio,
+  SearchIntent,
   Side,
   Suggestion,
 } from "@contracts/types";
@@ -150,21 +151,23 @@ export async function getCompany(id: string): Promise<Company | null> {
 export function streamSearch(q: string, onEvent: (e: DiscoveryEvent) => void): () => void {
   const timers: number[] = [];
   const at = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms));
-  const city = /\bpittsburgh\b/i.test(q) ? "Pittsburgh" : /\btulsa\b/i.test(q) ? "Tulsa" : null;
-  const state = /\b(pa|pennsylvania|pittsburgh)\b/i.test(q) ? "PA" : /\b(ok|oklahoma|tulsa)\b/i.test(q) ? "OK" : null;
-  at(250, () =>
-    onEvent({
-      type: "intent",
-      intent: { category: "laundromat", naics_guess: "812310", state, city, min_value: null, max_value: null, must_have: [] },
-    }),
-  );
-  at(400, () => onEvent({ type: "ranking", revision: 1, companies: CARDS }));
-  CARDS.forEach((c, i) => {
+  const place = q.match(/\b(?:in|near|around)\s+(.+?)(?=\s+(?:under|over|with|below|above|for)\b|$)/i)?.[1];
+  const city = place?.split(",")[0].trim() ?? null;
+  const state = place?.match(/,\s*([a-z]{2})\b/i)?.[1].toUpperCase() ?? (/\bpittsburgh\b/i.test(q) ? "PA" : null);
+  const category = /laundromat|laundry/i.test(q) ? "laundromat" : /car wash|carwash/i.test(q) ? "car_wash" : /machine shop/i.test(q) ? "machine_shop" : /restaurant/i.test(q) ? "restaurant" : "default";
+  const amount = q.match(/\b(?:under|below)\s*\$?([\d,.]+)\s*(k|m|million|thousand)?\b/i);
+  const maxValue = amount ? Number(amount[1].replaceAll(",", "")) * (/^(m|million)$/i.test(amount[2] ?? "") ? 1e6 : /^(k|thousand)$/i.test(amount[2] ?? "") ? 1e3 : 1) : null;
+  const intent: SearchIntent = { category, naics_guess: null, state, city, min_value: null, max_value: maxValue, must_have: [] };
+  const matches = CARDS.filter(c => (!city || c.city?.toLowerCase() === city.toLowerCase()) && (!state || c.state === state)
+    && (category === "default" || c.category === category) && (maxValue === null || c.v0_per_share !== null && c.v0_per_share * SHARES <= maxValue));
+  at(250, () => onEvent({ type: "intent", intent }));
+  at(400, () => onEvent({ type: "ranking", revision: 1, companies: matches }));
+  matches.forEach((c, i) => {
     const stub: CompanyCard = { ...c, bid: null, ask: null, last: null, v0_per_share: null, confidence: null, status: "stub" };
     at(600 + i * 350, () => onEvent({ type: "company_stub", company: stub }));
     if (c.status === "ready") at(2200 + i * 900, () => onEvent({ type: "company_ready", company: c }));
   });
-  at(2200 + CARDS.length * 900 + 400, () => onEvent({ type: "done", total: CARDS.length }));
+  at(2200 + matches.length * 900 + 400, () => onEvent({ type: "done", total: matches.length, warnings: ["Live search unavailable"], status: "partial" }));
   return () => timers.forEach((t) => window.clearTimeout(t));
 }
 

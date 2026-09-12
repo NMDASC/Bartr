@@ -30,6 +30,7 @@ export function Valuation({ company, last }: { company: Company; last: number | 
         </span>
       </div>
       <div className="p-3">
+        {v.as_of ? <p className="mb-3 font-mono text-[10px] text-muted-foreground">AS OF {v.as_of.slice(0, 10)}</p> : null}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div>
             <Label tracking="tight" className="block mb-1">Model</Label>

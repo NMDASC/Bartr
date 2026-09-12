@@ -1,5 +1,6 @@
 """Deterministic intent fallback, including the existing Pittsburgh metro convention."""
 import re
+from .locations import parse_location, city_matches
 
 STATES = {"alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA", "colorado": "CO", "connecticut": "CT",
           "delaware": "DE", "florida": "FL", "georgia": "GA", "hawaii": "HI", "idaho": "ID", "illinois": "IL", "indiana": "IN", "iowa": "IA",
@@ -15,12 +16,6 @@ CATEGORIES = {"laundromat": ["laundromat", "laundry", "coin laundry", "wash hous
               "daycare": ["daycare", "day care", "childcare"], "liquor_store": ["liquor"], "convenience_store": ["convenience", "gas station"],
               "self_storage": ["storage"], "trucking": ["trucking", "freight"], "retail": ["store", "shop", "boutique"]}
 
-CITIES = {"pittsburgh": ("Pittsburgh", "PA"), "squirrel hill": ("Pittsburgh", "PA"), "oakland": ("Pittsburgh", "PA"), "bloomfield": ("Pittsburgh", "PA"),
-          "lawrenceville": ("Pittsburgh", "PA"), "south side": ("Pittsburgh", "PA"), "strip district": ("Pittsburgh", "PA"), "shadyside": ("Pittsburgh", "PA"),
-          "homestead": ("Homestead", "PA"), "mckees rocks": ("McKees Rocks", "PA"), "tulsa": ("Tulsa", "OK"), "waco": ("Waco", "TX"),
-          "philadelphia": ("Philadelphia", "PA"), "cleveland": ("Cleveland", "OH"), "columbus": ("Columbus", "OH")}
-PITTSBURGH_METRO = {"Pittsburgh", "Homestead", "McKees Rocks"}
-
 def parse_intent(q: str) -> dict:
     ql = q.lower()
     category = "default"
@@ -28,25 +23,7 @@ def parse_intent(q: str) -> dict:
         if any(k in ql for k in kws):
             category = cat
             break
-    state, city = None, None
-    for name, (cty, ab) in CITIES.items():
-        if re.search(rf"\b{name}\b", ql):
-            city, state = cty, ab
-            break
-    for name, ab in STATES.items():
-        if re.search(rf"\b{name}\b", ql):
-            state = ab
-            break
-    if not state:
-        m = re.search(r"\b([A-Z]{2})\b", q)
-        if m and m.group(1) in STATES.values():
-            state = m.group(1)
-    if not city:
-        place = re.search(r"\bin\s+([a-z][a-z .'-]*?)(?=\s+(?:under|over|with|below|above|that|for)|[,!?]|$)", ql)
-        if place:
-            name = place.group(1).strip()
-            if name not in STATES and name.upper() not in STATES.values():
-                city = name.title()
+    city, state = parse_location(q, STATES)
     def amount(prefix):
         match = re.search(rf"\b(?:{prefix})\s*\$?\s*([\d,]+(?:\.\d+)?)\s*(million|thousand|m|k)?\b", ql)
         if not match:
@@ -64,9 +41,7 @@ def _matches(c: dict, intent: dict) -> bool:
     if intent["state"] and (c.get("state") or "").upper() != intent["state"]:
         return False
     if intent["city"]:
-        metro = {city.casefold() for city in PITTSBURGH_METRO}
-        want = metro if intent["city"].casefold() in metro else {intent["city"].casefold()}
-        if (c.get("city") or "").casefold() not in want:
+        if not city_matches(c.get("city"), intent["city"], intent.get("state")):
             return False
     v0 = (c.get("valuation") or {}).get("v0")
     if intent["max_value"] is not None and (v0 is None or v0 > intent["max_value"]):

@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import type { CompanyCard, SearchIntent } from "@contracts/types";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import { streamSearch } from "@/lib/api";
 import { px, usd, pct } from "@/lib/format";
 import { Label } from "@/components/ui/label";
@@ -10,43 +9,29 @@ import { Chip } from "@/components/ui/chip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
-
-type Phase = "idle" | "streaming" | "done" | "error";
+import { initialSearchState, reduceDiscovery } from "@/lib/search-state";
+import { Button } from "@/components/ui/button";
 
 export function Results({ q }: { q: string }) {
-  const [phase, setPhase] = useState<Phase>(q ? "streaming" : "idle");
-  const [intent, setIntent] = useState<SearchIntent | null>(null);
-  const [cards, setCards] = useState<Map<string, CompanyCard>>(new Map());
-  const [order, setOrder] = useState<string[]>([]);
+  const [{ phase, intent, cards, order, error, warnings }, dispatch] = useReducer(reduceDiscovery, undefined, initialSearchState);
+  const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState("");
   const [band, setBand] = useState("");
   const [sort, setSort] = useState<"relevance" | "conf" | "value" | "name">("relevance");
-  const [error, setError] = useState<string | null>(null);
 
   // page.tsx mounts this with key={q}, so a new query is a fresh component; no reset needed here
   useEffect(() => {
     if (!q) return;
-    const stop = streamSearch(q, (e) => {
-      if (e.type === "intent") setIntent(e.intent);
-      if (e.type === "ranking") {
-        setCards(new Map(e.companies.map(c => [c._id, c])));
-        setOrder(e.companies.map(c => c._id));
-      }
-      if (e.type === "error") { setError(e.message); setPhase("error"); }
-      if (e.type === "company_stub" || e.type === "company_ready") {
-        setCards((m) => new Map(m).set(e.company._id, e.company));
-        setOrder((o) => (o.includes(e.company._id) ? o : [...o, e.company._id]));
-      }
-      if (e.type === "done") setPhase(e.status === "failed" ? "error" : "done");
-    });
+    const stop = streamSearch(q, dispatch);
     return stop;
-  }, [q]);
+  }, [q, attempt]);
 
   const rows = useMemo(() => {
     const all = order.map((id) => cards.get(id)!).filter(Boolean);
     const filtered = all.filter((c) => {
       if (state && c.state !== state) return false;
-      if (band && c.v0_per_share !== null) {
+      if (band) {
+        if (c.v0_per_share === null) return false;
         const v = c.v0_per_share * 10000;
         if (band === "lt500" && v >= 500_000) return false;
         if (band === "500-1500" && (v < 500_000 || v > 1_500_000)) return false;
@@ -86,6 +71,8 @@ export function Results({ q }: { q: string }) {
               <dd className="text-foreground">{intent.naics_guess ?? "\u2014"}</dd>
               <dt className="uppercase tracking-[0.08em]">state</dt>
               <dd className="text-foreground">{intent.state ?? "any"}</dd>
+              <dt className="uppercase tracking-[0.08em]">city</dt>
+              <dd className="text-foreground">{intent.city ?? "any"}</dd>
             </dl>
           ) : (
             <Skeleton className="mt-3 h-12 w-full" />
@@ -123,17 +110,19 @@ export function Results({ q }: { q: string }) {
       </aside>
 
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3" role="status" aria-live="polite">
           <Label>
-            {readyCount} priced · {rows.length - readyCount} reading
+            {readyCount} priced{rows.length > readyCount ? ` · ${rows.length - readyCount} ${phase === "streaming" ? "reading" : "unavailable"}` : ""}
           </Label>
           <span className={cn("font-mono text-[10px] uppercase tracking-[0.1em]", phase === "done" ? "text-muted-foreground" : "text-accent")}>
-            {phase === "error" ? "Unavailable" : phase === "done" ? "Complete" : "Streaming"}
+            {phase === "error" ? "Unavailable" : phase === "partial" ? "Partial results" : phase === "done" ? "Complete" : "Searching"}
           </span>
         </div>
 
         {error ? <p role="alert" className="py-4 text-down">{error}</p> : null}
-        {phase === "done" && rows.length === 0 ? <p className="py-4 secondary">No matching companies.</p> : null}
+        {warnings.length ? <ul className="py-3 text-[13px] secondary">{warnings.map(w => <li key={w}>{w}</li>)}</ul> : null}
+        {phase === "error" || phase === "partial" ? <Button size="sm" className="mb-4" onClick={() => { dispatch({ type: "reset" }); setAttempt(a => a + 1); }}>Retry search</Button> : null}
+        {(phase === "done" || phase === "partial") && rows.length === 0 ? <p className="py-4 secondary">{phase === "partial" ? "No saved matches." : "No matching companies."}</p> : null}
 
         <div className="hidden md:grid grid-cols-[1fr_110px_88px_88px_88px_120px] gap-4 px-3 pb-2 border-b border-line">
           <Label>Company</Label>
@@ -154,7 +143,7 @@ export function Results({ q }: { q: string }) {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="truncate text-[16px]">{c.name}</span>
-                    {c.status !== "ready" ? <Chip tone="accent">Reading</Chip> : null}
+                    {c.status !== "ready" ? <Chip tone="accent">{c.status === "stub" && phase === "streaming" ? "Reading" : "Unavailable"}</Chip> : null}
                   </div>
                   <div className="text-[13px] secondary">
                     {c.city}, {c.state} · {c.category}
@@ -162,7 +151,7 @@ export function Results({ q }: { q: string }) {
                   </div>
                 </div>
                 <div className="font-mono text-[13px] tabular-nums text-right">
-                  {c.v0_per_share !== null ? usd(c.v0_per_share * 10000, { compact: true }) : <Skeleton className="inline-block h-3 w-14" />}
+                  {c.v0_per_share !== null ? usd(c.v0_per_share * 10000, { compact: true }) : c.status === "stub" && phase === "streaming" ? <Skeleton className="inline-block h-3 w-14" /> : "—"}
                 </div>
                 <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-up">{px(c.bid)}</div>
                 <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-down">{px(c.ask)}</div>

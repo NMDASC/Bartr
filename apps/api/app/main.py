@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.deps import STORE_KIND, engine, store
 from app.routers import acquire, agent, companies, discovery, market, portfolio, surveillance, ws
+from app.routers.graphql import router as graphql_router
 
 SEED = os.getenv("SEED", "1") == "1"
 BOTS = os.getenv("BOTS", "0") == "1"
@@ -59,6 +60,8 @@ async def lifespan(app: FastAPI):
     stop = asyncio.Event()
     task = asyncio.create_task(scheduler(stop))
     yield
+    from app.services.discovery.jobs import service
+    await service().close()
     stop.set()
     task.cancel()
 
@@ -75,6 +78,7 @@ app.include_router(acquire.router, prefix=API)
 app.include_router(surveillance.router, prefix=API)
 app.include_router(agent.router, prefix=API)
 app.include_router(ws.router)  # /ws/markets/{id} at the root, per the contract
+app.include_router(graphql_router, prefix="/graphql")
 
 
 @app.get("/health")

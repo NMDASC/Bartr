@@ -17,6 +17,9 @@ from .models import DiscoveryRequest, ExtractedCompanies, ParsedIntent
 from .pricing import save_company, verified_company
 from .querit import Querit
 from .ranking import rank_companies
+from .locations import retrieval_query
+from .places import text_search
+from .intent import _matches
 
 
 @dataclass
@@ -46,8 +49,8 @@ class DiscoveryJobs:
         self.jobs: dict[str, Job] = {}
         self.live_slots = asyncio.Semaphore(2)
 
-    def start(self, request: DiscoveryRequest) -> Job:
-        request = request.model_copy(update={"q": request.q.strip()})
+    def start(self, request: DiscoveryRequest, intent: dict | None = None) -> Job:
+        request = request.model_copy(update={"q": request.q.strip(), "live": request.live if request.live is not None else os.getenv("DISCOVERY_LIVE", "0") == "1"})
         if not request.q:
             raise ValueError("Enter a search query")
         now = time.monotonic()
@@ -55,14 +58,14 @@ class DiscoveryJobs:
             if job.status != "running" and now - job.created > 900:
                 del self.jobs[jid]
         for job in self.jobs.values():
-            if job.request == request and now - job.created < 300:
+            if job.request == request and job.status in ("running", "done") and now - job.created < 300:
                 return job
         if len(self.jobs) >= 64:
             completed = [job for job in self.jobs.values() if job.status != "running"]
             if not completed:
                 raise ValueError("Discovery is busy; retry shortly")
             del self.jobs[min(completed, key=lambda j: j.created).id]
-        job = Job(id="job_" + uuid.uuid4().hex, request=request, intent=parse_intent(request.q))
+        job = Job(id="job_" + uuid.uuid4().hex, request=request, intent=intent or parse_intent(request.q))
         self.jobs[job.id] = job
         job.task = asyncio.create_task(self.run(job))
         return job
@@ -96,12 +99,20 @@ class DiscoveryJobs:
         for item in extracted.companies[:job.request.limit]:
             try:
                 data = verified_company(item, pages)
+                # Check geography before creating a company or opening its market.
+                location_only = {**job.intent, "min_value": None, "max_value": None}
+                if not _matches(data, location_only):
+                    continue
                 data["source_documents"] = [{"url": p["url"], "title": p["title"],
                     "snippet": p["content"][:400], "fetched_at": iso(time.time())} for p in pages
-                    if any(e["source_url"] == p["url"] for e in data["evidence"])]
+                    if any(e["source_url"] == p["url"] for e in data["evidence"])
+                    or item.name.casefold() in p["content"].casefold()]
                 company = save_company(self.engine, data)
                 if rank_companies(job.request.q, job.intent, [company]):
-                    job.emit({"type": "company_ready", "company": self.engine.card(company)})
+                    self.rank(job)
+                    hit = next((h for h in job.results if h["company"]["_id"] == company["id"]), None)
+                    if hit:
+                        job.emit({"type": "company_ready", "company": {**hit["company"], "relevance": hit["relevance"]}})
             except (ValueError, TypeError, KeyError):
                 job.warnings.append("A company was omitted because its source evidence was incomplete or invalid")
 
@@ -123,13 +134,20 @@ class DiscoveryJobs:
             job.intent = intent
             job.emit({"type": "intent", "intent": intent})
             self.rank(job)
-            pages = await self.provider.search(job.request.q, count=12)
-            if not pages:
+            query = retrieval_query(job.request.q, job.intent)
+            pages = await self.provider.search(query, count=12)
+            try:
+                places = await text_search(query, count=6)
+            except Exception:
+                places = []
+                job.warnings.append("Some location details were unavailable")
+            if not pages and not places:
                 return
             try:
                 pages = await self.provider.contents(pages[:6])
-            except (RuntimeError, OSError, ValueError):
+            except Exception:
                 job.warnings.append("Full page retrieval failed; search excerpts were used")
+            pages.extend({"url": p["source_url"], "title": p["name"], "content": json.dumps(p)} for p in places)
             initial = await self.extract(pages)
             self.ingest(initial, pages, job)
             self.rank(job)
@@ -154,9 +172,11 @@ class DiscoveryJobs:
             for hit in job.results:
                 job.emit({"type": "company_ready", "company": {**hit["company"], "relevance": hit["relevance"]}})
             configured = bool(os.getenv("QUERIT_API_KEY")) and llm.is_configured("xai")
-            if job.request.live is True and not configured:
-                job.warnings.append("Live discovery requires QUERIT_API_KEY and XAI_API_KEY")
-            if job.request.live is not False and configured:
+            if job.request.live and not configured:
+                job.warnings.append("Live search unavailable")
+            elif not job.request.live:
+                job.warnings.append("Live search is paused")
+            if job.request.live and configured:
                 await asyncio.wait_for(self.live(job), timeout=180)
             job.status = "partial" if job.warnings else "done"
         except asyncio.CancelledError:

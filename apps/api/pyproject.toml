@@ -17,6 +17,7 @@ dependencies = [
   "sentence-transformers",
   "sse-starlette",
   "pyyaml",
+  "strawberry-graphql[fastapi]>=0.280,<1",
 ]
 
 [dependency-groups]

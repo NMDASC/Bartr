@@ -56,7 +56,7 @@ def company(c: dict, m: dict | None) -> dict:
             "website": c.get("website"), "phone": c.get("phone"), "rating": o.get("rating"), "review_count": o.get("review_count") or 0,
             "founded_year": (datetime.now().year - yrs) if yrs else None, "owners": c.get("owners", []),
             "description": c.get("description"), "financials": financials(c), "valuation": valuation(c["valuation"], c["created_at"]),
-            "sources": sources(c), "status": c.get("status", "ready"), "created_at": iso(c["created_at"]),
+            "sources": sources(c), "evidence": c.get("evidence", []), "status": c.get("status", "ready"), "created_at": iso(c["created_at"]),
             "market": market_summary(m) if m else None, "observables": o}
 
 

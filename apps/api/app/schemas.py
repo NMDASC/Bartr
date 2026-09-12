@@ -73,6 +73,17 @@ class Source(BaseModel):
     fetched_at: str
 
 
+class FieldEvidence(BaseModel):
+    field: str
+    value: float | str | bool | None
+    source_url: str
+    quote: str
+    status: Literal["reported", "inferred"] = "reported"
+    currency: str | None = None
+    period: str | None = None
+    fetched_at: str | None = None
+
+
 class Financials(BaseModel):
     revenue_est: float | None
     sde_est: float | None
@@ -146,6 +157,7 @@ class MarketSummary(BaseModel):
 
 
 class Company(BaseModel):
+    evidence: list[FieldEvidence] = Field(default_factory=list)
     id: str = Field(alias="_id")
     name: str
     category: str

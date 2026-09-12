@@ -22,6 +22,7 @@ export function Sources({ sources }: { sources: Source[] }) {
                 </a>
               </div>
               <div className="mt-0.5 pl-6 font-mono text-[10px] text-muted-foreground">{domain(s.url)}</div>
+              {s.fetched_at ? <div className="mt-0.5 pl-6 font-mono text-[10px] text-muted-foreground">Retrieved {s.fetched_at.slice(0, 10)}</div> : null}
               <p className="mt-1 pl-6 text-[13px] secondary">{s.snippet}</p>
             </li>
           ))}

@@ -10,6 +10,7 @@ import { DepthPlate } from "./depth-plate";
 import { OrderTicket } from "./order-ticket";
 import { Valuation } from "./valuation";
 import { Sources } from "./sources";
+import { Evidence } from "./evidence";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -91,6 +92,7 @@ export function MarketPanel({ company }: { company: Company }) {
               <DepthPlate book={m.book} tick={m.tick} last={m.last} />
             </div>
             <Sources sources={company.sources} />
+            <Evidence facts={company.evidence ?? []} />
           </div>
         </div>
       </div>

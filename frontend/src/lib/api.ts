@@ -13,6 +13,7 @@ import type {
   Company,
   CompanyCard,
   DiscoveryEvent,
+  SearchJobAccepted,
   Order,
   Portfolio,
   Side,
@@ -22,7 +23,7 @@ import type {
 } from "@contracts/types";
 import * as mock from "./mock";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? null;
+export const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/$/, "") || null;
 export const IS_MOCK = API_URL === null;
 const BASE = `${API_URL}/api/v1`;
 
@@ -76,26 +77,54 @@ export function streamSearch(q: string, onEvent: (e: DiscoveryEvent) => void): (
   if (IS_MOCK) return mock.streamSearch(q, onEvent);
 
   let es: EventSource | null = null;
-  let aborted = false;
-  (async () => {
-    const { job_id, intent } = await j<{ job_id: string; intent: DiscoveryEvent extends { intent: infer I } ? I : never }>(
-      "/discovery/search",
-      { method: "POST", body: JSON.stringify({ q }) },
-    );
-    if (aborted) return;
-    onEvent({ type: "intent", intent } as DiscoveryEvent);
-    es = new EventSource(`${BASE}/discovery/jobs/${job_id}`);
-    es.onmessage = (m) => {
-      const ev = JSON.parse(m.data) as DiscoveryEvent;
-      onEvent(ev);
-      if (ev.type === "done") es?.close();
-    };
-    es.onerror = () => es?.close();
-  })();
-  return () => {
-    aborted = true;
+  const controller = new AbortController();
+  let stopped = false;
+  let reconnects = 0;
+  let timer: ReturnType<typeof setTimeout>;
+  const stop = () => {
+    stopped = true;
+    clearTimeout(timer);
+    controller.abort();
     es?.close();
   };
+  const fail = (message: string) => {
+    if (stopped) return;
+    onEvent({ type: "error", message });
+    stop();
+  };
+  timer = setTimeout(() => fail("Search timed out. Try again."), 15000);
+  (async () => {
+    try {
+      const { job_id, intent } = await j<SearchJobAccepted>("/discovery/search", {
+        method: "POST", body: JSON.stringify({ q, limit: 50 }), signal: controller.signal,
+      });
+      if (stopped) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => fail("Search timed out. Try again."), 210000);
+      onEvent({ type: "intent", intent });
+      es = new EventSource(`${BASE}/discovery/jobs/${encodeURIComponent(job_id)}`);
+      es.onmessage = (m) => {
+        if (stopped) return;
+        try {
+          const event = JSON.parse(m.data) as DiscoveryEvent;
+          reconnects = 0;
+          onEvent(event);
+          if (event.type === "done" || event.type === "error") stop();
+        } catch {
+          fail("Search returned an invalid response. Try again.");
+        }
+      };
+      es.onerror = () => {
+        // EventSource reconnects with Last-Event-ID; the server replays the same job.
+        if (es?.readyState === EventSource.CLOSED || ++reconnects >= 3) {
+          fail("Search connection lost. Try again.");
+        }
+      };
+    } catch {
+      fail("Search is unavailable. Try again.");
+    }
+  })();
+  return stop;
 }
 
 // ---------------------------------------------------------------- market
