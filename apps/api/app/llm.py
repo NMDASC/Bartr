@@ -100,6 +100,12 @@ def client(provider: Provider = "xai") -> AsyncOpenAI:
 
 def is_configured(provider: Provider) -> bool:
     try:
+        from app.services.agents import grok as _g
+        if _g._blocked_until.get(provider, 0) > __import__("time").time():
+            return False   # key known dead (credits or spend limit); callers fall back instantly
+    except Exception:  # noqa: BLE001
+        pass
+    try:
         client(provider)
         return True
     except (LLMNotConfigured, ValueError):

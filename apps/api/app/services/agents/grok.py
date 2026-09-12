@@ -28,8 +28,22 @@ CACHE_TTL = float(os.getenv("GROK_CACHE_TTL", "600"))
 CALLS: list[dict] = []   # last calls, surfaced on /readiness for the demo
 
 
+_blocked_until: dict[str, float] = {}
+BLOCK_S = float(os.getenv("GROK_BLOCK_S", "300"))
+
+
 def configured(provider: str = "xai") -> bool:
+    """Key present and not known to be dead. A 403 credit/spend-limit reply or a 429 marks the
+    provider blocked for BLOCK_S seconds so callers fall back instantly instead of waiting on it."""
+    if _blocked_until.get(provider, 0) > time.time():
+        return False
     return llm.is_configured(provider)  # type: ignore[arg-type]
+
+
+def _note_failure(provider: str, e: Exception) -> None:
+    text = repr(e)
+    if "permission-denied" in text or "spending limit" in text or "credits" in text or "429" in text or "insufficient_quota" in text:
+        _blocked_until[provider] = time.time() + BLOCK_S
 
 
 def _key(name: str, *parts: Any) -> str:
@@ -70,6 +84,7 @@ async def structured(name: str, schema: type[M], system: str, user: str, *, prov
         _remember(name, provider, True, (time.time() - t0) * 1000, _model(provider, tier))
         return out  # type: ignore[return-value]
     except Exception as e:  # noqa: BLE001
+        _note_failure(provider, e)
         _remember(name, provider, False, (time.time() - t0) * 1000, repr(e))
         return None
 
@@ -90,6 +105,7 @@ async def text(name: str, system: str, user: str, *, provider: str = "xai", temp
         _remember(name, provider, True, (time.time() - t0) * 1000)
         return out  # type: ignore[return-value]
     except Exception as e:  # noqa: BLE001
+        _note_failure(provider, e)
         _remember(name, provider, False, (time.time() - t0) * 1000, repr(e))
         return None
 
@@ -132,6 +148,8 @@ async def researched(name: str, question: str, *, allowed_domains: list[str] | N
         error = f"{type(e).__name__}: {e}"
         if raw is None:
             raw = error_response(e)
+        if not isinstance(e, asyncio.CancelledError):
+            _note_failure("xai", e)
         _remember(name, "xai+web_search", False, (time.time() - t0) * 1000, repr(e))
         if isinstance(e, asyncio.CancelledError):
             raise
@@ -147,4 +165,5 @@ async def second_opinion(name: str, schema: type[M], system: str, user: str) -> 
 
 
 def status() -> dict:
-    return {"xai": configured("xai"), "ifm": configured("ifm"), "recent_calls": CALLS[-10:]}
+    blocked = {p: round(t - time.time()) for p, t in _blocked_until.items() if t > time.time()}
+    return {"xai": configured("xai"), "ifm": configured("ifm"), "blocked_s": blocked, "recent_calls": CALLS[-10:]}

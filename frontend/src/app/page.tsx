@@ -40,7 +40,7 @@ export default async function Home() {
       </section>
 
       <section className="border-t border-line">
-        <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-14 md:py-20 xl:border-l xl:border-r xl:border-line">
+        <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 pt-14 md:pt-20 xl:border-l xl:border-r xl:border-line">
           <div className="max-w-2xl">
             <Label className="mb-2 block">Coverage</Label>
             <h2 className="text-[30px] md:text-[36px] 3xl:text-[44px] leading-[1.2]">The businesses you were never going to see.</h2>
