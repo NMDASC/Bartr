@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.deps import STORE_KIND, engine, store
-from app.routers import acquire, agent, companies, discovery, market, portfolio, surveillance, ws
+from app.routers import acquire, agent, companies, discovery, market, offers, portfolio, surveillance, ws
 from app.routers.graphql import router as graphql_router
 
 SEED = os.getenv("SEED", "1") == "1"
@@ -90,6 +90,7 @@ app.include_router(discovery.router, prefix=API)
 app.include_router(market.router, prefix=API)
 app.include_router(portfolio.router, prefix=API)
 app.include_router(acquire.router, prefix=API)
+app.include_router(offers.router, prefix=API)
 app.include_router(surveillance.router, prefix=API)
 app.include_router(agent.router, prefix=API)
 app.include_router(ws.router)  # /ws/markets/{id} at the root, per the contract
@@ -116,4 +117,5 @@ def readiness():
         "auth0": False,  # not wired, see docs/DECISIONS.md 011
         "grok_features": ["appraise", "intent", "compliance_review", "narrative", "profile", "suggest_why", "ask_owner", "redteam", "loi", "checklist", "health_report", "chat_agent"],
         "grok": __import__("app.services.agents.grok", fromlist=["status"]).status(),
+        "usage": __import__("app.llm", fromlist=["usage_summary"]).usage_summary(),
     }

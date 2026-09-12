@@ -13,7 +13,7 @@ import { initialSearchState, reduceDiscovery } from "@/lib/search-state";
 import { Button } from "@/components/ui/button";
 
 export function Results({ q }: { q: string }) {
-  const [{ phase, intent, cards, order, error, warnings }, dispatch] = useReducer(reduceDiscovery, undefined, initialSearchState);
+  const [{ phase, intent, cards, order, error, warnings, activity }, dispatch] = useReducer(reduceDiscovery, undefined, initialSearchState);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState("");
   const [band, setBand] = useState("");
@@ -119,6 +119,19 @@ export function Results({ q }: { q: string }) {
           </span>
         </div>
 
+        {/* what the search is doing: the last few status lines from the pipeline, newest emphasized */}
+        {activity.length ? (
+          <ol className="mb-4 border-l border-line pl-3 flex flex-col gap-1" aria-label="Search activity">
+            {activity.slice(-4).map((a, i, arr) => (
+              <li key={`${a.t}-${i}`} className={cn("fade-up font-mono text-[11px] tracking-[0.02em]", i === arr.length - 1 && phase === "streaming" ? "text-foreground" : "text-muted-foreground")}>
+                <span className="uppercase tracking-[0.1em] text-accent-deep mr-2">{a.phase}</span>
+                {a.message}
+                {i === arr.length - 1 && phase === "streaming" ? <span className="ml-1 inline-block w-[6px] h-[11px] align-[-1px] bg-accent animate-pulse" aria-hidden /> : null}
+              </li>
+            ))}
+          </ol>
+        ) : null}
+
         {error ? <p role="alert" className="py-4 text-down">{error}</p> : null}
         {warnings.length ? <ul className="py-3 text-[13px] secondary">{warnings.map(w => <li key={w}>{w}</li>)}</ul> : null}
         {phase === "error" || phase === "partial" ? <Button size="sm" className="mb-4" onClick={() => { dispatch({ type: "reset" }); setAttempt(a => a + 1); }}>Retry search</Button> : null}
@@ -143,7 +156,7 @@ export function Results({ q }: { q: string }) {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="truncate text-[16px]">{c.name}</span>
-                    {c.status !== "ready" ? <Chip tone="accent">{c.status === "stub" && phase === "streaming" ? "Reading" : "Unavailable"}</Chip> : null}
+                    {c.status !== "ready" ? <Chip tone="accent">{c.status === "stub" && phase === "streaming" ? "Reading" : "Unavailable"}</Chip> : c.listed === false ? <Chip>Not listed</Chip> : null}
                   </div>
                   <div className="text-[13px] secondary">
                     {c.city}, {c.state} · {c.category}
@@ -153,9 +166,17 @@ export function Results({ q }: { q: string }) {
                 <div className="font-mono text-[13px] tabular-nums text-right">
                   {c.v0_per_share !== null ? usd(c.v0_per_share * 10000, { compact: true }) : c.status === "stub" && phase === "streaming" ? <Skeleton className="inline-block h-3 w-14" /> : "—"}
                 </div>
-                <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-up">{px(c.bid)}</div>
-                <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-down">{px(c.ask)}</div>
-                <div className="hidden md:block font-mono text-[13px] tabular-nums text-right">{px(c.last)}</div>
+                {c.listed === false ? (
+                  <div className="hidden md:block md:col-span-3 text-[12px] secondary text-right">
+                    What we think it is worth · <span className="text-foreground">Make an offer</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-up">{px(c.bid)}</div>
+                    <div className="hidden md:block font-mono text-[13px] tabular-nums text-right text-down">{px(c.ask)}</div>
+                    <div className="hidden md:block font-mono text-[13px] tabular-nums text-right">{px(c.last)}</div>
+                  </>
+                )}
                 <div className="hidden md:flex items-center gap-2">
                   <div className="h-px flex-1 bg-tint-300 relative">
                     <div className="absolute inset-y-0 left-0 h-px bg-primary" style={{ width: `${(c.confidence ?? 0) * 100}%` }} />

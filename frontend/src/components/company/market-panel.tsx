@@ -11,12 +11,14 @@ import { OrderTicket } from "./order-ticket";
 import { Valuation } from "./valuation";
 import { Sources } from "./sources";
 import { Evidence } from "./evidence";
+import { OfferPanel } from "./offer-panel";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
 export function MarketPanel({ company }: { company: Company }) {
-  const live = company.status === "ready";
+  const listed = company.listed !== false;
+  const live = company.status === "ready" && listed;
   const m = useMarket(company._id, live);
 
   const shares = company.market?.shares_outstanding ?? 10000;
@@ -31,8 +33,8 @@ export function MarketPanel({ company }: { company: Company }) {
           <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3 py-4">
             <div className="flex items-end gap-6">
               <div>
-                <Label tracking="tight" className="block mb-1">Last clearing price</Label>
-                <div key={m.tick} className={cn("text-[40px] leading-none tabular-nums px-1 -mx-1", m.tick > 0 && "bartr-clear")}>{px(m.last)}</div>
+                <Label tracking="tight" className="block mb-1">{listed ? "Last clearing price" : "Our estimate, per share"}</Label>
+                <div key={m.tick} className={cn("text-[40px] leading-none tabular-nums px-1 -mx-1", m.tick > 0 && "bartr-clear")}>{listed ? px(m.last) : px(ref)}</div>
               </div>
               <div className="pb-1">
                 <Label tracking="tight" className="block mb-1">Change</Label>
@@ -51,7 +53,7 @@ export function MarketPanel({ company }: { company: Company }) {
                 </div>
               </div>
             </div>
-            {live ? <Countdown nextBatchAt={m.book?.next_batch_at} interval={company.market?.batch_interval_s ?? 10} /> : <Label>Not listed yet</Label>}
+            {live ? <Countdown nextBatchAt={m.book?.next_batch_at} interval={company.market?.batch_interval_s ?? 10} /> : <Label>{listed ? "Not priced yet" : "Not on the exchange"}</Label>}
           </div>
         </div>
       </div>
@@ -61,6 +63,7 @@ export function MarketPanel({ company }: { company: Company }) {
           {/* right rail first on mobile so judges can bid without scrolling */}
           <div className="flex flex-col gap-4 order-first lg:order-none lg:col-start-2">
             {live ? <OrderTicket marketId={company._id} book={m.book} /> : null}
+            {!listed ? <OfferPanel company={company} /> : null}
             <Valuation company={company} last={m.last} />
             <div className="flex gap-2">
               <Button variant="primary" size="lg" href={`/company/${company._id}/acquire`} className="flex-1">

@@ -1,0 +1,613 @@
+{
+ "Pittsburgh|PA|laundromat": [
+  {
+   "item": "Pennsylvania Tax Clearance Certificate (Form REV-181) from seller",
+   "why": "Buyer can face successor liability for unpaid seller state taxes (sales, withholding, corporate, etc.) and unemployment compensation obligations if not obtained.",
+   "citation": {
+    "url": "https://acquisitionstars.com/purchase-agreement-attorney/pa",
+    "title": "PA Bulk Sales Tax Clearances"
+   },
+   "done": false
+  },
+  {
+   "item": "Certificate of Organization for new LLC (PA Department of State)",
+   "why": "Operating without proper entity registration prevents legal operation, tax account setup, and contract execution in the buyer\u2019s name.",
+   "citation": {
+    "url": "https://www.pa.gov/services/dos/register-a-business",
+    "title": "PA Register a Business"
+   },
+   "done": false
+  },
+  {
+   "item": "myPATH Business Tax Registration (PA Department of Revenue)",
+   "why": "Failure to register for sales tax (on wash-dry-fold services), employer withholding, or Allegheny County local tax can result in penalties, inability to collect/ remit taxes, and successor liability exposure.",
+   "citation": {
+    "url": "https://www.pa.gov/services/revenue/register-my-business-for-taxes",
+    "title": "PA Register for Taxes"
+   },
+   "done": false
+  },
+  {
+   "item": "Allegheny County Plumbing Permit / Inspection Records (via Citizen Access Portal)",
+   "why": "Unpermitted or non-compliant high-volume drains, lint interceptors, or backflow devices become the buyer\u2019s responsibility, leading to fines, forced upgrades, or shutdown.",
+   "citation": {
+    "url": "https://www.alleghenycounty.us/Services/Health-Department/Plumbing-Program",
+    "title": "Allegheny County Plumbing Program"
+   },
+   "done": false
+  },
+  {
+   "item": "Allegheny County Health Department Food Facility Registration (Class I if vending)",
+   "why": "Operating vending machines without required prepackaged food registration can trigger fines, closure orders, or health violations after ownership change.",
+   "citation": {
+    "url": "https://www.alleghenycounty.us/Services/Health-Department/Food-Safety/Permits-and-Registration/Permanent-Food-Facility",
+    "title": "Allegheny County Permanent Food Facility Registration"
+   },
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh Business Tax Registration and Tax Compliance Letter",
+   "why": "Missing registration for Business Privilege Tax and Local Services Tax (or failure to obtain compliance letter) prevents legal operation and blocks issuance of occupancy permits.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/City-Government/Finance-Budget/New-Business-Registration",
+    "title": "Pittsburgh New Business Registration"
+   },
+   "done": false
+  },
+  {
+   "item": "Pittsburgh Certificate of Occupancy (via OneStopPGH / PLI)",
+   "why": "Operating without an updated or new CO after ownership/lessee change risks immediate shutdown, fire code violations, and inability to obtain other permits.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/Business-Development/Zoning/Plan-Reviews-and-Notices/Certificate-of-Occupancy",
+    "title": "Pittsburgh Certificate of Occupancy"
+   },
+   "done": false
+  },
+  {
+   "item": "Pittsburgh Water and Sewer Authority (PWSA) Account Transfer and Discharge Review",
+   "why": "Failure to transfer high-volume water/sewer accounts or confirm lint interceptor compliance can result in service shutoff, large back-bills, or plumbing code violations.",
+   "citation": null,
+   "done": false
+  },
+  {
+   "item": "UCC Lien Search and Release Documentation on Equipment",
+   "why": "Undiscovered liens or financing on washers, dryers, or fixtures can allow creditors to seize assets post-purchase, defeating the asset acquisition.",
+   "citation": null,
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of Labor & Industry Unemployment Compensation (UC) Bulk-Sale Clearance",
+   "why": "Buyer can inherit seller\u2019s unpaid UC tax liabilities as successor if the 10-day notice and clearance are not secured.",
+   "citation": {
+    "url": "https://manuals.plus/m/7bbbe45bd13101e7e76b011a4a739b2be8b4b34e4e867e25d4ffefcb20866ac3",
+    "title": "PA Bulk Sales Clearance REV-181"
+   },
+   "done": false
+  }
+ ],
+ "Pittsburgh|PA|car_wash": [
+  {
+   "item": "Pennsylvania Department of Revenue Bulk Sales Clearance Certificate (Form REV-181)",
+   "why": "Without this, the buyer risks successor liability for the seller\u2019s unpaid state taxes (sales, withholding, corporate), which can result in personal liability for the buyer in an asset purchase transferring 51% or more of assets.",
+   "citation": {
+    "url": "https://www.pa.gov/agencies/revenue/resources/tax-law-policies-bulletins-notices/bulk-sales",
+    "title": "PA Department of Revenue Bulk Sales Information"
+   },
+   "done": false
+  },
+  {
+   "item": "Pittsburgh Department of Finance New Business Registration and Business Tax Compliance Letter",
+   "why": "Failure to register the buyer\u2019s new entity for a City ID can prevent operation, block other permits, and expose the buyer to penalties or inability to collect/pay Pittsburgh taxes such as Payroll Expense Tax.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/City-Government/Finance-Budget/New-Business-Registration",
+    "title": "Pittsburgh New Business Registration"
+   },
+   "done": false
+  },
+  {
+   "item": "Pittsburgh Department of Permits, Licenses, and Inspections (PLI) Certificate of Occupancy",
+   "why": "An incorrect, expired, or missing CO for car wash use can lead to shutdown orders, fines, or inability to legally operate after the ownership change.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/References-Resources-and-Forms/Online-Occupancy-Search",
+    "title": "Pittsburgh Online Occupancy Search"
+   },
+   "done": false
+  },
+  {
+   "item": "Pittsburgh Water and Sewer Authority (PWSA) Sewer Discharge Approval / Industrial User Agreement",
+   "why": "Discharging car wash wastewater without proper pretreatment approval (oil/water separators, grit interceptors) to the sanitary sewer can result in fines, service termination, or environmental violations.",
+   "citation": {
+    "url": "https://www.pgh2o.com/developers-contractors-vendors/permits",
+    "title": "PWSA Permits Page"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of State Business Entity Registration (new LLC or amendment)",
+   "why": "Operating without properly forming and registering the buyer\u2019s new entity prevents legal operation, tax registration, and obtaining other licenses in the buyer\u2019s name.",
+   "citation": {
+    "url": "https://www.pa.gov/services/dos/register-a-business",
+    "title": "PA Department of State Register a Business"
+   },
+   "done": false
+  },
+  {
+   "item": "Allegheny County Health Department Plumbing Permit / Inspection Records",
+   "why": "Unpermitted or non-compliant plumbing (including oil/water separators) can trigger violations, stop-work orders, or costly retrofits after closing.",
+   "citation": {
+    "url": "https://www.alleghenycounty.us/Services/Health-Department/Plumbing-Program",
+    "title": "Allegheny County Health Department Plumbing Program"
+   },
+   "done": false
+  },
+  {
+   "item": "PA Department of Environmental Protection (DEP) Wastewater / NPDES Confirmation or Permit",
+   "why": "Missing confirmation or permit for stormwater, reclaim systems, or non-sanitary discharge can lead to DEP violations, fines, or operational shutdowns.",
+   "citation": null,
+   "done": false
+  },
+  {
+   "item": "Pittsburgh Bureau of Fire Inspection Report / Approval",
+   "why": "Failure to verify current fire safety compliance for chemicals, hazardous materials, and occupancy can result in citations, closure, or insurance issues post-acquisition.",
+   "citation": null,
+   "done": false
+  },
+  {
+   "item": "Record of Zoning Approval or Property Certification from Pittsburgh PLI",
+   "why": "Operating in violation of zoning or with unresolved code violations can prevent legal use of the site and lead to enforcement actions or inability to obtain a valid CO.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections",
+    "title": "Pittsburgh Permits, Licenses, and Inspections"
+   },
+   "done": false
+  },
+  {
+   "item": "Phase I Environmental Site Assessment Report",
+   "why": "Without it, hidden soil/groundwater contamination from historical car wash chemicals, underground tanks, or prior uses can result in massive unexpected cleanup costs for the buyer.",
+   "citation": null,
+   "done": false
+  }
+ ],
+ "McKees Rocks|PA|machine_shop": [
+  {
+   "item": "Borough of McKees Rocks Certificate of Occupancy",
+   "why": "Without it, the buyer cannot legally occupy or operate in the building; risks shutdown, fines, or inability to obtain insurance after asset purchase.",
+   "citation": {
+    "url": "https://mckeesrockspa.us/doing-business-here/fees",
+    "title": "Borough of McKees Rocks Doing Business Here / Fees"
+   },
+   "done": false
+  },
+  {
+   "item": "Borough of McKees Rocks Zoning/Planning Approval or Variance",
+   "why": "Machine shop may not be permitted in the zoning district (especially with ongoing ordinance rewrite); operating without confirmation risks enforcement actions, variances denial, or forced relocation.",
+   "citation": {
+    "url": "https://mckeesrockspa.us/doing-business-here/planning-and-zoning",
+    "title": "Borough of McKees Rocks Planning and Zoning"
+   },
+   "done": false
+  },
+  {
+   "item": "Borough of McKees Rocks Business Privilege Tax Registration",
+   "why": "Failure to register and pay the 2.5 mills tax on gross receipts (plus other local taxes) can lead to penalties, liens, or personal liability for the buyer.",
+   "citation": {
+    "url": "https://ecode360.com/42096449",
+    "title": "McKees Rocks Borough Code on Business Privilege Tax"
+   },
+   "done": false
+  },
+  {
+   "item": "Allegheny County Health Department Air Quality Permit (or Request for Determination)",
+   "why": "If emissions sources exist (welding, coatings, etc.), operating without permit violates ACHD rules; risks fines, stop-work orders, or NESHAP violations even after change of ownership.",
+   "citation": {
+    "url": "https://www.alleghenycounty.us/Services/Health-Department/Air-Quality/Air-Quality-Permitting",
+    "title": "Allegheny County Health Department Air Quality Permitting"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of Revenue Tax Clearance Certificate (Form REV-181)",
+   "why": "In an asset purchase of 51%+ of assets, skipping this exposes the buyer to successor liability for the seller\u2019s unpaid state taxes (including unassessed amounts).",
+   "citation": {
+    "url": "https://rckelly.com/News-Insights/ArticleID/39140/Avoiding-Successor-Liability-for-Unpaid-Taxes-When-Buying-a-Business-in-Pennsylvania",
+    "title": "Avoiding Successor Liability for Unpaid Taxes When Buying a Business in Pennsylvania"
+   },
+   "done": false
+  },
+  {
+   "item": "PA DEP Hazardous Waste Generator Notification (EPA ID via Form 8700-12)",
+   "why": "Machine shops generating spent oils/solvents/contaminated fluids must comply; skipping risks improper disposal violations, fines, or cleanup liability under state and federal rules.",
+   "citation": {
+    "url": "https://www.pa.gov/agencies/dep/programs-and-services/waste-programs/solid-waste-programs/hazardous-waste-program/hazardous-waste-generators",
+    "title": "PA DEP Hazardous Waste Generators"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of State Business Entity Registration (Certificate of Organization or Fictitious Name)",
+   "why": "Buyer must form/register their new legal entity and DBA to operate legally in PA; failure prevents opening bank accounts, signing contracts, or limiting personal liability.",
+   "citation": {
+    "url": "https://www.pa.gov/services/dos/register-a-business",
+    "title": "PA Department of State Register a Business"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of Revenue Business Tax Registration (myPATH)",
+   "why": "Required for sales/use tax, withholding, UC tax, etc.; without it the buyer cannot collect/remit taxes or avoid successor liability on bulk-sale transfers.",
+   "citation": {
+    "url": "https://www.pa.gov/services/revenue/register-my-business-for-taxes",
+    "title": "PA Department of Revenue Register My Business for Taxes"
+   },
+   "done": false
+  },
+  {
+   "item": "Local Fire Department (Independent Hose Co. 5) Compliance Inspection",
+   "why": "Machine shops have specific fire-code risks (flammable fluids, dust); operating without verification can lead to citations, insurance denial, or closure by the borough fire marshal.",
+   "citation": null,
+   "done": false
+  },
+  {
+   "item": "PA Workers\u2019 Compensation Insurance Policy (or L&I Exemption)",
+   "why": "Mandatory if the shop has any employees; lack of coverage exposes the buyer to personal liability, fines, and stop-work orders from the state.",
+   "citation": null,
+   "done": false
+  }
+ ],
+ "Pittsburgh|PA|hvac": [
+  {
+   "item": "Pennsylvania Department of State Certificate of Organization (or equivalent business entity registration) and initial annual report filing",
+   "why": "Most licenses and registrations are not transferable in an asset purchase; without forming/registering the buyer's own legal entity, the business cannot legally operate or obtain other required permits in Pittsburgh/PA.",
+   "citation": {
+    "url": "https://www.pa.gov/agencies/dos/programs/business",
+    "title": "Pennsylvania Department of State - Business Programs"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of Revenue Bulk Sales Clearance Certificate (Form REV-181)",
+   "why": "Seller must provide this (with Department of Labor & Industry unemployment clearance) at least 10 days before transfer; skipping exposes buyer to successor liability for seller's unpaid taxes, even unassessed ones.",
+   "citation": {
+    "url": "https://www.pa.gov/agencies/revenue/resources/tax-law-policies-bulletins-notices/bulk-sales",
+    "title": "Pennsylvania Department of Revenue - Bulk Sales Information"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Office of Attorney General Home Improvement Contractor (HIC) registration",
+   "why": "Required for residential HVAC work over $5,000/year; not transferable in asset sale. Skipping risks fines, inability to legally perform most residential jobs, and insurance non-compliance.",
+   "citation": {
+    "url": "https://www.attorneygeneral.gov/businesses-and-organizations/home-improvement-contractor-registration/",
+    "title": "Pennsylvania Attorney General - Home Improvement Contractor Registration"
+   },
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh Department of Finance Business Registration (City ID) and Business Tax Compliance Letter",
+   "why": "Any business operating in Pittsburgh must register and provide this letter for permits/licenses; not transferable. Skipping prevents obtaining mechanical permits or trade licenses and risks tax penalties.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/City-Government/Finance-Budget/New-Business-Registration",
+    "title": "City of Pittsburgh - New Business Registration"
+   },
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh Mechanical/HVAC Trade License (for qualifying individuals)",
+   "why": "Required for anyone performing HVAC/mechanical work in the city; needed to pull permits. Not transferable. Skipping means inability to legally perform or permit work in Pittsburgh.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/Licenses/Trade-Licenses/MechanicalHVAC-Trade-License",
+    "title": "City of Pittsburgh - Mechanical/HVAC Trade License"
+   },
+   "done": false
+  },
+  {
+   "item": "Allegheny County Health Department (ACHD) Plumbing Program license/registration (Journeyman or Master Plumber as applicable)",
+   "why": "Required for gas piping, boilers, and related HVAC work in the county; permits and inspections needed. Skipping can result in failed inspections, stop-work orders, or illegal operation.",
+   "citation": {
+    "url": "https://www.alleghenycounty.us/Services/Health-Department/Plumbing-Program",
+    "title": "Allegheny County Health Department - Plumbing Program"
+   },
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh HVAC/Mechanical permits (sample or confirmation of process via OneStopPGH)",
+   "why": "Most HVAC installations, replacements, or modifications require permits and inspections by PLI; without them, work is illegal, risks fines, failed occupancy, or insurance denial.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/Permits/Commercial-Permits/HVAC-Permit",
+    "title": "City of Pittsburgh - HVAC Permit Information"
+   },
+   "done": false
+  },
+  {
+   "item": "EPA Section 608 Technician Certification (Universal or Type II/III as applicable)",
+   "why": "Federal requirement for any personnel handling refrigerants; not a transferable business license. Skipping violates Clean Air Act, risks fines up to $50,000+ per violation, and voids insurance.",
+   "citation": null,
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of Revenue tax registrations (sales/use, employer withholding, etc.)",
+   "why": "Buyer must register anew for tax accounts; without them, cannot collect/remit taxes or comply with filings, leading to penalties and inability to operate legally.",
+   "citation": {
+    "url": "https://www.pa.gov/agencies/revenue",
+    "title": "Pennsylvania Department of Revenue"
+   },
+   "done": false
+  },
+  {
+   "item": "Proof of required insurance (general liability, workers\u2019 comp, and HIC minimums) with City of Pittsburgh named as additional insured",
+   "why": "Mandated for HIC registration, trade licenses, permits, and city tax compliance letter; absence blocks all operational approvals and exposes buyer to uncovered liabilities.",
+   "citation": null,
+   "done": false
+  }
+ ],
+ "Pittsburgh|PA|restaurant": [
+  {
+   "item": "Pennsylvania Department of State: Articles of Organization (or Incorporation) and Fictitious Name Registration (DSCB:54-311)",
+   "why": "Most licenses and permits are issued to a specific entity and do not transfer automatically; without forming the new legal entity and registering the DBA, the buyer cannot apply for any operating permits or licenses in Pittsburgh.",
+   "citation": {
+    "url": "https://www.pa.gov/services/dos/register-a-business",
+    "title": "Pennsylvania Department of State - Register a Business"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of Revenue: Tax Clearance Certificate (Form REV-181) from seller plus buyer\u2019s PA-100 Sales Tax and Withholding registration",
+   "why": "Buyer risks personal successor liability for the seller\u2019s unpaid sales, withholding, corporate and other taxes if the clearance is not obtained before the bulk asset sale.",
+   "citation": {
+    "url": "https://manuals.plus/m/7bbbe45bd13101e7e76b011a4a739b2be8b4b34e4e867e25d4ffefcb20866ac3",
+    "title": "Pennsylvania Department of Revenue - Tax Clearance Requirements"
+   },
+   "done": false
+  },
+  {
+   "item": "Allegheny County Health Department: Change of Ownership Food Facility Permit Application",
+   "why": "Food facility permits are not transferable; operating without the new permit (and passing the required inspection) is illegal and can result in immediate closure, fines, or criminal penalties.",
+   "citation": {
+    "url": "https://www.alleghenycounty.us/Services/Health-Department/Food-Safety/Restaurants-Retail-Shared-Kitchen-Users-and-Manufacturers/Change-of-Ownership",
+    "title": "Allegheny County Health Department - Change of Ownership"
+   },
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh Department of Finance: New Business Registration and Tax Compliance Letter",
+   "why": "Failure to register within 15 days of starting activity prevents legal operation in the city and can trigger penalties, back taxes, and denial of other permits that require proof of city tax compliance.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/City-Government/Finance-Budget/New-Business-Registration",
+    "title": "City of Pittsburgh - New Business Registration"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Liquor Control Board: Person-to-Person Restaurant Liquor License Transfer Application (if alcohol is served)",
+   "why": "Liquor licenses do not transfer automatically; operating without PLCB approval violates state law, risks license revocation, and can incur substantial fines or criminal charges.",
+   "citation": {
+    "url": "https://www.lcb.pa.gov/",
+    "title": "Pennsylvania Liquor Control Board - License Transfer"
+   },
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh PLI / OneStopPGH: Certificate of Occupancy confirmation plus Zoning Compliance Letter",
+   "why": "Using the premises without a valid certificate or zoning approval for restaurant use can result in stop-work orders, fines, or forced closure even after other permits are obtained.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/OneStopPGH",
+    "title": "Pittsburgh PLI - OneStopPGH"
+   },
+   "done": false
+  },
+  {
+   "item": "Pittsburgh Bureau of Fire: Fire Safety Inspection and Permit",
+   "why": "Restaurants require a current fire inspection; operating without it violates city code and can lead to immediate shutdown, liability for injuries, or insurance denial.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/OneStopPGH",
+    "title": "Pittsburgh PLI - OneStopPGH (Fire Safety)"
+   },
+   "done": false
+  },
+  {
+   "item": "Allegheny County Health Department / City: Proof of Certified Food Protection Manager (ServSafe or equivalent) and Grease Trap Compliance",
+   "why": "Lack of a certified manager or proper grease interceptor violates health and plumbing codes, risking permit denial, repeated violations, fines, or shutdown during routine inspections.",
+   "citation": {
+    "url": "https://www.alleghenycounty.us/Services/Health-Department/Food-Safety/Restaurants-Retail-Shared-Kitchen-Users-and-Manufacturers/Change-of-Ownership",
+    "title": "Allegheny County Health Department - Food Safety Requirements"
+   },
+   "done": false
+  },
+  {
+   "item": "Department of Labor & Industry: Unemployment Compensation Tax Clearance and Workers\u2019 Compensation Insurance Proof",
+   "why": "Without clearances and coverage, the buyer can be held liable for the seller\u2019s unpaid unemployment taxes and may be unable to obtain other permits or face lawsuits from injured employees.",
+   "citation": {
+    "url": "https://www.pa.gov/agencies/revenue",
+    "title": "Pennsylvania Department of Revenue / Labor & Industry Clearances"
+   },
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh: Business Privilege and Related Tax Filings plus Insurance Naming City as Additional Insured",
+   "why": "Failure to file or provide proof of insurance blocks permit issuance and exposes the buyer to personal liability, tax liens, and inability to legally operate the restaurant.",
+   "citation": {
+    "url": "https://pittsburghpa.gov/finance/business-privilege-tax",
+    "title": "City of Pittsburgh - Business Privilege Tax"
+   },
+   "done": false
+  }
+ ],
+ "Pittsburgh|PA|convenience_store": [
+  {
+   "item": "Pennsylvania Department of Revenue Tax Clearance Certificate (Form REV-181) from seller",
+   "why": "Buyer can become personally liable for seller\u2019s unpaid state taxes, unemployment contributions, and other liabilities as successor in an asset purchase.",
+   "citation": {
+    "url": "https://manuals.plus/m/7bbbe45bd13101e7e76b011a4a739b2be8b4b34e4e867e25d4ffefcb20866ac3",
+    "title": "Tax clearance/filings for asset/bulk sales (51%+ of assets)"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of State Business Registration (entity or fictitious name) via Business Filing Services portal",
+   "why": "Without proper PA entity registration and registered office, the buyer cannot legally operate, obtain tax IDs, or secure other licenses and permits in the state.",
+   "citation": {
+    "url": "https://www.pa.gov/services/dos/register-a-business",
+    "title": "Register a new or existing entity (LLC, corporation, etc.) or fictitious name if needed"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of Revenue myPATH Sales, Use & Hotel Occupancy Tax License plus Tobacco Products License",
+   "why": "Required to legally collect/remit sales tax and sell tobacco; operating without it risks fines, seizure of inventory, and inability to complete other permit applications.",
+   "citation": {
+    "url": "https://www.pa.gov/services/revenue/register-my-business-for-taxes",
+    "title": "Register for state taxes via myPATH"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Lottery Retailer License application (new, non-transferable)",
+   "why": "Lottery license does not transfer; buyer must pass credit, background, tax clearance, and ADA checks or lose the right to sell lottery tickets, a major revenue source.",
+   "citation": {
+    "url": "https://www.palottery.pa.gov/About-PA-Lottery/For-Retailers/Become-a-Retailer.aspx",
+    "title": "Pennsylvania Lottery retailer licenses are not transferable"
+   },
+   "done": false
+  },
+  {
+   "item": "Allegheny County Health Department Food Facility Permit (Change of Ownership or new)",
+   "why": "Food permit cannot transfer between owners; operating without it after closing violates county law, risks immediate closure, fines, and failed inspections.",
+   "citation": {
+    "url": "https://www.alleghenycounty.us/Services/Health-Department/Food-Safety/Restaurants-Retail-Shared-Kitchen-Users-and-Manufacturers/Change-of-Ownership",
+    "title": "Convenience stores selling food require a food facility permit"
+   },
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh Department of Finance New Business Registration and Tax Compliance Letter",
+   "why": "Required for all city operations and to obtain other Pittsburgh permits; operating unregistered exposes the buyer to city tax penalties and delays in occupancy or inspections.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/City-Government/Finance-Budget/New-Business-Registration",
+    "title": "Register the business with the Department of Finance for city tax purposes"
+   },
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh Certificate of Occupancy (or modification) via OneStopPGH",
+   "why": "Confirms legal use of the space; without it the buyer cannot lawfully open, may face code violations, fines, or forced closure even without physical changes.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/Business-Development/Zoning/Plan-Reviews-and-Notices/Certificate-of-Occupancy",
+    "title": "Certificate of Occupancy (or modification for change of owner/lessee/use)"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Liquor Control Board (PLCB) License Transfer or new application (if beer is sold)",
+   "why": "Beer sales require specific PLCB approval under quota system; operating without proper transfer risks criminal penalties, license denial, and loss of alcohol revenue.",
+   "citation": null,
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh Bureau of Fire / PLI Fire Inspection and approval",
+   "why": "Required before opening; skipping it can result in failed occupancy, safety violations, fines, or shutdown by fire marshal.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections",
+    "title": "Fire inspection (via PLI/Bureau of Fire)"
+   },
+   "done": false
+  },
+  {
+   "item": "Allegheny County Weights & Measures inspection for scales, pumps, or pricing devices",
+   "why": "Prevents fines, stop-sale orders, or consumer complaints; uninspected devices can lead to citations and loss of trust in a convenience store setting.",
+   "citation": null,
+   "done": false
+  }
+ ],
+ "Pittsburgh|PA|daycare": [
+  {
+   "item": "PA Department of Human Services (OCDEL) Certificate of Compliance (new child care center license)",
+   "why": "Licenses are issued to a specific legal entity at a specific location and are not transferable; change in ownership voids the existing license, preventing legal operation and risking fines, shutdown, or inability to serve children.",
+   "citation": {
+    "url": "https://www.law.cornell.edu/regulations/pennsylvania/55-Pa-Code-SS-3290-11",
+    "title": "55 Pa. Code \u00a7 3290.11"
+   },
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh Department of Finance Business Tax Compliance Letter",
+   "why": "Unregistered businesses cannot file or pay required local taxes (e.g., Payroll Expense Tax, Earned Income Tax); skipping exposes buyer to successor liability, penalties, and inability to obtain other city permits.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/City-Government/Finance-Budget/Taxes/Business-Tax-Compliance-Letter",
+    "title": "Pittsburgh Business Tax Compliance Letter"
+   },
+   "done": false
+  },
+  {
+   "item": "Pittsburgh Department of Permits, Licenses, and Inspections (PLI) Certificate of Occupancy for childcare use",
+   "why": "Required for legal occupancy and OCDEL licensing; without it, the facility cannot open, and pre-1978 buildings risk lead violations, fines, or closure.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections/Licenses/Business-Licenses/Registrations",
+    "title": "Pittsburgh Child Care Facility Registry"
+   },
+   "done": false
+  },
+  {
+   "item": "Allegheny County Health Department food facility permit",
+   "why": "Non-transferable; required if meals are served (common for daycares); operating without it violates health regulations, leading to fines, shutdown, or inability to provide food service.",
+   "citation": {
+    "url": "https://www.alleghenycounty.us/Services/Health-Department/Food-Safety",
+    "title": "Allegheny County Food Safety Permits"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of Revenue Bulk Sales Tax Clearance Certificate (Form REV-181)",
+   "why": "Buyer risks personal/successor liability for seller\u2019s unpaid taxes (sales, withholding, corporate) if not obtained; seller must provide it as a closing condition.",
+   "citation": {
+    "url": "https://www.pa.gov/agencies/revenue",
+    "title": "PA Department of Revenue Bulk Sales Procedures (REV-181)"
+   },
+   "done": false
+  },
+  {
+   "item": "Pennsylvania Department of State Certificate of Organization (or equivalent entity filing)",
+   "why": "New legal entity is typically required in asset deals; without proper formation and registration, licenses cannot be issued in the buyer\u2019s name and liability protection is lost.",
+   "citation": {
+    "url": "https://www.pa.gov/services/dos/register-a-business",
+    "title": "PA Department of State Register a Business"
+   },
+   "done": false
+  },
+  {
+   "item": "PA Child Abuse History Clearance, PA State Police, and FBI fingerprint checks (under CPSL/Act 153)",
+   "why": "Required for owner, staff, and relevant household members before OCDEL licensing or hiring; missing or expired clearances prevent certification, delay opening by months, and risk non-compliance violations.",
+   "citation": {
+    "url": "https://www.pa.gov/agencies/dhs/resources/for-providers/child-care-for-providers/child-care-regulations",
+    "title": "PA Child Care Regulations (Chapters 20/3270/3280/3290)"
+   },
+   "done": false
+  },
+  {
+   "item": "PA Department of Labor & Industry Unemployment Compensation and workers\u2019 compensation registration/clearance",
+   "why": "Required for new entity and bulk sale notice; skipping can result in successor liability, inability to obtain tax clearances, and penalties for non-compliance with employment laws.",
+   "citation": {
+    "url": "https://www.pa.gov/agencies/revenue",
+    "title": "PA Bulk Sales and Labor & Industry Notice Requirements"
+   },
+   "done": false
+  },
+  {
+   "item": "City of Pittsburgh zoning confirmation and lead dust wipe inspection (if pre-1978 building)",
+   "why": "Childcare use must be permitted; failure to confirm zoning or register as Child-Occupied Facility risks permit denial, lead violations, annual non-compliance fines, or forced closure.",
+   "citation": {
+    "url": "https://www.pittsburghpa.gov/Business-Development/Permits-Licenses-and-Inspections",
+    "title": "Pittsburgh PLI OneStopPGH Portal"
+   },
+   "done": false
+  },
+  {
+   "item": "General liability and professional liability insurance certificates (naming City as additional insured)",
+   "why": "Required for City Business Tax Compliance Letter, PLI permits, and OCDEL licensing; operating without adequate coverage (often $1M/$2M) exposes the business to uninsured claims and prevents issuance of required permits.",
+   "citation": {
+    "url": "https://acquisitionstars.com/buying-a-business/daycare",
+    "title": "Acquisition Stars - Buying a Daycare in Pittsburgh, PA"
+   },
+   "done": false
+  }
+ ]
+}

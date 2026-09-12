@@ -22,6 +22,29 @@ M = TypeVar("M", bound=BaseModel)
 
 _clients: dict[str, AsyncOpenAI] = {}
 
+# Token accounting for this process, surfaced on /readiness. Prices per 1M tokens (docs.x.ai, Sep 2026).
+USAGE: dict[str, dict[str, float]] = {}
+_PRICES = {"grok-4.6": (2.0, 6.0), "grok-4.5": (2.0, 6.0), "grok-4.3": (1.25, 2.5), "grok-4.20-0309-non-reasoning": (1.25, 2.5),
+           "grok-4.20-0309-reasoning": (1.25, 2.5), "grok-build-0.1": (1.0, 2.0)}
+
+
+def record_usage(model: str, usage) -> None:
+    if usage is None:
+        return
+    u = USAGE.setdefault(model, {"calls": 0, "in": 0, "out": 0, "usd": 0.0})
+    pin = getattr(usage, "prompt_tokens", 0) or 0
+    pout = getattr(usage, "completion_tokens", 0) or 0
+    u["calls"] += 1
+    u["in"] += pin
+    u["out"] += pout
+    pi, po = _PRICES.get(model, (2.0, 6.0))
+    u["usd"] = round(u["usd"] + pin * pi / 1e6 + pout * po / 1e6, 4)
+
+
+def usage_summary() -> dict:
+    return {"by_model": USAGE, "usd_total": round(sum(u["usd"] for u in USAGE.values()), 4),
+            "note": "model tokens only; web_search tool calls are billed separately by xAI"}
+
 _CONFIG = {
     "xai": ("XAI_API_KEY", "XAI_BASE_URL", "XAI_MODEL", "https://api.x.ai/v1", "grok-4.6"),
     "ifm": ("IFM_API_KEY", "IFM_BASE_URL", "IFM_MODEL", "", ""),
@@ -114,12 +137,14 @@ async def complete(
 
     if schema is not None:
         parsed = await c.beta.chat.completions.parse(response_format=schema, **kwargs)
+        record_usage(kwargs["model"], getattr(parsed, "usage", None))
         out = parsed.choices[0].message.parsed
         if out is None:
             raise RuntimeError("model returned no parsed content")
         return out
 
     resp = await c.chat.completions.create(**kwargs)
+    record_usage(kwargs["model"], getattr(resp, "usage", None))
     msg = resp.choices[0].message
     if tools:
         calls = []

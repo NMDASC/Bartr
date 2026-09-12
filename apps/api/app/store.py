@@ -37,6 +37,10 @@ class Store(Protocol):
     # identity: lets a demo session be claimed by a later real login (DECISIONS 011)
     def find_user_by_email(self, email: str) -> dict | None: ...
     def list_users(self) -> list[dict]: ...
+    # offers to owners of discovered businesses
+    def put_offer(self, o: dict) -> None: ...
+    def get_offer(self, oid: str) -> dict | None: ...
+    def list_offers(self, user_id: str | None = None, company_id: str | None = None) -> list[dict]: ...
     # audit
     def audit(self, event: dict) -> None: ...
     def audit_log(self, limit: int = 200) -> list[dict]: ...
@@ -51,6 +55,7 @@ class MemoryStore:
         self._batches: dict[str, list[dict]] = {}
         self._trades: dict[str, list[dict]] = {}
         self.users: dict[str, dict] = {}
+        self.offers: dict[str, dict] = {}
         self._audit: list[dict] = []
         if state_file and os.path.exists(state_file):
             self.load(state_file)
@@ -81,6 +86,11 @@ class MemoryStore:
     def find_user_by_email(self, email):
         return next((u for u in self.users.values() if u.get("email") == email), None)
     def list_users(self): return list(self.users.values())
+    # offers
+    def put_offer(self, o): self.offers[o["id"]] = o
+    def get_offer(self, oid): return self.offers.get(oid)
+    def list_offers(self, user_id=None, company_id=None):
+        return [o for o in self.offers.values() if (user_id is None or o["buyer_id"] == user_id) and (company_id is None or o["company_id"] == company_id)]
     # audit
     def audit(self, event):
         self._audit.append(event)

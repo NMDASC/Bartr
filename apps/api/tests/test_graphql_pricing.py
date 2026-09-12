@@ -44,6 +44,8 @@ def test_refresh_preserves_market_orders_positions_and_deduplicates():
     data = verified_company(c, pages)
     company = save_company(e, data)
     cid = company["id"]
+    assert not company["listed"] and e.book(cid)["asks"] == []   # discovered businesses are not tradable
+    e.list_on_exchange(cid)                                        # until the owner accepts an offer
     ask = e.book(cid)["asks"][0]["price"]
     e.place_order("nico", cid, "buy", 2, ask)
     e.run_batch(cid)

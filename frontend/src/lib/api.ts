@@ -20,6 +20,8 @@ import type {
   Suggestion,
   Flag,
   Acquisition,
+  Offer,
+  OfferIn,
 } from "@contracts/types";
 import * as mock from "./mock";
 
@@ -178,4 +180,16 @@ export async function startAcquisition(companyId: string) {
 export async function getFlags() {
   if (IS_MOCK) return mock.flags();
   return j<Flag[]>("/surveillance/flags");
+}
+
+// ---------------------------------------------------------------- offers (discovered businesses)
+
+export async function makeOffer(companyId: string, body: OfferIn): Promise<Offer> {
+  if (IS_MOCK) return mock.makeOffer(companyId, body);
+  return j<Offer>(`/companies/${companyId}/offer`, { method: "POST", body: JSON.stringify(body) });
+}
+
+export async function acceptOffer(offerId: string): Promise<Offer> {
+  if (IS_MOCK) return mock.acceptOffer(offerId);
+  return j<Offer>(`/offers/${offerId}/accept`, { method: "POST", body: "{}" });
 }

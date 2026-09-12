@@ -74,12 +74,12 @@ class Engine:
             "id": cid, "name": c["name"], "category": obs.category, "state": obs.state,
             "city": c.get("city"), "address": c.get("address"), "description": c.get("description"),
             "website": c.get("website"), "phone": c.get("phone"), "naics_guess": c.get("naics_guess"), "lat": c.get("lat"), "lng": c.get("lng"),
-            "owners": c.get("owners", []), "status": "ready",
+            "owners": c.get("owners", []), "status": "ready", "listed": bool(c.get("listed", True)),
             "observables": {k: getattr(obs, k) for k in obs_fields},
             "valuation": self._val_dict(val), "created_at": _now(),
         }
         self.store.put_company(company)
-        self.create_market(cid, val)
+        self.create_market(cid, val, listed=company["listed"])
         self.store.audit({"t": _now(), "actor": "system", "action": "create_company", "payload": {"id": cid, "v0": val.v0}})
         return company
 
@@ -89,10 +89,12 @@ class Engine:
                 "disagreement": v.disagreement,
                 "estimates": [{"name": e.name, "value": e.value, "sigma": e.sigma, "note": e.note} for e in v.estimates]}
 
-    def create_market(self, cid: str, val: Valuation, interval: float = 10.0) -> dict:
+    def create_market(self, cid: str, val: Valuation, interval: float = 10.0, listed: bool = True) -> dict:
+        """listed=False: the business was discovered and appraised but the owner has not put it on the
+        exchange. No quotes, no orders, no rounds; the page shows our estimate and an offer button."""
         ref = round(val.v0 / SHARES, 2)
         m = {
-            "id": cid, "shares_outstanding": SHARES, "float_shares": SHARES * FLOAT_FRAC, "retained": SHARES * (1 - FLOAT_FRAC),
+            "id": cid, "listed": listed, "shares_outstanding": SHARES, "float_shares": SHARES * FLOAT_FRAC, "retained": SHARES * (1 - FLOAT_FRAC),
             "last_price": None, "ref_price": ref, "batch_interval_s": interval, "next_batch_at": _now() + interval,
             "band_pct": BAND, "halted": False, "band_hits": 0,
             "prior": {"mu": math.log(val.v0), "sigma": val.sigma},
@@ -122,6 +124,11 @@ class Engine:
         u = self.user(uid)
         qty = round(qty, 2)
         limit = round(limit, 2)
+        if not m.get("listed", True):
+            o = {"id": _id("ord"), "market_id": mid, "user_id": uid, "side": side, "qty": qty, "filled_qty": 0.0, "limit_price": limit,
+                 "status": "rejected", "origin": origin, "created_at": _now(), "seq": time.monotonic_ns(),
+                 "reason": "not on the exchange yet: make the owner an offer instead"}
+            return o
         order = {"id": _id("ord"), "market_id": mid, "user_id": uid, "side": side, "qty": qty, "filled_qty": 0.0,
                  "limit_price": limit, "status": "open", "origin": origin, "created_at": _now(), "seq": time.monotonic_ns(),
                  "reason": None}
@@ -170,6 +177,8 @@ class Engine:
     def _treasury_orders(self, m: dict) -> list[auction.Order]:
         t = m["treasury"]
         out = []
+        if not m.get("listed", True):
+            return out
         if t["floor_qty"] > 0 and t["floor_price"] > 0:
             out.append(auction.Order("T_floor", TREASURY, "buy", t["floor_qty"], t["floor_price"], 0, "treasury"))
         for i, lvl in enumerate(t["ask_ladder"]):
@@ -198,6 +207,11 @@ class Engine:
     def run_batch(self, mid: str) -> dict:
         m = self.store.get_market(mid)
         t0 = _now()
+        if not m.get("listed", True):
+            m["next_batch_at"] = _now() + 60
+            self.store.put_market(m)
+            return {"id": _id("b"), "market_id": mid, "t": t0, "clearing_price": None, "volume": 0.0, "demand": 0.0, "supply": 0.0,
+                    "band_hit": False, "n_buy": 0, "n_sell": 0, "book_snapshot": {"bids": [], "asks": []}, "halted": False, "ref_moved": False, "skipped": "not listed"}
         user_orders = self._user_orders(mid)
         orders = self._treasury_orders(m) + user_orders
         snapshot = self.book(mid)
@@ -355,6 +369,19 @@ class Engine:
         out = []
         now = _now()
         for m in self.store.list_markets():
-            if now >= m["next_batch_at"]:
+            if m.get("listed", True) and now >= m["next_batch_at"]:
                 out.append(self.run_batch(m["id"]))
         return out
+
+    def list_on_exchange(self, cid: str) -> dict:
+        """Owner accepted: open the market with quotes from the current posterior."""
+        c = self.store.get_company(cid)
+        m = self.store.get_market(cid)
+        c["listed"] = True
+        m["listed"] = True
+        m["next_batch_at"] = _now() + m["batch_interval_s"]
+        self._requote(m)
+        self.store.put_company(c)
+        self.store.put_market(m)
+        self.store.audit({"t": _now(), "actor": "owner", "action": "list", "payload": {"company": cid}})
+        return c
