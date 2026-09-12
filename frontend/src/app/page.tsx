@@ -8,7 +8,8 @@ import { LandingClearing } from "@/components/search/landing-clearing";
 import { Label } from "@/components/ui/label";
 import { listCompanies } from "@/lib/api";
 
-const examples = ["laundromat in Pittsburgh", "car wash on McKnight Road", "machine shop in McKees Rocks", "restaurant on the South Side"];
+/** Three, because a fourth wraps the hero column onto a second line. */
+const examples = ["laundromat in Pittsburgh", "car wash on McKnight Road", "machine shop in McKees Rocks"];
 
 export default async function Home() {
   const trending = (await listCompanies().catch(() => [])).filter((c) => c.status === "ready").slice(0, 6);
@@ -17,7 +18,7 @@ export default async function Home() {
     <>
       <section className="bg-background">
         <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
-          <div className="grid gap-12 pt-20 pb-16 md:pt-28 md:pb-24 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-16 3xl:grid-cols-[minmax(0,1fr)_440px]">
+          <div className="grid gap-12 pt-20 pb-16 md:pt-28 md:pb-24 xl:grid-cols-[minmax(0,1fr)_380px] xl:gap-16 3xl:grid-cols-[minmax(0,1fr)_440px]">
             <div className="max-w-2xl">
               <Label className="mb-4 block">Discovery engine and exchange</Label>
               <h1 className="text-[33px] lg:text-[40px] 3xl:text-[48px] leading-[1.1] tracking-[-0.01em]">
@@ -31,7 +32,7 @@ export default async function Home() {
               <CityShortcuts />
             </div>
 
-            <div className="hidden lg:block lg:pt-10">
+            <div className="hidden xl:block xl:pt-10">
               <LandingTape />
             </div>
           </div>
