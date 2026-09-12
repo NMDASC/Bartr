@@ -34,6 +34,12 @@ CATEGORIES = {"laundromat": ["laundromat", "laundry", "coin laundry", "wash hous
               "daycare": ["daycare", "day care", "childcare"], "liquor_store": ["liquor"], "convenience_store": ["convenience", "gas station"],
               "self_storage": ["storage"], "trucking": ["trucking", "freight"], "retail": ["store", "shop", "boutique"]}
 
+CITIES = {"pittsburgh": ("Pittsburgh", "PA"), "squirrel hill": ("Pittsburgh", "PA"), "oakland": ("Pittsburgh", "PA"), "bloomfield": ("Pittsburgh", "PA"),
+          "lawrenceville": ("Pittsburgh", "PA"), "south side": ("Pittsburgh", "PA"), "strip district": ("Pittsburgh", "PA"), "shadyside": ("Pittsburgh", "PA"),
+          "homestead": ("Homestead", "PA"), "mckees rocks": ("McKees Rocks", "PA"), "tulsa": ("Tulsa", "OK"), "waco": ("Waco", "TX"),
+          "philadelphia": ("Philadelphia", "PA"), "cleveland": ("Cleveland", "OH"), "columbus": ("Columbus", "OH")}
+PITTSBURGH_METRO = {"Pittsburgh", "Homestead", "McKees Rocks"}
+
 JOBS: dict[str, dict] = {}
 
 
@@ -44,7 +50,11 @@ def parse_intent(q: str) -> dict:
         if any(k in ql for k in kws):
             category = cat
             break
-    state = None
+    state, city = None, None
+    for name, (cty, ab) in CITIES.items():
+        if re.search(rf"\b{name}\b", ql):
+            city, state = cty, ab
+            break
     for name, ab in STATES.items():
         if re.search(rf"\b{name}\b", ql):
             state = ab
@@ -57,7 +67,7 @@ def parse_intent(q: str) -> dict:
              for x, u in re.findall(r"\$?\s?([\d,.]+)\s*([mMkK]?)", ql) if x.replace(",", "").replace(".", "").isdigit()]
     max_value = max(money) if money and ("under" in ql or "below" in ql or "less than" in ql) else None
     min_value = max(money) if money and ("over" in ql or "above" in ql or "more than" in ql) else None
-    return {"category": category, "naics_guess": None, "state": state, "city": None, "min_value": min_value, "max_value": max_value, "must_have": []}
+    return {"category": category, "naics_guess": None, "state": state, "city": city, "min_value": min_value, "max_value": max_value, "must_have": []}
 
 
 def _matches(c: dict, intent: dict) -> bool:
@@ -65,6 +75,10 @@ def _matches(c: dict, intent: dict) -> bool:
         return False
     if intent["state"] and (c.get("state") or "").upper() != intent["state"]:
         return False
+    if intent["city"]:
+        want = PITTSBURGH_METRO if intent["city"] in PITTSBURGH_METRO else {intent["city"]}
+        if (c.get("city") or "") not in want:
+            return False
     v0 = c["valuation"]["v0"]
     if intent["max_value"] and v0 > intent["max_value"]:
         return False

@@ -32,3 +32,6 @@ Local stand-ins so the frontend runs against the real API today, each replaced b
 
 ## 010  Sat 00:05  author: A  affects: D
 No disclaimer line in the generated LOI or anywhere in the UI. Plan.md 9.6 says "A disclaimer line: play money, not legal advice"; that line is removed from the LOI fixture and from every screen, footer, and the iMessage help text. Nothing user-facing says play money, demo, mock, or not-advice. Also: the ensemble numbers, auction rules, and Kelly formula stay out of the UI (no captions or helper sentences explaining mechanism); see the UI-copy line in CLAUDE.md.
+
+## 010  Sat 00:50  author: Aditya  affects: A, B, D
+Demo is Pittsburgh. Seeds are now 10 Pittsburgh area businesses (Squirrel Hill, Bloomfield, Lawrenceville, McKnight Rd, McKees Rocks, Greenfield, South Side, Homestead, Strip District, Oakland) plus two out of state controls (Tulsa, Waco). Company ids changed: `co_squirrel_hill_wash` is the hero. Discovery intent parser is city aware ("laundromat in Pittsburgh" -> city Pittsburgh, state PA; Homestead and McKees Rocks count as metro). Acquire checklist adds City of Pittsburgh registration and Allegheny County Health Department items. Plan.md section 13 and docs/PROMPT_presentation.md updated. A: the fixtures in packages/contracts/examples still reference Oklahoma; swap when convenient.

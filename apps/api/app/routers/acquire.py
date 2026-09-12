@@ -46,7 +46,15 @@ BY_STATE = {
            ("Oklahoma Secretary of State entity filing", "Assumed name or new LLC registration")],
     "TX": [("Texas Comptroller sales tax permit", "Required before operating"),
            ("Bulk sale notice to Comptroller for tax clearance", "Buyer can be liable for seller's unpaid sales tax")],
-    "PA": [("PA bulk sale clearance certificate (REV-181)", "Protects the buyer from the seller's tax liabilities")],
+    "PA": [("PA bulk sale clearance certificate (REV-181)", "Protects the buyer from the seller's tax liabilities"),
+           ("PA sales tax license (myPATH)", "Licenses do not transfer; apply before the first sale"),
+           ("PA Department of State fictitious name or new LLC filing", "Trade name must be registered to the new entity")],
+}
+BY_CITY = {
+    "Pittsburgh": [("City of Pittsburgh business registration and payroll expense tax", "Every business operating in the city registers with Finance"),
+                   ("Allegheny County Health Department permit (food, laundromat water discharge)", "County permits are issued to the operator, not the location")],
+    "Homestead": [("Borough of Homestead business privilege license", "Municipal license required to operate")],
+    "McKees Rocks": [("Borough business privilege and mercantile tax registration", "Local tax registration for the new owner")],
     "OH": [("Ohio vendor's license", "County issued, does not transfer")],
 }
 
@@ -83,7 +91,7 @@ This letter expresses intent only. No obligation arises until a definitive agree
 
 
 def checklist_for(c: dict) -> list[dict]:
-    items = GENERIC + BY_CATEGORY.get(c["category"], []) + BY_STATE.get((c.get("state") or "").upper(), [])
+    items = GENERIC + BY_CATEGORY.get(c["category"], []) + BY_STATE.get((c.get("state") or "").upper(), []) + BY_CITY.get(c.get("city") or "", [])
     return [{"item": i, "why": w, "citation": None, "done": False} for i, w in items]
 
 

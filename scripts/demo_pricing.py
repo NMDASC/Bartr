@@ -11,16 +11,16 @@ from app.services.market.auction import Order, clear
 from app.services.market.kelly import size_portfolio
 
 CASES = {
-    "Documented laundromat, Tulsa OK (SDE from a listing page)":
-        Observables(category="laundromat", state="OK", revenue=380_000, sde=140_000, rating=4.6, review_count=180, years_operating=12, llm_estimate=520_000, llm_confidence=0.7),
-    "Same laundromat, actually listed on BizBuySell at $575k":
-        Observables(category="laundromat", state="OK", revenue=380_000, sde=140_000, asking_price=575_000, rating=4.6, review_count=180, years_operating=12),
-    "Stub: a laundromat that is only a Google Places pin":
-        Observables(category="laundromat", state="OK", rating=4.1, review_count=23),
-    "Car wash, TX, employees known, no financials, Grok and K2 disagree":
-        Observables(category="car_wash", state="TX", employees=9, rating=4.7, review_count=640, llm_estimate=1_900_000, llm2_estimate=900_000, llm_confidence=0.5),
-    "Machine shop, OH, revenue only, owner operated":
-        Observables(category="machine_shop", state="OH", revenue=1_400_000, employees=8, owner_operated=True, years_operating=22),
+    "Squirrel Hill Wash and Fold (SDE from a listing page)":
+        Observables(category="laundromat", state="PA", revenue=410_000, sde=152_000, rating=4.6, review_count=214, years_operating=14, llm_estimate=560_000, llm_confidence=0.7),
+    "Butler Street Laundromat, actually listed on BizBuySell at $640k":
+        Observables(category="laundromat", state="PA", revenue=445_000, sde=168_000, asking_price=640_000, rating=4.4, review_count=118, years_operating=9),
+    "Bloomfield Coin Laundry: only a Google Places pin":
+        Observables(category="laundromat", state="PA", rating=4.0, review_count=27),
+    "Steel City Express Car Wash, McKnight Rd: employees known, no financials, Grok and K2 disagree":
+        Observables(category="car_wash", state="PA", employees=11, rating=4.7, review_count=730, llm_estimate=2_100_000, llm2_estimate=1_000_000, llm_confidence=0.5),
+    "Iron City Precision Machine, McKees Rocks: revenue only, owner operated":
+        Observables(category="machine_shop", state="PA", revenue=1_500_000, employees=9, owner_operated=True, years_operating=26),
 }
 
 def show(name, o):
@@ -35,9 +35,9 @@ def show(name, o):
 
 vals = {n: show(n, o) for n, o in CASES.items()}
 
-print("\n\n== Auction simulation: documented laundromat, 6 rounds, 8 bot players with private valuations")
+print("\n\n== Auction simulation: Squirrel Hill Wash and Fold, 6 rounds, 8 bot players with private valuations")
 random.seed(7)
-v = vals["Documented laundromat, Tulsa OK (SDE from a listing page)"]
+v = vals["Squirrel Hill Wash and Fold (SDE from a listing page)"]
 p_model = v.v0 / SHARES
 quotes = opening_quotes(v)
 seq = 0
