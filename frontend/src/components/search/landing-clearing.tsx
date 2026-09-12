@@ -37,19 +37,25 @@ function book(): Order[] {
 
 /**
  * Uniform price clearing: the price that matches the most quantity wins, and
- * every fill happens at it. This is the rule the exchange actually runs.
+ * every fill happens at it.
+ *
+ * Maximum volume is usually achieved over a RANGE of prices, not one, and this
+ * book is a case in point: 55.13, 55.25, 55.38 and 55.57 all clear 337. Taking
+ * the first candidate found would put the print at the bottom of that range
+ * every time, which is a standing gift to the buy side. The tie breaks at the
+ * midpoint instead.
  */
 function clearAt(orders: Order[]) {
   const bids = orders.filter((o) => o.side === "bid");
   const asks = orders.filter((o) => o.side === "ask");
-  let best = { price: 0, matched: 0 };
-  for (const c of orders) {
+  const scored = orders.map((c) => {
     const demand = bids.reduce((a, o) => a + (o.price >= c.price ? o.qty : 0), 0);
     const supply = asks.reduce((a, o) => a + (o.price <= c.price ? o.qty : 0), 0);
-    const matched = Math.min(demand, supply);
-    if (matched > best.matched) best = { price: c.price, matched };
-  }
-  return best;
+    return { price: c.price, matched: Math.min(demand, supply) };
+  });
+  const matched = Math.max(...scored.map((s) => s.matched));
+  const band = scored.filter((s) => s.matched === matched).map((s) => s.price);
+  return { price: (Math.min(...band) + Math.max(...band)) / 2, matched };
 }
 
 /** Cumulative curve: each order's place in the queue at its own limit price. */
@@ -110,9 +116,11 @@ export function LandingClearing() {
   const queue = Math.min(1, Math.max(0, (p - 0.1) / 0.36)); // orders take their place
   const cross = Math.min(1, Math.max(0, (p - 0.64) / 0.22)); // the cross is marked
 
+  const resting = orders.reduce((a, o) => a + o.qty, 0);
   const steps = [
     { id: "01", label: "Orders", stat: `${orders.length} resting` },
-    { id: "02", label: "Queue", stat: `${qMax} shares` },
+    // both sides, because qMax is only the larger of the two and reads as the book
+    { id: "02", label: "Depth", stat: `${resting.toLocaleString()} shares` },
     { id: "03", label: "Cleared", stat: `${cleared.price.toFixed(2)} \u00d7 ${cleared.matched}` },
   ];
 
@@ -208,11 +216,12 @@ export function LandingClearing() {
                   opacity={0.09 * cross}
                 />
 
-                {/* every order sliding from its limit price into its place in the queue */}
+                {/* every order sliding from its limit price into its place in the line */}
                 {[...bids, ...asks].map((c, i) => {
                   const restX = x(c.to);
                   const restY = y(c.o.price);
-                  const arriveX = PL + 14 + c.o.jx * 26;
+                  // they all start on the price axis: a limit, with no size accounted for yet
+                  const arriveX = PL + 3 + c.o.jx * 5;
                   const cx = arriveX + (restX - arriveX) * queue;
                   return (
                     <circle
