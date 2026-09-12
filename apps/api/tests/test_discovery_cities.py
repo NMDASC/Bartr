@@ -53,6 +53,23 @@ def test_city_and_budget_never_relax():
         assert rank_companies(query, parse_intent(query), companies) == []
 
 
+def test_catalog_card_reuses_market_without_changing_prices():
+    class CountingStore(MemoryStore):
+        reads = 0
+        def get_market(self, mid):
+            self.reads += 1
+            return super().get_market(mid)
+
+    store = CountingStore()
+    engine = Engine(store)
+    company = engine.create_company({"name": "Catalog Laundry", "category": "laundromat"})
+    expected = engine.card(company)
+    market = store.list_markets()[0]
+    store.reads = 0
+    assert engine.card(company, market=market) == expected
+    assert store.reads == 0
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("contents_enabled", [True, False])
 @pytest.mark.parametrize("city,state,alias", [
