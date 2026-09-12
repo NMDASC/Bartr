@@ -5,7 +5,7 @@ type AdminAccount = {
   password: string;
 };
 
-const ADMIN_SLOTS = [1, 2, 3] as const;
+const ADMIN_SLOTS = [1, 2, 3, 4] as const;
 const DEFAULT_ADMIN_EMAIL = "admin@gmail.com";
 const DEFAULT_ADMIN_PASSWORD = "admin1234";
 

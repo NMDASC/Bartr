@@ -146,7 +146,7 @@ export function AuthDialog({
                 name="password"
                 type={showPassword ? "text" : "password"}
                 autoComplete={isSignup ? "new-password" : "current-password"}
-                minLength={8}
+                minLength={isSignup ? 8 : undefined}
                 required
                 className="pr-11"
               />

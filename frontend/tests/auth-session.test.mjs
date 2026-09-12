@@ -7,7 +7,7 @@ const adminKeys = [
   "DEMO_ADMIN_USERNAME",
   "DEMO_ADMIN_EMAIL",
   "DEMO_ADMIN_PASSWORD",
-  ...[1, 2, 3].flatMap((slot) => [
+  ...[1, 2, 3, 4].flatMap((slot) => [
     `DEMO_ADMIN_USERNAME_${slot}`,
     `DEMO_ADMIN_EMAIL_${slot}`,
     `DEMO_ADMIN_PASSWORD_${slot}`,
@@ -23,7 +23,7 @@ test.after(() => {
   for (const key of adminKeys) delete process.env[key];
 });
 
-test("matches three configured admin credentials and recognizes their identifiers", () => {
+test("matches configured admin credentials and recognizes their identifiers", () => {
   setAdminEnvironment({
     DEMO_ADMIN_USERNAME_1: "admin",
     DEMO_ADMIN_PASSWORD_1: "alpha-password",
@@ -31,11 +31,14 @@ test("matches three configured admin credentials and recognizes their identifier
     DEMO_ADMIN_PASSWORD_2: "bravo-password",
     DEMO_ADMIN_USERNAME_3: "reviewer",
     DEMO_ADMIN_PASSWORD_3: "charlie-password",
+    DEMO_ADMIN_USERNAME_4: "demo",
+    DEMO_ADMIN_PASSWORD_4: "delta-password",
   });
 
   assert.equal(adminCredentialsMatch("ADMIN", "alpha-password"), true);
   assert.equal(adminCredentialsMatch("OPS@EXAMPLE.COM", "bravo-password"), true);
   assert.equal(adminCredentialsMatch("reviewer", "charlie-password"), true);
+  assert.equal(adminCredentialsMatch("demo", "delta-password"), true);
   assert.equal(isAdminIdentifier("ops@example.com"), true);
   assert.equal(isAdminIdentifier("member@example.com"), false);
   assert.equal(adminCredentialsMatch("admin", "wrong-password"), false);

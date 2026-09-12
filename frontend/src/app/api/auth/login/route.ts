@@ -24,7 +24,9 @@ export async function POST(request: Request) {
   const isConfiguredAdmin = isAdminIdentifier(email);
   const isAdmin = adminCredentialsMatch(email, password);
 
-  if (password.length < 8 || (!isConfiguredAdmin && !EMAIL.test(email))) {
+  // Configured demo accounts may intentionally use short credentials (for
+  // local demos); regular email logins still require the normal minimum.
+  if ((!isAdmin && password.length < 8) || (!isConfiguredAdmin && !EMAIL.test(email))) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
