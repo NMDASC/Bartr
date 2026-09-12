@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 from typing import Protocol
+from threading import RLock
 
 
 class Store(Protocol):
@@ -25,6 +26,7 @@ class Store(Protocol):
     def put_order(self, o: dict) -> None: ...
     def get_order(self, oid: str) -> dict | None: ...
     def open_orders(self, mid: str) -> list[dict]: ...
+    def cancelled_orders(self, mid: str) -> list[dict]: ...
     def user_orders(self, uid: str, mid: str | None = None) -> list[dict]: ...
     # batches, trades
     def add_batch(self, b: dict) -> None: ...
@@ -40,11 +42,16 @@ class Store(Protocol):
     # audit
     def audit(self, event: dict) -> None: ...
     def audit_log(self, limit: int = 200) -> list[dict]: ...
+    def audit_page(self, calls: bool, before: float, offset: int, limit: int, query: str = "") -> list[dict]: ...
+    def audit_counts(self) -> dict: ...
+    def put_case(self, case: dict) -> None: ...
+    def list_cases(self) -> list[dict]: ...
 
 
 class MemoryStore:
     def __init__(self, state_file: str | None = None):
         self.state_file = state_file
+        self._save_lock = RLock()
         self.companies: dict[str, dict] = {}
         self.markets: dict[str, dict] = {}
         self.orders: dict[str, dict] = {}
@@ -52,6 +59,7 @@ class MemoryStore:
         self._trades: dict[str, list[dict]] = {}
         self.users: dict[str, dict] = {}
         self._audit: list[dict] = []
+        self.cases: dict[str, dict] = {}
         if state_file and os.path.exists(state_file):
             self.load(state_file)
 
@@ -68,6 +76,8 @@ class MemoryStore:
     def get_order(self, oid): return self.orders.get(oid)
     def open_orders(self, mid):
         return [o for o in self.orders.values() if o["market_id"] == mid and o["status"] in ("open", "partial")]
+    def cancelled_orders(self, mid):
+        return [o for o in self.orders.values() if o["market_id"] == mid and o["status"] == "cancelled" and o["filled_qty"] == 0]
     def user_orders(self, uid, mid=None):
         return [o for o in self.orders.values() if o["user_id"] == uid and (mid is None or o["market_id"] == mid)]
     # batches, trades
@@ -84,24 +94,37 @@ class MemoryStore:
     # audit
     def audit(self, event):
         self._audit.append(event)
-        if len(self._audit) > 20_000:
-            self._audit = self._audit[-10_000:]
     def audit_log(self, limit=200): return self._audit[-limit:]
+    def audit_page(self, calls, before, offset, limit, query=""):
+        rows = (e for e in reversed(self._audit) if e["t"] <= before and (e.get("action") == "agent_call") == calls)
+        if query:
+            rows = (e for e in rows if query.casefold() in json.dumps(e, default=str).casefold())
+        from itertools import islice
+        return list(islice(rows, offset, offset + limit))
+    def audit_counts(self):
+        calls = [e for e in self._audit if e.get("action") == "agent_call"]
+        return {"calls": len(calls), "errors": sum(e.get("payload", {}).get("status") == "error" for e in calls)}
+    def put_case(self, case): self.cases[case["id"]] = case
+    def list_cases(self): return list(self.cases.values())
 
     # snapshot
     def save(self, path: str | None = None):
         path = path or self.state_file
         if not path:
             return
-        data = {"companies": self.companies, "markets": self.markets, "orders": self.orders,
-                "batches": self._batches, "trades": self._trades, "users": self.users}
-        tmp = path + ".tmp"
-        with open(tmp, "w") as f:
-            json.dump(data, f)
-        os.replace(tmp, path)
+        with self._save_lock:
+            data = {"companies": self.companies, "markets": self.markets, "orders": self.orders,
+                    "batches": self._batches, "trades": self._trades, "users": self.users,
+                    "audit": self._audit, "cases": self.cases}
+            tmp = path + ".tmp"
+            snapshot = json.dumps(data)
+            with open(tmp, "w") as f:
+                f.write(snapshot)
+            os.replace(tmp, path)
 
     def load(self, path: str):
         with open(path) as f:
             d = json.load(f)
         self.companies, self.markets, self.orders = d["companies"], d["markets"], d["orders"]
         self._batches, self._trades, self.users = d["batches"], d["trades"], d["users"]
+        self._audit, self.cases = d.get("audit", []), d.get("cases", {})

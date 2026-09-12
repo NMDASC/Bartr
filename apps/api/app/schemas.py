@@ -353,6 +353,7 @@ class Acquisition(BaseModel):
 class Review(BaseModel):
     reviewer: Literal["rules", "grok", "k2"]
     severity: Literal["benign", "low", "medium", "high"]
+    explanation: str | None = None
 
 
 class Flag(BaseModel):
@@ -386,4 +387,5 @@ class AgentMessage(BaseModel):
 
 class AgentChatRequest(BaseModel):
     session_id: str
-    message: str
+    message: str = Field(min_length=1, max_length=8000)
+    request_id: str | None = Field(default=None, max_length=100)

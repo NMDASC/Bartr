@@ -11,8 +11,9 @@ from app import views
 from app.deps import current_user, engine, store
 from app.schemas import Flag
 from app.services.agents import health, redteam
+from app.security import require_admin
 
-router = APIRouter(prefix="/surveillance", tags=["surveillance"])
+router = APIRouter(prefix="/surveillance", tags=["surveillance"], dependencies=[Depends(require_admin)])
 
 
 @router.get("/audit")
@@ -34,7 +35,7 @@ def treasury_summary():
     return out
 
 
-def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
+def _rule_flags(mid: str, lookback: int = 20, *, users=None, market=None) -> list[dict]:
     batches = store.batches(mid, lookback)
     trades = store.trades(mid, 500)
     flags = []
@@ -60,7 +61,8 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
                           "explanation": f"{a} and {b} have traded {n} times and only with each other; volume between them prints price without changing ownership in any real sense.",
                           "reviewer": "rules", "reviews": [{"reviewer": "rules", "severity": "high"}], "disputed": False, "t": last["t"]})
     # pump: clearing price jump > 2 s_m with > 60% of buy volume from one account
-    m = store.get_market(mid)
+    m = market if market is not None else store.get_market(mid)
+    users = users if users is not None else store.list_users()
     s_m = m["belief"]["s_m"]
     for prev, b in zip(batches, batches[1:]):
         if not (prev["clearing_price"] and b["clearing_price"]):
@@ -81,7 +83,7 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
                                   "explanation": f"price moved {jump*100:+.1f}% in one round ({2*s_m*100:.1f}% is the 2 sigma threshold) with {q/vol:.0%} of buy volume from {top}.",
                                   "reviewer": "rules", "reviews": [{"reviewer": "rules", "severity": "medium"}], "disputed": False, "t": b["t"]})
     # concentration: one user holds > 40% of shares outstanding
-    for u in store.list_users():
+    for u in users:
         q = u["positions"].get(mid, {}).get("qty", 0)
         if q > 0.4 * m["shares_outstanding"]:
             flags.append({"id": f"fl_{uuid.uuid5(uuid.NAMESPACE_URL, f'conc:{mid}:{u['id']}').hex[:10]}", "market_id": mid, "batch_id": batches[-1]["id"],
@@ -90,10 +92,8 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
                           "reviewer": "rules", "reviews": [{"reviewer": "rules", "severity": "low"}], "disputed": False, "t": batches[-1]["t"]})
     # spoofing: >= 3 orders in this market cancelled unfilled by one user, and that user filled on the other side
     cancelled: dict[str, list[dict]] = {}
-    for o in (store.user_orders(u["id"], mid) for u in store.list_users()):
-        for x in o:
-            if x["status"] == "cancelled" and x["filled_qty"] == 0:
-                cancelled.setdefault(x["user_id"], []).append(x)
+    for x in store.cancelled_orders(mid):
+        cancelled.setdefault(x["user_id"], []).append(x)
     for uid_, xs in cancelled.items():
         if len(xs) < 3:
             continue
@@ -116,11 +116,12 @@ def _rule_flags(mid: str, lookback: int = 20) -> list[dict]:
 
 
 def _all_flags(market_id: str | None = None) -> list[dict]:
-    mids = [market_id] if market_id else [m["id"] for m in store.list_markets()]
+    markets = [store.get_market(market_id)] if market_id else store.list_markets()
+    users = store.list_users()
     out = []
-    for mid in mids:
-        if store.get_market(mid):
-            out.extend(_rule_flags(mid))
+    for market in markets:
+        if market:
+            out.extend(_rule_flags(market["id"], users=users, market=market))
     out.sort(key=lambda f: -f["t"])
     return out
 

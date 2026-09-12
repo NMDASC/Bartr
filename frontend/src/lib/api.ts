@@ -38,17 +38,28 @@ export function demoUser(): string {
   return u;
 }
 
-async function j<T>(path: string, init?: RequestInit): Promise<T> {
+export function setDemoUser(value: string) {
+  window.localStorage.setItem("bartr:user", value.trim());
+}
+
+export async function j<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
+    signal: init?.signal ?? AbortSignal.timeout(init?.method === "POST" ? 180000 : 20000),
     headers: {
       "content-type": "application/json",
       "x-demo-user": demoUser(),
       ...(init?.headers ?? {}),
     },
     cache: "no-store",
+  }).catch((error: Error) => {
+    if (error.name === "TimeoutError") throw new Error("Request timed out. Refresh to check its status before trying again.");
+    throw error;
   });
-  if (!res.ok) throw new Error(`${init?.method ?? "GET"} ${path} -> ${res.status}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(typeof body.detail === "string" ? body.detail : `Request failed (${res.status}). Please try again.`);
+  }
   return res.json() as Promise<T>;
 }
 
@@ -150,18 +161,31 @@ export type MarketFrame =
   | { type: "flag"; flag: Flag };
 
 /** Subscribes to a market. Returns unsubscribe. Real mode uses WS /ws/markets/{id}. */
-export function subscribeMarket(id: string, onFrame: (f: MarketFrame) => void): () => void {
-  if (IS_MOCK) return mock.subscribeMarket(id, onFrame);
-  const wsUrl = `${API_URL!.replace(/^http/, "ws")}/ws/markets/${id}`;
-  const ws = new WebSocket(wsUrl);
-  ws.onmessage = (m) => onFrame(JSON.parse(m.data) as MarketFrame);
-  return () => ws.close();
+export function subscribeMarket(id: string, onFrame: (f: MarketFrame) => void, onStatus?: (connected:boolean)=>void): () => void {
+  if (IS_MOCK) { onStatus?.(true); return mock.subscribeMarket(id, onFrame); }
+  let ws: WebSocket | null = null;
+  let closed = false;
+  let retries = 0;
+  let timer: ReturnType<typeof setTimeout>;
+  const connect = () => {
+    if (closed) return;
+    ws = new WebSocket(`${API_URL!.replace(/^http/, "ws")}/ws/markets/${encodeURIComponent(id)}`);
+    ws.onopen = () => { retries = 0; onStatus?.(true); };
+    ws.onmessage = m => { try { const frame = JSON.parse(m.data); if (["book","batch","flag"].includes(frame.type)) onFrame(frame); } catch { onStatus?.(false); } };
+    ws.onerror = () => { onStatus?.(false); ws?.close(); };
+    ws.onclose = () => { onStatus?.(false); if (!closed) timer = setTimeout(connect, Math.min(15000, 1000 * 2 ** retries++)); };
+  };
+  connect();
+  return () => { closed=true; clearTimeout(timer); ws?.close(); };
 }
 
 // ---------------------------------------------------------------- portfolio / acquire / surveillance
 
 export async function getPortfolio() {
-  if (IS_MOCK) return mock.getPortfolio();
+  if (IS_MOCK) {
+    const [portfolio, orders] = await Promise.all([mock.getPortfolio(), mock.myOrders()]);
+    return {...portfolio, reserved_cash: orders.filter(o=>o.side==="buy"&&(o.status==="open"||o.status==="partial")).reduce((sum,o)=>sum+(o.qty-o.filled_qty)*o.limit_price,0)};
+  }
   return j<Portfolio>("/portfolio");
 }
 
@@ -171,11 +195,60 @@ export async function suggestPortfolio() {
 }
 
 export async function startAcquisition(companyId: string) {
-  if (IS_MOCK) return mock.acquire(companyId);
+  if (IS_MOCK) throw new Error("Connect the API to prepare and save acquisition drafts.");
   return j<Acquisition>(`/acquire/${companyId}/start`, { method: "POST", body: "{}" });
 }
 
 export async function getFlags() {
   if (IS_MOCK) return mock.flags();
   return j<Flag[]>("/surveillance/flags");
+}
+
+export async function getMyOrders(id: string): Promise<Order[]> {
+  if (IS_MOCK) return mock.myOrders(id);
+  return j<Order[]>(`/markets/${encodeURIComponent(id)}/orders/mine`);
+}
+export async function cancelOrder(id: string): Promise<Order> {
+  if (IS_MOCK) return mock.cancelOrder(id);
+  return j<Order>(`/markets/orders/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+export async function getTrades(id: string): Promise<import("@contracts/types").Trade[]> {
+  if (IS_MOCK) return [];
+  return j(`/markets/${encodeURIComponent(id)}/trades?limit=50`);
+}
+export async function getOverview(): Promise<import("@contracts/types").Overview> {
+  if (IS_MOCK) {
+    const portfolio = await mock.getPortfolio();
+    const orders = await mock.myOrders();
+    const companies = await mock.listCompanies({});
+    return { user_id: demoUser(), display_name: demoUser(), portfolio, orders: orders.map(o=>({...o,company_name:companies.find(c=>c._id===o.market_id)?.name??o.market_id,category:"business"})), activity: [], open_orders: orders.filter(o=>o.status==="open"||o.status==="partial").length, reserved_cash: orders.filter(o=>o.side==="buy"&&(o.status==="open"||o.status==="partial")).reduce((s,o)=>s+(o.qty-o.filled_qty)*o.limit_price,0), as_of:new Date().toISOString() };
+  }
+  return j("/portfolio/overview");
+}
+export async function getChannel(): Promise<import("@contracts/types").ChannelStatus> {
+  if (IS_MOCK) return { configured:false, connected:false, phone_number:null, last_seen:null, identity:demoUser(), identity_kind:"name" };
+  return j("/agent/channel");
+}
+export async function getMessages(): Promise<(import("@contracts/types").AgentMessage & {channel?: string; t?: string})[]> {
+  if (IS_MOCK) return [];
+  return j("/agent/messages");
+}
+export async function askAgent(message: string) {
+  if (IS_MOCK) return {role:"assistant" as const,content:"Connect the API to use the trading assistant. You can explore businesses and trade in the local exchange."};
+  return j<import("@contracts/types").AgentMessage>("/agent/chat", {method:"POST",body:JSON.stringify({session_id:demoUser(),message})});
+}
+export async function getSecurity(token: string) {
+  if (IS_MOCK) throw new Error("Connect the API to open the security console.");
+  return j<import("@contracts/types").SecurityOverview>("/security/overview", {headers:{"x-admin-token":token}});
+}
+export async function getCase(token:string,id:string) {return j<import("@contracts/types").CaseDetail>(`/security/cases/${encodeURIComponent(id)}`,{headers:{"x-admin-token":token}});}
+export async function reviewCase(token:string,id:string,status:import("@contracts/types").CaseStatus,note:string) {return j<import("@contracts/types").SecurityCase>(`/security/cases/${encodeURIComponent(id)}`,{method:"PATCH",headers:{"x-admin-token":token},body:JSON.stringify({status,note})});}
+export async function reviewAgents(token:string) {return j<{reviewed:number;remaining:number}>("/security/review",{method:"POST",headers:{"x-admin-token":token}});}
+export async function getSecurityUser(token:string,id:string) { return j<import("@contracts/types").SecurityUser>(`/security/users/${encodeURIComponent(id)}`,{headers:{"x-admin-token":token}}); }
+export async function getAcquisitionDraft(id:string):Promise<Acquisition|null>{if(IS_MOCK)return null;return j(`/acquire/${encodeURIComponent(id)}/draft`);}
+export async function saveAcquisitionDraft(id:string,acq:Acquisition):Promise<Acquisition>{if(IS_MOCK)throw new Error("Connect the API to save acquisition drafts.");return j(`/acquire/${encodeURIComponent(id)}/draft`,{method:"PUT",body:JSON.stringify({loi_md:acq.loi_md,checklist:acq.checklist})});}
+
+export async function getSecurityEvents(token: string, options: { kind: "agents" | "audit"; query?: string; before?: number; offset?: number }) {
+  const params = new URLSearchParams(Object.entries(options).filter(([,value])=>value!==undefined).map(([key,value])=>[key,String(value)]));
+  return j<import("@contracts/types").SecurityEventPage>(`/security/events?${params}`, {headers:{"x-admin-token":token}});
 }

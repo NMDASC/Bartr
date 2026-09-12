@@ -84,3 +84,29 @@ Live discovery in the UI, Pittsburgh first and then cities nationwide. REST/SSE 
 `/graphql` is on the app: Strawberry router at `/graphql`, same DiscoveryJobs and pricing snapshots as REST. Search UI stays on REST/SSE. `strawberry-graphql` is an API dependency.
 
 Pricing/ranking verification follow-up: exact-quote and field-associated USD checks gate financial evidence; repeated inputs deduplicate snapshots while source documents merge; source hostnames, not repeated URLs, contribute corroboration. `calibrate_pricing.py` fits category-scoped sale-basis profiles on explicit training rows and reports held-out error/coverage without auto-activation. Mismatched category/benchmark profiles fall back with a warning. Export GraphQL SDL with `scripts/gen_graphql.py`; usage and limitations are in `docs/DISCOVERY_PRICING.md`. Legacy seeded/manual company creation is not repriced automatically. Runtime verified `/graphql` pricing preview; full live discovery still requires a configured xAI key.
+
+## 019  Sat  author: Nico (with Codex)  affects: all
+User-authorized product redesign spans the frontend, personal overview, messaging bridge, and security console. The UI evolves the original Lemma direction into a persistent navigation shell, accessible white panels, editorial hierarchy, and progressive disclosure of the order book. `/` is the personal overview; `/search` is discovery; `/surveillance` is the administrator workspace. Personal data loads in the browser under the active normalized identity, never a shared server identity.
+
+Additive APIs: `/portfolio/overview`, `/agent/messages`, `/agent/channel`, `/agent/heartbeat`, and `/security/*`. Security and legacy surveillance routes require `X-Admin-Token` matching server-only `ADMIN_API_TOKEN`; unset configuration fails closed. Bridge telemetry requires server-only `BRIDGE_API_TOKEN`. No credential is shipped through NEXT_PUBLIC variables. Agent call inputs/outputs and case transitions are logged through Store with secret redaction. Security cases persist with snapshots, evidence, reviewer opinions and human dispositions; MemoryStore snapshots now include audit and cases. New migration 007 contains security-case indexes. Existing discovery edits are preserved. Types remain hand-authored; OpenAPI is exported after verification. Deployment and sending real external messages are outside this local implementation run.
+
+
+019 follow-up: acquisition drafts are saved as `users.acquisitions[company_id]`; GET/PUT
+`/acquire/{company_id}/draft` and the existing acquisition-id lookup are scoped to the
+current identity. Starting an existing draft preserves edits. The bridge forwards an
+optional chat `request_id`; replayed requests return the stored response, and conflicting
+reuse is rejected. Chat can read portfolio/order status and cancel an owned order.
+
+`/security/events` searches and pages the full stored event history with a fixed time
+anchor. The overview export explicitly contains its latest 500 events per feed. Model
+calls include the named feature and full redacted output; trade, cancellation, detection,
+and disposition records connect to the affected market and identities. Each detection
+archives its evidence packet in the audit trail before a later detection can supersede it.
+Memory snapshots retain audit history and serialize concurrent saves; use Mongo for a
+long-running exchange. UI drawers use a shared portal and keyboard focus containment.
+
+The recurring security scan runs in a worker thread and reads cancelled orders in bulk,
+so Mongo surveillance does not block the API event loop or query every user per market.
+Case writes and MemoryStore snapshots serialize concurrent updates. An unchanged
+concentration condition does not reopen a reviewed case just because another quiet
+batch elapsed.

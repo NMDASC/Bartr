@@ -28,20 +28,22 @@ const terminalUi = env.TERMINAL_UI === "1";
 if (!terminalUi) {
   required("SPECTRUM_PROJECT_ID");
   required("SPECTRUM_PROJECT_SECRET");
+  if (env.JB_API_URL) required("BRIDGE_API_TOKEN");
 }
 
-const jb = jbClient({ apiUrl: env.JB_API_URL, log });
+const jb = jbClient({ apiUrl: env.JB_API_URL, bridgeToken: terminalUi ? undefined : env.BRIDGE_API_TOKEN, log });
 
 const HELP = [
   "I'm JB. I find small businesses and price them.",
   "",
   "Try:",
   "  laundromat in pittsburgh",
-  "  book for squirrel hill wash",
+  "  my orders",
+  "  my portfolio",
   "  buy 50 shares of squirrel hill wash at 56",
   "  what should i hold with 10k",
   "",
-  "/reset  start over",
+  "  cancel order <order-id>",
   "/help   this",
 ].join("\n");
 
@@ -55,7 +57,17 @@ const app = await Spectrum({
   providers,
 } as any);
 
-log(`up. mode=${jb.mode} terminal=${terminalUi} api=${env.JB_API_URL ?? "(mock)"}`);
+async function heartbeat() {
+  if (!env.JB_API_URL || !env.BRIDGE_API_TOKEN || terminalUi) return;
+  try {
+    const res = await fetch(`${env.JB_API_URL.replace(/\/$/, "")}/api/v1/agent/heartbeat`, {method:"POST", headers:{"x-bridge-token":env.BRIDGE_API_TOKEN}, signal:AbortSignal.timeout(10000)});
+    if (!res.ok) log(`heartbeat failed: ${res.status}`);
+  } catch { log("heartbeat unavailable"); }
+}
+void heartbeat();
+setInterval(() => void heartbeat(), 30000).unref();
+
+log(`up. mode=${jb.mode} terminal=${terminalUi} api=${env.JB_API_URL ?? "(offline)"}`);
 
 /** Text of a message, unwrapping threaded replies. Null for non-text content. */
 function textOf(content: Message["content"]): string | null {
@@ -78,6 +90,7 @@ function enqueue(key: string, fn: () => Promise<void>) {
   const prev = queues.get(key) ?? Promise.resolve();
   const next = prev.then(fn, fn);
   queues.set(key, next);
+  void next.finally(() => { if (queues.get(key) === next) queues.delete(key); }).catch(() => {});
   return next;
 }
 
@@ -92,13 +105,13 @@ async function handle(space: Space, message: Message, text: string) {
     await (space as { typing?: (on: boolean) => Promise<void> }).typing?.(true);
   } catch {}
   try {
-    const reply = await jb.chat(sender, t);
+    const reply = await jb.chat(sender, t, (message as {id?: string}).id);
     const body = reply.content.trim() || "No answer. Try rephrasing.";
     await space.send(body);
     log(`${sender} -> ${reply.tool_calls?.map((c) => c.name).join(",") || "text"}`);
   } catch (err) {
     log(`agent failed for ${sender}: ${(err as Error).message}`);
-    await space.send("JB is busy. Try again in a few seconds.");
+    await space.send("The response was interrupted. Send my orders to check status before repeating a trade.");
   } finally {
     try {
       await (space as { typing?: (on: boolean) => Promise<void> }).typing?.(false);

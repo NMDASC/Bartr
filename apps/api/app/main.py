@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.deps import STORE_KIND, engine, store
 from app.routers import acquire, agent, companies, discovery, market, portfolio, surveillance, ws
 from app.routers.graphql import router as graphql_router
+from app.routers import dashboard, security_console
 
 SEED = os.getenv("SEED", "1") == "1"
 BOTS = os.getenv("BOTS", "0") == "1"
@@ -59,11 +60,13 @@ async def lifespan(app: FastAPI):
     print(f"seeded {n} companies; markets: {len(store.list_markets())}; bots: {BOTS}")
     stop = asyncio.Event()
     task = asyncio.create_task(scheduler(stop))
+    security_task = asyncio.create_task(security_console.monitor())
     yield
     from app.services.discovery.jobs import service
     await service().close()
     stop.set()
     task.cancel()
+    security_task.cancel()
 
 
 app = FastAPI(title="JB API", version="0.1.0", lifespan=lifespan)
@@ -77,8 +80,24 @@ app.include_router(portfolio.router, prefix=API)
 app.include_router(acquire.router, prefix=API)
 app.include_router(surveillance.router, prefix=API)
 app.include_router(agent.router, prefix=API)
+app.include_router(dashboard.router, prefix=API)
+app.include_router(security_console.router, prefix=API)
 app.include_router(ws.router)  # /ws/markets/{id} at the root, per the contract
 app.include_router(graphql_router, prefix="/graphql")
+
+
+@app.middleware("http")
+async def audit_context(request, call_next):
+    from app.security import context
+    from app.identity import normalize
+    parts = request.url.path.strip("/").split("/")
+    market_id = next((part for part in parts if part.startswith("co_")), None)
+    token = context.set({"actor": normalize(request.headers.get("x-demo-user", "system")).uid,
+                         "market_id": market_id, "feature": request.url.path})
+    try:
+        return await call_next(request)
+    finally:
+        context.reset(token)
 
 
 @app.get("/health")

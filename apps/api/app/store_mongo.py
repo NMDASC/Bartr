@@ -77,6 +77,9 @@ class MongoStore:
         cur = self.db.orders.find({"market_id": mid, "status": {"$in": ["open", "partial"]}})
         return [_r(d) for d in cur]
 
+    def cancelled_orders(self, mid: str) -> list[dict]:
+        return [_r(d) for d in self.db.orders.find({"market_id": mid, "status": "cancelled", "filled_qty": 0})]
+
     def user_orders(self, uid: str, mid: str | None = None) -> list[dict]:
         q: dict = {"user_id": uid}
         if mid is not None:
@@ -120,7 +123,30 @@ class MongoStore:
         cur = self.db.audit_log.find().sort("t", DESCENDING).limit(limit)
         return [_r(d) for d in reversed(list(cur))]
 
+    def audit_page(self, calls, before, offset, limit, query=""):
+        import json
+        from itertools import islice
+        match = {"t": {"$lte": before}, "action": "agent_call" if calls else {"$ne": "agent_call"}}
+        cursor = self.db.audit_log.find(match).sort([("t", DESCENDING), ("_id", DESCENDING)])
+        if not query:
+            return [_r(d) for d in cursor.skip(offset).limit(limit)]
+        # Search arbitrary nested model output without copying the entire log to
+        # memory. A deployment may replace this with its indexed search service.
+        rows = (_r(d) for d in cursor.batch_size(200))
+        matches = (e for e in rows if query.casefold() in json.dumps(e, default=str).casefold())
+        return list(islice(matches, offset, offset + limit))
+
+    def audit_counts(self):
+        return {"calls": self.db.audit_log.count_documents({"action": "agent_call"}),
+                "errors": self.db.audit_log.count_documents({"action": "agent_call", "payload.status": "error"})}
+
     # snapshot. engine.tick() calls save() every round; writes already
+    def put_case(self, case: dict) -> None:
+        self.db.security_cases.replace_one({"_id": case["id"]}, _w(case), upsert=True)
+
+    def list_cases(self) -> list[dict]:
+        return [_r(d) for d in self.db.security_cases.find()]
+
     # persisted, so there is nothing to flush.
     def save(self, path: str | None = None) -> None:
         return None

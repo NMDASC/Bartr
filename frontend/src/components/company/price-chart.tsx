@@ -34,7 +34,7 @@ export function PriceChart({ batches, refPrice }: { batches: Batch[]; refPrice: 
     });
     const s = c.addSeries(LineSeries, {
       color: "#755cfe",
-      lineWidth: 1,
+      lineWidth: 2,
       lineType: LineType.WithSteps,
       priceLineColor: "#755cfe",
       priceLineStyle: 3,
@@ -55,7 +55,9 @@ export function PriceChart({ batches, refPrice }: { batches: Batch[]; refPrice: 
   useEffect(() => {
     const s = series.current;
     if (!s) return;
-    s.setData(batches.map((b) => ({ time: Math.floor(Date.parse(b.t) / 1000) as UTCTimestamp, value: b.clearing_price })));
+    const points = new Map<number, number>();
+    for (const b of batches) if (Number.isFinite(b.clearing_price)) points.set(Math.floor(Date.parse(b.t)/1000), b.clearing_price);
+    s.setData([...points].sort((a,b)=>a[0]-b[0]).map(([time,value])=>({time:time as UTCTimestamp,value})));
     chart.current?.timeScale().fitContent();
   }, [batches]);
 

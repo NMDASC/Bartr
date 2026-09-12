@@ -7,7 +7,7 @@ import { Footer } from "@/components/site/footer";
 const geist = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600"],
 });
 
 const plexMono = IBM_Plex_Mono({
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f2f2f2",
+  themeColor: "#f6f7fb",
   colorScheme: "light",
 };
 
@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         <Header />
-        <main id="main" className="flex-1">
+    <main id="main" className="app-content flex-1">
           {children}
         </main>
         <Footer />

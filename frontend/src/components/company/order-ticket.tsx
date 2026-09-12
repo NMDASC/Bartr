@@ -1,108 +1,22 @@
 "use client";
-
-import { useState } from "react";
-import type { Book, Order, Side } from "@contracts/types";
-import { placeOrder } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
+import type { Book, Order, Portfolio, Side } from "@contracts/types";
+import { getPortfolio, placeOrder } from "@/lib/api";
 import { px, usd } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Callout } from "@/components/ui/chip";
-import { cn } from "@/lib/cn";
-
-export function OrderTicket({ marketId, book }: { marketId: string; book: Book | null }) {
-  const [side, setSide] = useState<Side>("buy");
-  const [qty, setQty] = useState("50");
-  const [limit, setLimit] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [placed, setPlaced] = useState<Order | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-
-  const bestBid = book?.bids[0]?.price ?? null;
-  const bestAsk = book?.asks[0]?.price ?? null;
-  const suggested = side === "buy" ? bestAsk : bestBid;
-  const q = Number(qty);
-  const l = limit === "" ? suggested : Number(limit);
-  const notional = q > 0 && l ? q * l : null;
-  const disabled = busy || !book || book.halted || !(q > 0) || !l;
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (disabled || l === null) return;
-    setBusy(true);
-    setErr(null);
-    try {
-      const o = await placeOrder(marketId, { side, qty: q, limit_price: l });
-      setPlaced(o);
-    } catch (x) {
-      setErr(x instanceof Error ? x.message : "Order rejected");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <form onSubmit={submit} className="bg-card border border-line">
-      <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
-        <Label>Order ticket</Label>
-      </div>
-      <div className="p-3 flex flex-col gap-3">
-        <div className="grid grid-cols-2 gap-px bg-line border border-line" role="radiogroup" aria-label="Side">
-          {(["buy", "sell"] as Side[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              role="radio"
-              aria-checked={side === s}
-              onClick={() => setSide(s)}
-              className={cn(
-                "py-2 font-mono text-[11px] uppercase tracking-[0.08em] transition-colors duration-150 ease-out active:scale-[0.98]",
-                side === s ? (s === "buy" ? "bg-up/[0.10] text-up" : "bg-down/[0.10] text-down") : "bg-card text-muted-foreground hover:bg-surface",
-              )}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label as="div" tracking="tight" className="mb-1.5">Shares</Label>
-            <Input inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} className="font-mono tabular-nums" aria-label="Shares" />
-          </div>
-          <div>
-            <Label as="div" tracking="tight" className="mb-1.5">Limit</Label>
-            <Input
-              inputMode="decimal"
-              value={limit}
-              placeholder={suggested !== null ? px(suggested) : ""}
-              onChange={(e) => setLimit(e.target.value)}
-              className="font-mono tabular-nums"
-              aria-label="Limit price"
-            />
-          </div>
-        </div>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-mono text-[11px] tabular-nums">
-          <dt className="uppercase tracking-[0.08em] text-muted-foreground">Notional</dt>
-          <dd className="text-right">{notional !== null ? usd(notional) : "\u2014"}</dd>
-          <dt className="uppercase tracking-[0.08em] text-muted-foreground">Band</dt>
-          <dd className="text-right">{book ? `${px(book.band.low)} to ${px(book.band.high)}` : "\u2014"}</dd>
-        </dl>
-        <Button type="submit" variant="primary" size="lg" disabled={disabled} className="w-full">
-          {busy ? "Placing" : `Place ${side} order`}
-        </Button>
-        {placed ? (
-          <Callout tone={placed.side === "buy" ? "up" : "down"}>
-            <span className="font-mono text-[11px] tabular-nums">
-              {placed.side} {placed.qty} @ {px(placed.limit_price)} resting
-            </span>
-          </Callout>
-        ) : null}
-        {err ? (
-          <Callout tone="down">
-            <span className="font-mono text-[11px]">{err}</span>
-          </Callout>
-        ) : null}
-      </div>
-    </form>
-  );
+export function OrderTicket({marketId,book,connected=true,refreshKey=0,onPlaced}:{marketId:string;book:Book|null;last:number|null;connected?:boolean;refreshKey?:number;onPlaced?:()=>void}) {
+ const [accountRevision,setAccountRevision]=useState(0);
+ const [side,setSide]=useState<Side>("buy"),[qty,setQty]=useState("10"),[limit,setLimit]=useState(""),[busy,setBusy]=useState(false),[placed,setPlaced]=useState<Order|null>(null),[err,setErr]=useState<string|null>(null),[portfolio,setPortfolio]=useState<(Portfolio&{reserved_cash?:number})|null>(null);
+ useEffect(()=>{let alive=true;getPortfolio().then(p=>{if(alive)setPortfolio(p);}).catch(()=>{if(alive)setPortfolio(null);});return()=>{alive=false;};},[marketId,refreshKey,placed,accountRevision]);
+ const suggested=side==="buy"?book?.asks[0]?.price:book?.bids[0]?.price;
+ const q=Number(qty),l=limit===""?(suggested??0):Number(limit),notional=q*l;
+ const available=portfolio?Math.max(0,portfolio.cash-(portfolio.reserved_cash??0)):null;
+ const owned=portfolio?.positions.find(p=>p.market_id===marketId)?.qty??0;
+ const invalid=!Number.isFinite(q)||!Number.isFinite(l)||q<.01||q>500||l<=0||Math.abs(q*100-Math.round(q*100))>1e-7;
+ const insufficient=side==="buy"?available!==null&&notional>available:portfolio!==null&&q>owned;
+ const disabled=busy||!book||book.halted||!connected||invalid||insufficient||!portfolio;
+ async function submit(e:React.FormEvent){e.preventDefault();if(disabled)return;setBusy(true);setErr(null);setPlaced(null);try{const o=await placeOrder(marketId,{side,qty:q,limit_price:l});setPlaced(o);onPlaced?.();}catch(e){setErr(e instanceof Error?e.message:"Order rejected");}finally{setBusy(false);}}
+ return <form onSubmit={submit} className="dashboard-panel"><div className="flex items-center justify-between border-b border-hairline px-5 py-4"><h2 className="section-title">Make your move</h2><span className="soft-tag !text-[9px]">Limit order</span></div><div className="space-y-5 p-5"><div className="grid grid-cols-2 gap-1 rounded-lg bg-surface p-1" role="group" aria-label="Order side">{(["buy","sell"] as Side[]).map(s=><button key={s} type="button" aria-pressed={s===side} onClick={()=>{setSide(s);setLimit("");setPlaced(null);setErr(null);}} className={`rounded-md py-2.5 text-xs font-medium ${side===s?(s==="buy"?"bg-white text-up":"bg-white text-down"):"text-muted-foreground"}`}>{s==="buy"?"Buy shares":"Sell shares"}</button>)}</div><div className="space-y-3"><label className="block"><span className="mb-1.5 block text-[11px] text-muted-foreground">Number of shares</span><Input type="number" min="0.01" max="500" step="0.01" inputMode="decimal" value={qty} onChange={e=>{setQty(e.target.value);setPlaced(null);}} className="!bg-white font-mono" aria-label="Shares"/></label><label className="block"><span className="mb-1.5 block text-[11px] text-muted-foreground">Limit price per share</span><div className="relative"><span className="absolute left-3 top-3 text-muted-foreground">$</span><Input type="number" min="0.01" step="0.01" inputMode="decimal" value={limit} placeholder={suggested?.toFixed(2)??"0.00"} onChange={e=>{setLimit(e.target.value);setPlaced(null);}} className="!bg-white pl-7 font-mono" aria-label="Limit price"/></div></label><div className="flex items-center justify-between text-[10px] secondary"><span>{side==="buy"?"Best ask":"Best bid"}</span><button type="button" onClick={()=>setLimit(suggested?.toFixed(2)??"")} className="text-accent">${px(suggested??null)} <span aria-hidden>↗</span></button></div></div><div className="space-y-2 border-t border-hairline pt-4"><div className="flex justify-between text-xs"><span className="secondary">{side==="buy"?"Available cash":"Shares owned"}</span><span className="font-mono">{side==="buy"?(available===null?"—":usd(available)):owned}</span></div><div className="flex justify-between text-sm"><span>Order value</span><span className="font-medium tabular-nums">{Number.isFinite(notional)&&notional>0?usd(notional):"—"}</span></div></div><Button type="submit" variant="primary" className={`w-full ${side==="sell"?"!bg-down":""}`} disabled={disabled}>{busy?"Placing order…":book?.halted?"Market paused":!connected?"Waiting for connection":`${side==="buy"?"Place buy":"Place sell"} order`}<ArrowRight size={14}/></Button>{!portfolio&&<p className="text-xs secondary">Account balance is unavailable. <button type="button" className="text-accent underline" onClick={()=>setAccountRevision(v=>v+1)}>Refresh balance</button></p>}{insufficient&&<p className="text-xs text-down" role="alert">{side==="buy"?"Not enough available cash for this order.":"You do not own enough shares to sell this amount."}</p>}{invalid&&qty&&<p className="text-xs text-down">Enter 0.01 to 500 shares and a positive limit price.</p>}{placed&&<div role="status" className="rounded-lg bg-up/5 p-3 text-up"><p className="flex items-center gap-2 text-xs"><CheckCircle2 size={14}/>Order accepted</p><p className="mt-1 text-[10px]">{placed.side} {placed.qty} shares at ${px(placed.limit_price)} limit. Follow its status in Your orders.</p></div>}{err&&<p role="alert" className="rounded-lg bg-down/5 p-3 text-xs text-down">{err}</p>}</div></form>;
 }

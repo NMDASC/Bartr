@@ -1,3 +1,4 @@
+import pytest
 import os
 os.environ["SEED"] = "1"
 from fastapi.testclient import TestClient
@@ -7,7 +8,7 @@ H = {"X-Demo-User": "judge1"}
 
 
 def test_end_to_end():
-    with TestClient(app) as c:
+    with TestClient(app, headers={"X-Admin-Token": "test-admin"}) as c:
         assert c.get("/health").json()["companies"] >= 8
         cards = c.get("/api/v1/companies?state=PA").json()
         assert all(x["state"] == "PA" for x in cards) and len(cards) >= 8
@@ -54,3 +55,8 @@ def test_end_to_end():
         with c.websocket_connect(f"/ws/markets/{cid}") as ws:
             msg = ws.receive_json()
             assert msg["type"] == "book"
+
+
+@pytest.fixture(autouse=True)
+def administrator_configuration(monkeypatch):
+    monkeypatch.setenv("ADMIN_API_TOKEN", "test-admin")

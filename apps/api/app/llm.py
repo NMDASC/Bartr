@@ -72,7 +72,7 @@ def is_configured(provider: Provider) -> bool:
         return False
 
 
-async def complete(
+async def _complete(
     messages: list[dict[str, Any]],
     *,
     provider: Provider = "xai",
@@ -123,3 +123,23 @@ async def complete(
             calls.append(ToolCall(id=tc.id, name=fn.name, arguments=args if isinstance(args, dict) else {}))
         return Completion(content=msg.content or "", tool_calls=calls)
     return msg.content or ""
+
+
+async def complete(messages, **kwargs):
+    """Audited entry point, including structured output and every tool-loop turn."""
+    import time
+    import asyncio
+    from dataclasses import asdict, is_dataclass
+    from app.security import record_call
+    started = time.time()
+    feature = kwargs.pop("audit_feature", None)
+    provider = kwargs.get("provider", "xai")
+    model = kwargs.get("model") or default_model(provider)
+    try:
+        out = await _complete(messages, **kwargs)
+        result = out.model_dump() if isinstance(out, BaseModel) else asdict(out) if is_dataclass(out) else out
+    except (Exception, asyncio.CancelledError) as exc:
+        record_call(provider=provider, model=model, messages=messages, error=f"{type(exc).__name__}: {exc}", started=started, feature=feature)
+        raise
+    record_call(provider=provider, model=model, messages=messages, output=result, started=started, feature=feature)
+    return out

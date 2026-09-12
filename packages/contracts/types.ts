@@ -210,6 +210,8 @@ export interface BookLevel {
 }
 
 export interface Book {
+  indicative_price?: number | null;
+  n_open_orders?: number;
   market_id: string;
   bids: BookLevel[]; // descending price
   asks: BookLevel[]; // ascending price
@@ -341,7 +343,7 @@ export interface Flag {
   explanation: string;
   reviewer: Reviewer;
   /** One entry per reviewer. Present so the UI can show disagreement. */
-  reviews: { reviewer: Reviewer; severity: Severity }[];
+  reviews: { reviewer: Reviewer; severity: Severity; explanation?: string }[];
   /** True when grok and k2 disagree on severity. */
   disputed: boolean;
   t: Iso;
@@ -364,6 +366,9 @@ export interface ToolCallCard {
     | "get_company"
     | "get_book"
     | "place_order"
+    | "cancel_order"
+    | "get_orders"
+    | "get_portfolio"
     | "suggest_portfolio";
   args: Record<string, unknown>;
   result_count: number;
@@ -382,4 +387,19 @@ export interface AgentMessage {
 export interface AgentChatRequest {
   session_id: string;
   message: string;
+  request_id?: string;
 }
+
+// Personal workspace and administrator investigations (decision 019).
+export interface PersonalOrder extends Order { company_name: string; category: string }
+export interface ActivityEvent { id?: string; t: Iso; actor: string; action: string; market_id?: string | null; flag_id?: string | null; payload: Record<string, unknown> }
+export interface Overview { user_id: string; display_name: string; portfolio: Portfolio; orders: PersonalOrder[]; activity: ActivityEvent[]; open_orders: number; reserved_cash: number; as_of: Iso }
+export interface ChannelStatus { configured: boolean; connected: boolean; phone_number: string | null; last_seen: Iso | null; identity: string; identity_kind: string }
+export type CaseStatus = "open" | "investigating" | "resolved" | "dismissed";
+export interface SecurityCase { id: string; flag: Flag; status: CaseStatus; note: string; company_name: string; category: string; occurrences: number; first_seen: Iso; last_seen: Iso; history: { t: Iso; actor: string; status: CaseStatus; note: string }[] }
+export interface AgentCall extends ActivityEvent { payload: { provider: string; model: string; feature: string; status: "success" | "error"; duration_ms: number; input: unknown; output: unknown; error: string | null } }
+export interface SecurityOverview { cases: SecurityCase[]; assets: { id: string; name: string; flags: number; high: number; occurrences: number; users: string[]; rules: string[] }[]; users: { id: string; flags: number; high: number; assets: string[]; rules: string[] }[]; calls: AgentCall[]; audit: ActivityEvent[]; summary: { open: number; high: number; disputed: number; markets: number; agent_calls: number; agent_errors: number }; providers: { grok: boolean; k2: boolean }; as_of: Iso; audit_window: string }
+export interface CaseDetail extends SecurityCase { trades: Trade[]; orders: Order[]; batches: Batch[]; audit: ActivityEvent[] }
+export interface SecurityUser { id: string; display_name: string; cases: SecurityCase[]; summary: { orders: number; cancelled: number; trades: number; traded_notional: number }; positions: Record<string, {qty: number; avg_cost: number}>; orders: Order[]; trades: Trade[]; calls: AgentCall[] }
+
+export interface SecurityEventPage { items: ActivityEvent[]; before: number; next_offset: number | null }

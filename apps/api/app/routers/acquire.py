@@ -6,16 +6,17 @@ official citations so the acquire demo does not wait on a model call.
 from __future__ import annotations
 
 import uuid
+import time
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.deps import current_user, engine, store
-from app.schemas import Acquisition
+from app.schemas import Acquisition, ChecklistItem
+from pydantic import BaseModel, Field
 from app.services.market.treasury import SHARES
 
 router = APIRouter(prefix="/acquire", tags=["acquire"])
-ACQS: dict[str, dict] = {}
 
 GENERIC = [
     ("Three years of tax returns and P&L", "Verify the SDE the price is built on"),
@@ -125,7 +126,12 @@ async def start(cid: str, uid: str = Depends(current_user)):
     c = store.get_company(cid)
     if not c:
         raise HTTPException(404, "no such company")
+    existing = engine.user(uid).get("acquisitions", {}).get(cid)
+    if existing:
+        return existing
     m = store.get_market(cid)
+    if not m:
+        raise HTTPException(409, "This business has not been priced yet")
     px = m["last_price"] or m["ref_price"]
     seller = ", ".join(c.get("owners") or ["the owner"])
     where = c.get("address") or ", ".join(x for x in (c.get("city"), c.get("state")) if x)
@@ -133,14 +139,43 @@ async def start(cid: str, uid: str = Depends(current_user)):
     items = await acquire_agent.checklist(c) or checklist_for(c)
     acq = {"acquisition_id": f"acq_{uuid.uuid4().hex[:8]}", "market_id": cid, "loi_md": loi,
            "checklist": items, "status": "draft"}
-    ACQS[acq["acquisition_id"]] = acq
-    store.audit({"t": __import__("time").time(), "actor": uid, "action": "acquire_start", "payload": {"company": cid}})
+    user = engine.user(uid)
+    user.setdefault("acquisitions", {})[cid] = acq
+    store.put_user(user)
+    store.audit({"t": time.time(), "actor": uid, "action": "acquire_start", "payload": {"market_id": cid, "acquisition_id": acq["acquisition_id"]}})
+    if hasattr(store, "save"):
+        store.save()
     return acq
 
 
 @router.get("/{acq_id}", response_model=Acquisition)
-def get(acq_id: str):
-    a = ACQS.get(acq_id)
+def get(acq_id: str, uid: str = Depends(current_user)):
+    a = next((a for a in engine.user(uid).get("acquisitions", {}).values() if a["acquisition_id"] == acq_id), None)
     if not a:
         raise HTTPException(404, "no such acquisition")
     return a
+
+
+@router.get("/{cid}/draft", response_model=Acquisition | None)
+def draft(cid: str, uid: str = Depends(current_user)):
+    return engine.user(uid).get("acquisitions", {}).get(cid)
+
+
+class DraftIn(BaseModel):
+    loi_md: str = Field(min_length=1, max_length=100000)
+    checklist: list[ChecklistItem] = Field(max_length=100)
+
+
+@router.put("/{cid}/draft", response_model=Acquisition)
+def save_draft(cid: str, body: DraftIn, uid: str = Depends(current_user)):
+    user = engine.user(uid)
+    acq = user.get("acquisitions", {}).get(cid)
+    if not acq:
+        raise HTTPException(404, "Create a draft first")
+    acq = {**acq, "loi_md": body.loi_md, "checklist": [i.model_dump() for i in body.checklist]}
+    user["acquisitions"][cid] = acq
+    store.put_user(user)
+    store.audit({"t": time.time(), "actor": uid, "action": "acquire_draft_saved", "payload": {"market_id": cid, "acquisition_id": acq["acquisition_id"]}})
+    if hasattr(store, "save"):
+        store.save()
+    return acq

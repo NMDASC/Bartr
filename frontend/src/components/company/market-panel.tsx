@@ -1,7 +1,9 @@
 "use client";
-
-import type { Company } from "@contracts/types";
+import { useEffect, useState } from "react";
+import { Activity, ArrowUpRight, Layers3, SlidersHorizontal } from "lucide-react";
+import type { Company, PersonalOrder, Trade } from "@contracts/types";
 import { useMarket } from "@/hooks/use-market";
+import { getMyOrders, getTrades, cancelOrder } from "@/lib/api";
 import { px, signed, usd } from "@/lib/format";
 import { Countdown } from "./countdown";
 import { PriceChart } from "./price-chart";
@@ -11,84 +13,25 @@ import { OrderTicket } from "./order-ticket";
 import { Valuation } from "./valuation";
 import { Sources } from "./sources";
 import { Evidence } from "./evidence";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/cn";
-
-export function MarketPanel({ company }: { company: Company }) {
-  const live = company.status === "ready";
-  const m = useMarket(company._id, live);
-
-  const shares = company.market?.shares_outstanding ?? 10000;
-  const ref = company.valuation ? company.valuation.v0 / shares : null;
-  const change = m.last !== null && m.prev !== null ? m.last - m.prev : null;
-
-  return (
-    <>
-      {/* price strip */}
-      <div className="border-t border-b border-line">
-        <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
-          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3 py-4">
-            <div className="flex items-end gap-6">
-              <div>
-                <Label tracking="tight" className="block mb-1">Last clearing price</Label>
-                <div key={m.tick} className={cn("text-[40px] leading-none tabular-nums px-1 -mx-1", m.tick > 0 && "bartr-clear")}>{px(m.last)}</div>
-              </div>
-              <div className="pb-1">
-                <Label tracking="tight" className="block mb-1">Change</Label>
-                <div className={cn("font-mono text-[14px] tabular-nums", change === null ? "text-muted-foreground" : change >= 0 ? "text-up" : "text-down")}>
-                  {change === null ? "\u2014" : signed(change)}
-                </div>
-              </div>
-              <div className="pb-1 hidden sm:block">
-                <Label tracking="tight" className="block mb-1">Implied value</Label>
-                <div className="font-mono text-[14px] tabular-nums">{m.last !== null ? usd(m.last * shares, { compact: true }) : "\u2014"}</div>
-              </div>
-              <div className="pb-1 hidden lg:block">
-                <Label tracking="tight" className="block mb-1">Owner float</Label>
-                <div className="font-mono text-[14px] tabular-nums">
-                  {company.market?.treasury ? `${company.market.treasury.unsold_float} unsold · floor ${px(company.market.treasury.floor_price)}` : "\u2014"}
-                </div>
-              </div>
-            </div>
-            {live ? <Countdown nextBatchAt={m.book?.next_batch_at} interval={company.market?.batch_interval_s ?? 10} /> : <Label>Not listed yet</Label>}
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-6 xl:border-l xl:border-r xl:border-line">
-        <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
-          {/* right rail first on mobile so judges can bid without scrolling */}
-          <div className="flex flex-col gap-4 order-first lg:order-none lg:col-start-2">
-            {live ? <OrderTicket marketId={company._id} book={m.book} /> : null}
-            <Valuation company={company} last={m.last} />
-            <div className="flex gap-2">
-              <Button variant="primary" size="lg" href={`/company/${company._id}/acquire`} className="flex-1">
-                Acquire
-              </Button>
-              <Button size="lg" href="/portfolio" className="flex-1">
-                Portfolio
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4 lg:col-start-1 lg:row-start-1">
-            <div className="bg-card border border-line">
-              <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
-                <Label>Clearing price by batch</Label>
-                
-              </div>
-              {live ? <PriceChart batches={m.batches} refPrice={ref} /> : <div className="h-[260px]" />}
-            </div>
-            <div className="grid gap-4 md:grid-cols-[1fr_1fr]">
-              <OrderBook book={m.book} last={m.last} tick={m.tick} />
-              <DepthPlate book={m.book} tick={m.tick} last={m.last} />
-            </div>
-            <Sources sources={company.sources} />
-            <Evidence facts={company.evidence ?? []} />
-          </div>
-        </div>
-      </div>
-    </>
-  );
+import { EmptyState, OrdersTable } from "@/components/dashboard/shared";
+export function MarketPanel({company}:{company:Company}) {
+ const live=company.status==="ready", m=useMarket(company._id,live);
+ const [advanced,setAdvanced]=useState(false),[tab,setTab]=useState("orders"),[range,setRange]=useState("all"),[orders,setOrders]=useState<PersonalOrder[]>([]),[trades,setTrades]=useState<Trade[]>([]),[refresh,setRefresh]=useState(0),[busy,setBusy]=useState<string|null>(null),[error,setError]=useState("");
+ useEffect(()=>{if(!live)return;let alive=true;Promise.all([getMyOrders(company._id),getTrades(company._id)]).then(([o,t])=>{if(alive){setOrders(o.map(x=>({...x,company_name:company.name,category:company.category})));setTrades(t.reverse());setError("");}}).catch(()=>{if(alive)setError("Order history is unavailable. Try refreshing.");});return()=>{alive=false;};},[company._id,company.name,company.category,m.tick,refresh,live]);
+ const cancel=async(id:string)=>{setBusy(id);try{await cancelOrder(id);setRefresh(r=>r+1);}catch(e){setError(e instanceof Error?e.message:"Unable to cancel order");}finally{setBusy(null);}};
+ const shares=company.market?.shares_outstanding??10000,ref=company.valuation?company.valuation.v0/shares:null, change=m.last!==null&&m.prev!==null?m.last-m.prev:null;
+ const price=m.last??m.book?.ref??ref;
+ const batches=range==="20"?m.batches.slice(-20):range==="60"?m.batches.slice(-60):m.batches;
+ return <div className="page-wrap !pt-0">
+   <div className="mb-5 flex flex-wrap items-center justify-between gap-4"><div className="flex items-end gap-5"><div><p className="eyebrow">{m.last===null?"Reference price / share":"Last price / share"}</p><div className="mt-1 flex items-end gap-4"><span key={m.tick} className={`text-[42px] leading-tight tracking-[-.055em] tabular-nums ${m.tick?"bartr-clear":""}`}>{price===null?"—":`$${px(price)}`}</span>{change!==null&&<span className={`mb-2 text-xs font-mono ${change>=0?"text-up":"text-down"}`}>{signed(change)} <span className="text-muted-foreground">last batch</span></span>}</div></div><div className="hidden lg:block border-l border-line pl-5 pb-2"><p className="eyebrow">Implied business value</p><p className="mt-2 text-lg tracking-tight">{price?usd(price*shares,{compact:true}):"—"}</p></div></div><div className="flex items-center gap-4"><span className={`flex items-center gap-1.5 text-[10px] ${m.book?.halted?"text-down":m.connected?"text-up":"text-muted-foreground"}`}><span className="status-dot"/>{m.book?.halted?"Market halted":m.connected?"Connected":"Reconnecting"}</span><div className="flex rounded-lg border border-line bg-white p-1" role="group" aria-label="Trading view">{[false,true].map(v=><button key={String(v)} aria-pressed={advanced===v} onClick={()=>setAdvanced(v)} className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-xs ${advanced===v?"bg-foreground text-white":"text-muted-foreground"}`}>{v?<SlidersHorizontal size={12}/>:<Activity size={12}/>} {v?"Advanced":"Simple"}</button>)}</div></div></div>
+   {m.error&&<p role="alert" className="mb-4 text-down">{m.error}</p>}
+   <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="order-2 min-w-0 space-y-5 lg:order-none"><section className="dashboard-panel"><div className="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-5 py-4"><h2 className="section-title">Price history</h2><div className="flex gap-1" role="group" aria-label="Price history range">{[["20","20 rounds"],["60","60 rounds"],["all","All"]].map(([v,l])=><button key={v} aria-pressed={range===v} onClick={()=>setRange(v)} className={`rounded-md px-2 py-1 text-[10px] ${range===v?"bg-accent/10 text-accent":"text-muted-foreground"}`}>{l}</button>)}</div></div>{m.batches.length?<PriceChart batches={batches} refPrice={ref}/>:<div className="relative flex h-[280px] flex-col items-center justify-center bg-[linear-gradient(#edf0f6_1px,transparent_1px)] bg-[size:100%_56px]"><div className="absolute inset-x-8 top-1/2 border-t border-dashed border-accent/40"/><span className="relative bg-white px-3 text-sm text-muted-foreground">Waiting for the first trade</span><span className="relative mt-2 bg-white px-3 font-mono text-xs text-accent">Reference ${px(ref)}</span></div>}<div className="grid grid-cols-3 divide-x divide-hairline border-t border-hairline">{[["Best bid",m.book?.bids[0]?.price,"text-up"],["Best ask",m.book?.asks[0]?.price,"text-down"],["Indicative price",m.book?.indicative_price,"text-accent"]].map(([l,v,c])=><div key={String(l)} className="px-5 py-3"><p className="eyebrow text-[9px]">{l}</p><p className={`mt-1 font-mono text-sm ${c}`}>${px(typeof v==="number"?v:null)}</p></div>)}</div></section>
+    {advanced&&<div className="grid gap-5 2xl:grid-cols-2"><OrderBook book={m.book} last={m.last} tick={m.tick}/><DepthPlate book={m.book} last={m.last} tick={m.tick}/></div>}
+    <section className="dashboard-panel"><div className="flex gap-5 border-b border-hairline px-5" role="group" aria-label="Market history">{[["orders","Your orders"],...(advanced?[["trades","Trade tape"],["batches","Batches"]]:[])].map(([v,l])=><button key={v} aria-pressed={tab===v} onClick={()=>setTab(v)} className={`border-b-2 py-4 text-xs ${tab===v?"border-accent text-accent":"border-transparent text-muted-foreground"}`}>{l}{v==="orders"&&<span className="ml-1.5 text-[10px]">{orders.length}</span>}</button>)}</div>{error&&<p role="alert" className="px-5 py-3 text-xs text-down">{error}<button className="ml-2 underline" onClick={()=>setRefresh(r=>r+1)}>Retry</button></p>}{(!advanced||tab==="orders")?(orders.length?<OrdersTable compact orders={orders} cancel={cancel} busy={busy}/>:<EmptyState title="No orders for this business yet" description="Your bids, fills, and order history will appear here."/>):tab==="trades"?<div className="max-h-80 overflow-auto"><table className="data-table"><thead><tr><th>Time</th><th>Price / share</th><th>Shares</th><th>Trade</th></tr></thead><tbody>{trades.map(t=><tr key={t._id}><td>{new Date(t.t).toLocaleTimeString()}</td><td className="font-mono">${px(t.price)}</td><td className="font-mono">{t.qty}</td><td className="font-mono text-muted-foreground">{t._id}</td></tr>)}</tbody></table>{!trades.length&&<EmptyState title="No trades yet" description="Executed trades appear here as each round clears."/>}</div>:<div className="max-h-80 overflow-auto"><table className="data-table"><thead><tr><th>Time</th><th>Clearing price</th><th>Volume</th><th>Imbalance</th></tr></thead><tbody>{[...m.batches].reverse().map(b=><tr key={b._id}><td>{new Date(b.t).toLocaleTimeString()}</td><td className="font-mono">${px(b.clearing_price)}</td><td className="font-mono">{b.volume}</td><td className="font-mono">{signed(b.imbalance)}</td></tr>)}</tbody></table></div>}</section>
+    <details className="dashboard-panel" open={advanced}><summary className="cursor-pointer px-5 py-4 text-sm font-medium">Business research & sources <span className="ml-2 text-xs text-muted-foreground">{company.sources.length} sources</span></summary><div className="space-y-4 border-t border-hairline p-4"><Sources sources={company.sources}/><Evidence facts={company.evidence??[]}/></div></details>
+    </div><aside className="contents lg:block"><div className="order-1 space-y-5">{live?<OrderTicket marketId={company._id} book={m.book} last={m.last} connected={m.connected} refreshKey={m.tick+refresh} onPlaced={()=>setRefresh(r=>r+1)}/>:<div className="dashboard-panel p-5">This business is still being priced.</div>}<div className="dashboard-panel flex items-center justify-between px-5 py-4"><span className="flex items-center gap-2 text-xs secondary"><Layers3 size={14}/>Next clearing</span><Countdown hideLabel nextBatchAt={m.book?.next_batch_at} interval={company.market?.batch_interval_s??10}/></div></div><div className="order-3 overflow-hidden rounded-xl lg:mt-5"><Valuation company={company} last={m.last} advanced={advanced}/></div><div className="dashboard-panel order-4 p-5 lg:mt-5"><h3 className="text-sm">Think bigger.</h3><p className="mt-1 text-xs secondary">Make the whole business your next chapter.</p><Button href={`/company/${company._id}/acquire`} className="mt-4 w-full">Explore acquisition<ArrowUpRight size={14}/></Button></div></aside>
+   </div>
+ </div>;
 }

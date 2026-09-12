@@ -3,7 +3,7 @@ import { usd, pct } from "@/lib/format";
 import { Label } from "@/components/ui/label";
 
 /** Model value vs market-implied value on one ruled scale. */
-export function Valuation({ company, last }: { company: Company; last: number | null }) {
+export function Valuation({ company, last, advanced = false }: { company: Company; last: number | null; advanced?: boolean }) {
   const v = company.valuation;
   const f = company.financials;
   if (!v) {
@@ -19,7 +19,7 @@ export function Valuation({ company, last }: { company: Company; last: number | 
   // log scale between low and high, padded
   const lo = Math.log(v.low) - 0.08;
   const hi = Math.log(v.high) + 0.08;
-  const pos = (x: number) => `${((Math.log(x) - lo) / (hi - lo)) * 100}%`;
+  const pos = (x: number) => `${Math.max(3, Math.min(97, ((Math.log(Math.max(x, 1)) - lo) / Math.max(.01, hi - lo)) * 100))}%`;
 
   return (
     <div className="bg-card border border-line">
@@ -64,11 +64,11 @@ export function Valuation({ company, last }: { company: Company; last: number | 
           <dt className="uppercase tracking-[0.08em] text-muted-foreground">Confidence</dt>
           <dd className="text-right">{pct(f?.confidence ?? null)} {f?.method === "proxy" ? <span className="text-tint-400">proxy</span> : null}</dd>
         </dl>
-        <div className="mt-3 border-t border-hairline pt-3">
-          <div className="flex items-center justify-between mb-2">
-            <Label tracking="tight">Estimators</Label>
-            <span className="font-mono text-[10px] text-muted-foreground tabular-nums">disagreement {v.disagreement.toFixed(2)}</span>
-          </div>
+        <details open={advanced} className="mt-3 border-t border-hairline pt-3">
+          <summary className="cursor-pointer text-xs mb-3">
+            Valuation methodology
+            <span className="font-mono text-[10px] text-muted-foreground tabular-nums"> · spread {v.disagreement.toFixed(2)}</span>
+          </summary>
           <ol className="flex flex-col gap-2">
             {v.estimates.map((e) => (
               <li key={e.name} className="grid grid-cols-[64px_1fr_auto] gap-x-3 items-baseline">
@@ -80,7 +80,7 @@ export function Valuation({ company, last }: { company: Company; last: number | 
               </li>
             ))}
           </ol>
-        </div>
+        </details>
       </div>
     </div>
   );

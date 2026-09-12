@@ -85,3 +85,10 @@ tests/                          auction, valuation, engine, API
 ## Plugging in a different store
 
 Implement the methods in `app/store.py::Store` (plain dicts in, plain dicts out) and construct it in `app/deps.py`. The engine never touches storage any other way.
+
+## Workspace, messaging and security
+
+See [WORKSPACE_GUIDE.md](../../docs/WORKSPACE_GUIDE.md) for the personal overview,
+administrator access token, full audit archive, saved acquisition drafts, bridge
+authentication and verification commands. New endpoints and storage additions are
+recorded in decision 019.

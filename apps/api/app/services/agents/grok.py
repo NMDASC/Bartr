@@ -38,7 +38,8 @@ def _key(name: str, *parts: Any) -> str:
 
 
 def _remember(name: str, provider: str, ok: bool, ms: float, note: str = "") -> None:
-    CALLS.append({"t": time.time(), "name": name, "provider": provider, "ok": ok, "ms": round(ms), "note": note[:120]})
+    from app.security import redact
+    CALLS.append({"t": time.time(), "name": name, "provider": provider, "ok": ok, "ms": round(ms), "note": redact(note)[:120]})
     del CALLS[:-50]
 
 
@@ -54,7 +55,7 @@ async def structured(name: str, schema: type[M], system: str, user: str, *, prov
     try:
         out = await asyncio.wait_for(
             llm.complete([{"role": "system", "content": system}, {"role": "user", "content": user}],
-                         provider=provider, schema=schema, temperature=temperature),  # type: ignore[arg-type]
+                         provider=provider, schema=schema, temperature=temperature, audit_feature=name),  # type: ignore[arg-type]
             timeout=float(os.getenv("GROK_TIMEOUT_S", "45")))
         _cache[k] = (time.time(), out)
         _remember(name, provider, True, (time.time() - t0) * 1000)
@@ -74,7 +75,7 @@ async def text(name: str, system: str, user: str, *, provider: str = "xai", temp
     try:
         out = await asyncio.wait_for(
             llm.complete([{"role": "system", "content": system}, {"role": "user", "content": user}],
-                         provider=provider, temperature=temperature),  # type: ignore[arg-type]
+                         provider=provider, temperature=temperature, audit_feature=name),  # type: ignore[arg-type]
             timeout=float(os.getenv("GROK_TIMEOUT_S", "45")))
         _cache[k] = (time.time(), out)
         _remember(name, provider, True, (time.time() - t0) * 1000)
@@ -109,9 +110,13 @@ async def researched(name: str, question: str, *, allowed_domains: list[str] | N
                     out += getattr(part, "text", "") or ""
         _cache[k] = (time.time(), out or None)
         _remember(name, "xai+web_search", bool(out), (time.time() - t0) * 1000)
+        from app.security import record_call
+        record_call(provider="xai", model=llm.default_model("xai"), messages=[{"role":"user", "content":question}], output=out, started=t0, feature=name)
         return out or None
     except Exception as e:  # noqa: BLE001
         _remember(name, "xai+web_search", False, (time.time() - t0) * 1000, repr(e))
+        from app.security import record_call
+        record_call(provider="xai", model=llm.default_model("xai"), messages=[{"role":"user", "content":question}], error=f"{type(e).__name__}: {e}", started=t0, feature=name)
         return None
 
 

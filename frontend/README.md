@@ -47,36 +47,39 @@ controlled by the API's Mongo configuration or `STATE_FILE`.
 Verification: `node --test frontend/tests/search-state.test.mjs` from the repository
 root (Node 22.18+), TypeScript checking, and browser checks against the running API.
 
-## Routes
+## Routes and workflows
 
-| Route | File | What it shows |
-|---|---|---|
-| `/` | `app/page.tsx` | hero, search, trending rows |
-| `/search?q=` | `app/search/page.tsx` + `components/search/results.tsx` | streamed results, filter rail, `READING` chip on stubs |
-| `/company/[id]` | `app/company/[id]/page.tsx` + `components/company/*` | price strip, countdown, step chart, order book, depth plate, order ticket, valuation estimators, sources |
-| `/company/[id]/acquire` | `app/company/[id]/acquire/page.tsx` | LOI, diligence checklist with citations |
-| `/portfolio` | `app/portfolio/page.tsx` | cash, positions, half-Kelly suggestions with risk slider |
-| `/surveillance` | `app/surveillance/page.tsx` | flags feed, per-reviewer severities, disputed marker |
-| `/agent` | `app/agent/page.tsx` + `components/agent/chat.tsx` | chat with tool-call cards, same endpoint as iMessage |
+See [the workspace guide](../docs/WORKSPACE_GUIDE.md) for route behavior,
+administrator setup, iMessage, persistence and verification.
+
+`/` is the personal overview. `/search` is business discovery. Business profiles begin
+with Simple trading and reveal the full book, depth, tape and batches in Advanced.
+`/portfolio` shows holdings and sizing, `/agent` shares the authenticated bridge's
+conversation, and `/surveillance` is the administrator console. Acquisition drafts
+are created explicitly and saved to the active session.
 
 ## Design system
 
-Lemma kinship. Tokens in `src/styles/lemma-tokens.css`, mapped into Tailwind's `@theme` in `src/app/globals.css`.
-Rules that are not negotiable: light only, `border-radius: 0` everywhere, no `box-shadow`, sections separate with
-`1px #D4D4DD` rules, secondary text is `#1D1956` at 65% (never a flat gray), every uppercase string is IBM Plex Mono
-with 0.06 to 0.15em tracking, headings weight 400, and `#755CFE` marks state (clearing price, active path, plate
-strokes), never importance. Bids `#2BC392`, asks `#EE5557`. Primitives in `src/components/ui`; no shadcn.
+The user-authorized redesign is documented in decision 019. Tokens now live in
+`src/app/globals.css`: a paper background, white bordered panels, a navy navigation
+shell, iris actions, green bids and red asks. Panels have a 14px radius and restrained
+separation. Geist handles navigation and headings; IBM Plex Mono handles numeric
+labels. The original Lemma token file is retained for reference.
 
-Britti Sans is licensed and not installed. The sans stack is `brittiSans, Geist, Arial`. IBM Plex Mono is real.
+Simple views lead with account status and the next useful action. Technical detail
+belongs behind Advanced, disclosure controls or an investigation. Copy explains
+unavailable data or consequential state transitions when it helps the user act.
+Use real data; do not fabricate chart history, connection status or completed trades.
+
+Dialogs use `components/ui/dialog.tsx` for a portal, Escape, focus containment and focus
+restoration. Tables stay scrollable when dense; personal orders become cards on phones.
+Respect reduced motion and preserve visible keyboard focus.
 
 ## Conventions
 
-- **No explainer text in the UI.** Controls and data speak; mechanism lives here and in Plan.md. Cut any string
-  that explains how something works, why a number is what it is, or what will happen when the user acts, plus
-  formulas, architecture facts, and repeated reassurance. Keep labels, numbers, states, chart legends, one
-  footer disclaimer. Test: would a team with no knowledge of the code have written this sentence?
-
-- Prices per share are `px()` (2 decimals, no symbol). Whole-company values are `usd(n, { compact: true })`.
-- `origin` on a book level is `user | treasury | bot | agent`. Treasury rows get the `OWNER` tag.
-- Plate figures carry a short label naming what they show, never a figure number, and must encode something real from live data.
-- Any new field the UI needs goes into `packages/contracts/types.ts` with a `docs/DECISIONS.md` entry, not into a component.
+- All transport calls go through `src/lib/api.ts`.
+- Fetch personal data in client components with the current normalized identity.
+- Put shared fields in `packages/contracts/types.ts` and document them in `DECISIONS.md`.
+- Per-share values use `px()`; whole business values use `usd()`.
+- Source labels distinguish owner, user, bot and agent liquidity.
+- Secrets stay on the API or bridge. Administrator tokens are entered by the user and held in memory.

@@ -89,7 +89,7 @@ def fake(monkeypatch):
 
 
 def test_fallbacks_without_key():
-    with TestClient(app) as c:
+    with TestClient(app, headers={"X-Admin-Token": "test-admin"}) as c:
         assert c.post(f"/api/v1/companies/{CID}/appraise").status_code == 503
         a = c.post(f"/api/v1/companies/{CID}/ask", json={"question": "how long have you been open?"}, headers=H).json()
         assert a["reviewer"] == "fallback" and "14 years" in a["answer"]
@@ -103,7 +103,7 @@ def test_fallbacks_without_key():
 
 
 def test_appraise_feeds_ensemble_and_reanchors(fake):
-    with TestClient(app) as c:
+    with TestClient(app, headers={"X-Admin-Token": "test-admin"}) as c:
         before = c.get(f"/api/v1/companies/{CID}").json()
         co = c.post(f"/api/v1/companies/{CID}/appraise").json()
         names = [e["name"] for e in co["valuation"]["estimates"]]
@@ -116,13 +116,13 @@ def test_appraise_feeds_ensemble_and_reanchors(fake):
 
 
 def test_intent_uses_grok(fake):
-    with TestClient(app) as c:
+    with TestClient(app, headers={"X-Admin-Token": "test-admin"}) as c:
         j = c.post("/api/v1/discovery/search", json={"q": "cnc machine shop near pittsburgh under 2M"}).json()
         assert j["intent"]["category"] == "machine_shop" and j["intent"]["must_have"] == ["CNC"]
 
 
 def test_persona_narrative_profile_why(fake):
-    with TestClient(app) as c:
+    with TestClient(app, headers={"X-Admin-Token": "test-admin"}) as c:
         a = c.post(f"/api/v1/companies/{CID}/ask", json={"question": "how long?"}, headers=H).json()
         assert a["reviewer"] == "grok" and a["grounded"]
         book = c.get(f"/api/v1/markets/{CID}/book").json()
@@ -137,7 +137,7 @@ def test_persona_narrative_profile_why(fake):
 
 
 def test_compliance_reviews_and_dispute(fake):
-    with TestClient(app) as c:
+    with TestClient(app, headers={"X-Admin-Token": "test-admin"}) as c:
         # build a wash pair on the tape by trading two accounts only with each other
         book = c.get(f"/api/v1/markets/{CID}/book").json()
         ask = book["asks"][0]["price"]
@@ -160,7 +160,7 @@ def test_compliance_reviews_and_dispute(fake):
 
 
 def test_redteam_spoof_is_caught(fake):
-    with TestClient(app) as c:
+    with TestClient(app, headers={"X-Admin-Token": "test-admin"}) as c:
         rt = c.post("/api/v1/surveillance/redteam", json={"market_id": CID}, headers=H).json()
         assert rt["planner"] == "grok" and rt["plan"]["attack"] == "spoof"
         assert len(rt["execution"]["orders"]) >= 3
@@ -188,13 +188,18 @@ def test_redteam_spoof_is_caught(fake):
 
 
 def test_acquire_uses_grok_loi_and_cited_checklist(fake):
-    with TestClient(app) as c:
+    with TestClient(app, headers={"X-Admin-Token": "test-admin"}) as c:
         a = c.post(f"/api/v1/acquire/{CID}/start", headers=H).json()
         assert a["loi_md"].startswith("# Non-Binding Letter of Intent") and "judge9" in a["loi_md"]
         assert len(a["checklist"]) == 5 and a["checklist"][0]["citation"]["url"].startswith("https://pittsburghpa.gov")
 
 
 def test_health_memo(fake):
-    with TestClient(app) as c:
+    with TestClient(app, headers={"X-Admin-Token": "test-admin"}) as c:
         r = c.get("/api/v1/surveillance/report").json()
         assert r["reviewer"] == "grok" and r["summary"]["markets"] >= 12
+
+
+@pytest.fixture(autouse=True)
+def administrator_configuration(monkeypatch):
+    monkeypatch.setenv("ADMIN_API_TOKEN", "test-admin")

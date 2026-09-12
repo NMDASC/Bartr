@@ -825,6 +825,114 @@ paths:
         schema:
           type: string
           title: Acq Id
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Acquisition'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/acquire/{cid}/draft:
+    get:
+      tags:
+      - acquire
+      summary: Draft
+      operationId: draft_api_v1_acquire__cid__draft_get
+      parameters:
+      - name: cid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Cid
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/Acquisition'
+                - type: 'null'
+                title: Response Draft Api V1 Acquire  Cid  Draft Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - acquire
+      summary: Save Draft
+      operationId: save_draft_api_v1_acquire__cid__draft_put
+      parameters:
+      - name: cid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Cid
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftIn'
       responses:
         '200':
           description: Successful Response
@@ -860,6 +968,14 @@ paths:
           - type: string
           - type: 'null'
           title: Actor
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
       responses:
         '200':
           description: Successful Response
@@ -878,12 +994,27 @@ paths:
       - surveillance
       summary: Treasury Summary
       operationId: treasury_summary_api_v1_surveillance_treasury_get
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/surveillance/flags:
     get:
       tags:
@@ -901,6 +1032,14 @@ paths:
           - type: string
           - type: 'null'
           title: Market Id
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
       responses:
         '200':
           description: Successful Response
@@ -927,6 +1066,14 @@ paths:
         Returns the attack plan and the orders it placed. Flags appear over the next rounds.'
       operationId: red_team_api_v1_surveillance_redteam_post
       parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
       - name: x-demo-user
         in: header
         required: false
@@ -968,12 +1115,27 @@ paths:
       - surveillance
       summary: Red Team Log
       operationId: red_team_log_api_v1_surveillance_redteam_get
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/surveillance/report:
     get:
       tags:
@@ -981,12 +1143,27 @@ paths:
       summary: Report
       description: Regulator style market health memo (Grok) over the last hour of the audit log.
       operationId: report_api_v1_surveillance_report_get
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/agent/chat:
     post:
       tags:
@@ -994,6 +1171,14 @@ paths:
       summary: Chat
       operationId: chat_api_v1_agent_chat_post
       parameters:
+      - name: x-bridge-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Bridge-Token
       - name: x-demo-user
         in: header
         required: false
@@ -1023,6 +1208,366 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AgentMessage'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/agent/messages:
+    get:
+      tags:
+      - agent
+      summary: Messages
+      operationId: messages_api_v1_agent_messages_get
+      parameters:
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/agent/channel:
+    get:
+      tags:
+      - agent
+      summary: Channel
+      operationId: channel_api_v1_agent_channel_get
+      parameters:
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/agent/heartbeat:
+    post:
+      tags:
+      - agent
+      summary: Heartbeat
+      operationId: heartbeat_api_v1_agent_heartbeat_post
+      parameters:
+      - name: x-bridge-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Bridge-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/portfolio/overview:
+    get:
+      tags:
+      - portfolio
+      summary: Overview
+      operationId: overview_api_v1_portfolio_overview_get
+      parameters:
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/security/overview:
+    get:
+      tags:
+      - security
+      summary: Overview
+      operationId: overview_api_v1_security_overview_get
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/security/events:
+    get:
+      tags:
+      - security
+      summary: Events
+      operationId: events_api_v1_security_events_get
+      parameters:
+      - name: kind
+        in: query
+        required: false
+        schema:
+          enum:
+          - agents
+          - audit
+          type: string
+          default: agents
+          title: Kind
+      - name: before
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Before
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: query
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 200
+          default: ''
+          title: Query
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/security/cases/{cid}:
+    get:
+      tags:
+      - security
+      summary: Detail
+      operationId: detail_api_v1_security_cases__cid__get
+      parameters:
+      - name: cid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Cid
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - security
+      summary: Review
+      operationId: review_api_v1_security_cases__cid__patch
+      parameters:
+      - name: cid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Cid
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Disposition'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/security/review:
+    post:
+      tags:
+      - security
+      summary: Model Review
+      operationId: model_review_api_v1_security_review_post
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/security/users/{uid}:
+    get:
+      tags:
+      - security
+      summary: User Profile
+      operationId: user_profile_api_v1_security_users__uid__get
+      parameters:
+      - name: uid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Uid
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
         '422':
           description: Validation Error
           content:
@@ -1111,7 +1656,15 @@ components:
           title: Session Id
         message:
           type: string
+          maxLength: 8000
+          minLength: 1
           title: Message
+        request_id:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: Request Id
       type: object
       required:
       - session_id
@@ -1746,6 +2299,44 @@ components:
       required:
       - q
       title: DiscoveryRequest
+    Disposition:
+      properties:
+        status:
+          type: string
+          enum:
+          - open
+          - investigating
+          - resolved
+          - dismissed
+          title: Status
+        note:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Note
+      type: object
+      required:
+      - status
+      - note
+      title: Disposition
+    DraftIn:
+      properties:
+        loi_md:
+          type: string
+          maxLength: 100000
+          minLength: 1
+          title: Loi Md
+        checklist:
+          items:
+            $ref: '#/components/schemas/ChecklistItem'
+          type: array
+          maxItems: 100
+          title: Checklist
+      type: object
+      required:
+      - loi_md
+      - checklist
+      title: DraftIn
     Estimate:
       properties:
         name:
@@ -2204,6 +2795,11 @@ components:
           - medium
           - high
           title: Severity
+        explanation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Explanation
       type: object
       required:
       - reviewer
