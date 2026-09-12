@@ -57,7 +57,7 @@ export function DepthPlate({ book, tick, last }: { book: Book | null; tick: numb
     return { W, H, x, y, demand: demand.join(" "), supply: supply.join(" "), star, xMin, xMax, lo, hi, mB, yMax };
   }, [book, last]);
 
-  const caption = geo ? (geo.star.v > 0 ? `p* ${geo.star.p.toFixed(2)}  vol ${geo.star.v}` : `no cross yet  ref ${geo.star.p.toFixed(2)}`) : "";
+  const caption = geo ? `${geo.star.p.toFixed(2)} · ${geo.star.v} sh` : "";
 
   return (
     <Plate id="BTR. 1.1" caption={caption} className="h-full">

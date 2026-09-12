@@ -10,7 +10,7 @@ export function Checklist({ items }: { items: ChecklistItem[] }) {
   const n = done.filter(Boolean).length;
   return (
     <aside className="bg-card border border-line self-start">
-      <div className="flex items-center justify-between border-b border-line px-3 py-2">
+      <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
         <Label>Diligence checklist</Label>
         <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{n}/{items.length}</span>
       </div>

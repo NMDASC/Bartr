@@ -19,7 +19,7 @@ export function Plate({
 }) {
   return (
     <figure className={cn("flex flex-col", className)}>
-      <div className="flex shrink-0 items-center justify-between gap-3 border border-accent px-2.5 py-1.5">
+      <div className="flex h-8 shrink-0 items-center justify-between gap-3 border border-accent px-3">
         <span className="font-mono text-[10px] text-accent">{id}</span>
         {caption ? <span className="font-mono text-[10px] text-accent tabular-nums">{caption}</span> : null}
       </div>

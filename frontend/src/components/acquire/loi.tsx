@@ -44,7 +44,7 @@ function inline(s: string) {
 export function Loi({ md }: { md: string }) {
   return (
     <article className="bg-card border border-line">
-      <div className="flex items-center justify-between border-b border-line px-3 py-2">
+      <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
         <Label>Letter of intent</Label>
         <div className="flex gap-2">
           <Button size="sm">Edit with agent</Button>

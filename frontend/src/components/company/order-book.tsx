@@ -60,9 +60,9 @@ export function OrderBook({ book, last, tick }: { book: Book | null; last: numbe
   const spread = bestBid !== null && bestAsk !== null ? bestAsk - bestBid : null;
   return (
     <div className="bg-card border border-line">
-      <div className="flex items-center justify-between border-b border-line px-3 py-2">
+      <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
         <Label>Order book</Label>
-        <div className="flex items-center gap-4 font-mono text-[11px] tabular-nums">
+        <div className="flex items-center gap-4 font-mono text-[11px] leading-none tabular-nums">
           <span className="text-muted-foreground">
             {spread !== null && spread <= 0 ? (
               <span className="text-accent uppercase tracking-[0.08em] text-[10px]">crossed</span>

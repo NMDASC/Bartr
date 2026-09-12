@@ -81,7 +81,7 @@ export function MarketPanel({ company }: { company: Company }) {
 
           <div className="flex flex-col gap-4 lg:col-start-1 lg:row-start-1">
             <div className="bg-card border border-line">
-              <div className="flex items-center justify-between border-b border-line px-3 py-2">
+              <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
                 <Label>Clearing price by batch</Label>
                 <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">{m.batches.length} batches · {company.market?.batch_interval_s ?? 10}s</span>
               </div>

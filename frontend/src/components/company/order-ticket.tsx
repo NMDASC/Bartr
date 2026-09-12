@@ -43,7 +43,7 @@ export function OrderTicket({ marketId, book, last }: { marketId: string; book: 
 
   return (
     <form onSubmit={submit} className="bg-card border border-line">
-      <div className="flex items-center justify-between border-b border-line px-3 py-2">
+      <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
         <Label>Order ticket</Label>
       </div>
       <div className="p-3 flex flex-col gap-3">

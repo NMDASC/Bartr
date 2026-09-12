@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 export function Sources({ sources }: { sources: Source[] }) {
   return (
     <div className="bg-card border border-line">
-      <div className="flex items-center justify-between border-b border-line px-3 py-2">
+      <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
         <Label>Sources</Label>
         <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{sources.length}</span>
       </div>

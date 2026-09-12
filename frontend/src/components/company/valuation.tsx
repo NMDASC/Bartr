@@ -23,7 +23,7 @@ export function Valuation({ company, last }: { company: Company; last: number | 
 
   return (
     <div className="bg-card border border-line">
-      <div className="flex items-center justify-between border-b border-line px-3 py-2">
+      <div className="flex h-8 shrink-0 items-center justify-between border-b border-line px-3">
         <Label>Valuation</Label>
         <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
           <span className="normal-case">σ</span> {v.sigma.toFixed(2)} · {v.estimates.length} estimators

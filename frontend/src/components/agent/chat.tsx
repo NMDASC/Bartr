@@ -66,7 +66,7 @@ export function Chat() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_280px] pb-20">
       <div className="bg-card border border-line flex flex-col min-h-[520px]">
-        <div className="flex items-center border-b border-line px-3 py-2">
+        <div className="flex h-8 shrink-0 items-center border-b border-line px-3">
           <Label>Session</Label>
         </div>
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
