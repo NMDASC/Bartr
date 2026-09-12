@@ -20,6 +20,8 @@ import type {
   Suggestion,
   Flag,
   Acquisition,
+  Offer,
+  OfferIn,
 } from "@contracts/types";
 import * as mock from "./mock";
 
@@ -251,4 +253,16 @@ export async function saveAcquisitionDraft(id:string,acq:Acquisition):Promise<Ac
 export async function getSecurityEvents(token: string, options: { kind: "agents" | "audit"; query?: string; before?: number; offset?: number }) {
   const params = new URLSearchParams(Object.entries(options).filter(([,value])=>value!==undefined).map(([key,value])=>[key,String(value)]));
   return j<import("@contracts/types").SecurityEventPage>(`/security/events?${params}`, {headers:{"x-admin-token":token}});
+}
+
+// ---------------------------------------------------------------- offers (discovered businesses)
+
+export async function makeOffer(companyId: string, body: OfferIn): Promise<Offer> {
+  if (IS_MOCK) return mock.makeOffer(companyId, body);
+  return j<Offer>(`/companies/${companyId}/offer`, { method: "POST", body: JSON.stringify(body) });
+}
+
+export async function acceptOffer(offerId: string): Promise<Offer> {
+  if (IS_MOCK) return mock.acceptOffer(offerId);
+  return j<Offer>(`/offers/${offerId}/accept`, { method: "POST", body: "{}" });
 }

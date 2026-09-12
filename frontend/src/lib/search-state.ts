@@ -8,10 +8,12 @@ export interface SearchState {
   error: string | null;
   warnings: string[];
   revision: number;
+  /** most recent status lines from the search, newest last */
+  activity: { phase: string; message: string; t: number }[];
 }
 
 export function initialSearchState(): SearchState {
-  return { phase: "streaming", intent: null, cards: new Map(), order: [], error: null, warnings: [], revision: -1 };
+  return { phase: "streaming", intent: null, cards: new Map(), order: [], error: null, warnings: [], revision: -1, activity: [] };
 }
 
 function finishCards(cards: Map<string, CompanyCard>) {
@@ -22,6 +24,7 @@ export function reduceDiscovery(state: SearchState, event: DiscoveryEvent | { ty
   switch (event.type) {
     case "reset": return initialSearchState();
     case "intent": return { ...state, intent: event.intent };
+    case "status": return { ...state, activity: [...state.activity.slice(-7), { phase: event.phase, message: event.message, t: event.t }] };
     case "ranking":
       if (event.revision <= state.revision) return state;
       return { ...state, revision: event.revision, cards: new Map(event.companies.map(c => [c._id, c])), order: event.companies.map(c => c._id) };

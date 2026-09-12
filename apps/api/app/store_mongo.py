@@ -145,6 +145,20 @@ class MongoStore:
         rows = dict((self.get_user(uid) or {}).get("acquisitions", {}))
         rows.update({d["market_id"]: d["draft"] for d in self.db.acquisitions.find({"user_id": uid})})
         return list(rows.values())
+    # offers
+    def put_offer(self, o: dict) -> None:
+        self.db.offers.replace_one({"_id": o["id"]}, _w(o), upsert=True)
+
+    def get_offer(self, oid: str) -> dict | None:
+        return _r(self.db.offers.find_one({"_id": oid}))
+
+    def list_offers(self, user_id: str | None = None, company_id: str | None = None) -> list[dict]:
+        q: dict = {}
+        if user_id:
+            q["buyer_id"] = user_id
+        if company_id:
+            q["company_id"] = company_id
+        return [_r(d) for d in self.db.offers.find(q).sort("created_at", ASCENDING)]
 
     # audit. Append only: no natural id, and it is never updated.
     def audit(self, event: dict) -> None:

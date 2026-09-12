@@ -12,7 +12,7 @@ import { initialSearchState, reduceDiscovery } from "@/lib/search-state";
 import { Button } from "@/components/ui/button";
 
 export function Results({ q }: { q: string }) {
-  const [{ phase, cards, order, error, warnings }, dispatch] = useReducer(reduceDiscovery, undefined, initialSearchState);
+  const [{ phase, cards, order, error, warnings, activity }, dispatch] = useReducer(reduceDiscovery, undefined, initialSearchState);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState("");
   const [band, setBand] = useState("");
@@ -74,6 +74,19 @@ export function Results({ q }: { q: string }) {
             {phase === "error" ? "Unavailable" : phase === "partial" ? "Partial results" : phase === "done" ? "Complete" : "Searching"}
           </span>
         </div>
+
+        {/* what the search is doing: the last few status lines from the pipeline, newest emphasized */}
+        {activity.length ? (
+          <ol className="mb-4 border-l border-line pl-3 flex flex-col gap-1" aria-label="Search activity">
+            {activity.slice(-4).map((a, i, arr) => (
+              <li key={`${a.t}-${i}`} className={cn("fade-up font-mono text-[11px] tracking-[0.02em]", i === arr.length - 1 && phase === "streaming" ? "text-foreground" : "text-muted-foreground")}>
+                <span className="uppercase tracking-[0.1em] text-accent-deep mr-2">{a.phase}</span>
+                {a.message}
+                {i === arr.length - 1 && phase === "streaming" ? <span className="ml-1 inline-block w-[6px] h-[11px] align-[-1px] bg-accent animate-pulse" aria-hidden /> : null}
+              </li>
+            ))}
+          </ol>
+        ) : null}
 
         {error ? <p role="alert" className="py-4 text-down">{error}</p> : null}
         {warnings.length ? <ul className="py-3 text-[13px] secondary">{warnings.map(w => <li key={w}>{w}</li>)}</ul> : null}

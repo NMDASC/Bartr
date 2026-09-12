@@ -46,6 +46,10 @@ class Store(Protocol):
     def get_draft(self, uid: str, cid: str) -> dict | None: ...
     def put_draft(self, uid: str, cid: str, draft: dict) -> None: ...
     def user_drafts(self, uid: str) -> list[dict]: ...
+    # offers to owners of discovered businesses
+    def put_offer(self, o: dict) -> None: ...
+    def get_offer(self, oid: str) -> dict | None: ...
+    def list_offers(self, user_id: str | None = None, company_id: str | None = None) -> list[dict]: ...
     # audit
     def audit(self, event: dict) -> None: ...
     def audit_log(self, limit: int = 200) -> list[dict]: ...
@@ -67,6 +71,7 @@ class MemoryStore:
         self._batches: dict[str, list[dict]] = {}
         self._trades: dict[str, list[dict]] = {}
         self.users: dict[str, dict] = {}
+        self.offers: dict[str, dict] = {}
         self._audit: list[dict] = []
         self.cases: dict[str, dict] = {}
         self.acquisitions: dict[str, dict[str, dict]] = {}
@@ -120,6 +125,11 @@ class MemoryStore:
         self.acquisitions.setdefault(uid, {})[cid] = deepcopy(draft)
     def user_drafts(self, uid):
         return list(deepcopy({**self.users.get(uid, {}).get("acquisitions", {}), **self.acquisitions.get(uid, {})}).values())
+    # offers
+    def put_offer(self, o): self.offers[o["id"]] = o
+    def get_offer(self, oid): return self.offers.get(oid)
+    def list_offers(self, user_id=None, company_id=None):
+        return [o for o in self.offers.values() if (user_id is None or o["buyer_id"] == user_id) and (company_id is None or o["company_id"] == company_id)]
     # audit
     def audit(self, event):
         self._audit.append(event)
@@ -157,7 +167,7 @@ class MemoryStore:
         with self._save_lock:
             data = {"companies": self.companies, "markets": self.markets, "orders": self.orders,
                     "batches": self._batches, "trades": self._trades, "users": self.users,
-                    "audit": self._audit, "cases": self.cases, "acquisitions": self.acquisitions}
+                    "audit": self._audit, "cases": self.cases, "acquisitions": self.acquisitions, "offers": self.offers}
             tmp = path + ".tmp"
             snapshot = json.dumps(data)
             with open(tmp, "w") as f:
@@ -171,3 +181,4 @@ class MemoryStore:
         self._batches, self._trades, self.users = d["batches"], d["trades"], d["users"]
         self._audit, self.cases = d.get("audit", []), d.get("cases", {})
         self.acquisitions = d.get("acquisitions", {})
+        self.offers = d.get("offers", {})

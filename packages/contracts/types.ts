@@ -101,6 +101,7 @@ export interface Treasury {
 }
 
 export interface MarketSummary {
+  listed: boolean;
   shares_outstanding: number;
   /** shares offered by the owner at listing (30%) */
   float: number;
@@ -140,6 +141,8 @@ export interface Company {
   valuation: Valuation | null;
   sources: Source[];
   status: CompanyStatus;
+  /** false: discovered and appraised, but the owner has not put it on the exchange. No quotes; make an offer instead. */
+  listed: boolean;
   created_at: Iso;
   market: MarketSummary | null;
 }
@@ -161,6 +164,8 @@ export interface CompanyCard {
   v0_per_share: number | null;
   confidence: number | null;
   status: CompanyStatus;
+  /** false: not on the exchange; bid/ask/last are null and v0_per_share is our estimate. */
+  listed: boolean;
 }
 
 export interface SearchIntent {
@@ -186,6 +191,8 @@ export type DiscoveryEvent =
   | { type: "company_stub"; company: CompanyCard }
   | { type: "company_ready"; company: CompanyCard }
   | { type: "company_failed"; company_id: string; reason: string }
+  /** What the search is doing right now. Phases: stored, intent, sourcing, appraising, reading, extracting, ranking, financials, finished. */
+  | { type: "status"; phase: string; message: string; t: number; count?: number; places?: number; pages?: number }
   | { type: "done"; total: number; warnings?: string[]; status?: string };
 
 export interface Relevance {
@@ -395,7 +402,7 @@ export interface AgentChatRequest {
   request_id?: string;
 }
 
-// Personal workspace and administrator investigations (decision 019).
+// Personal workspace and administrator investigations (decision 023).
 export interface PersonalOrder extends Order { company_name: string; category: string }
 export interface ActivityEvent { id?: string; t: Iso; actor: string; action: string; market_id?: string | null; flag_id?: string | null; payload: Record<string, unknown> }
 export interface Overview { user_id: string; display_name: string; portfolio: Portfolio; orders: PersonalOrder[]; activity: ActivityEvent[]; open_orders: number; reserved_cash: number; as_of: Iso }
@@ -408,3 +415,28 @@ export interface CaseDetail extends SecurityCase { trades: Trade[]; orders: Orde
 export interface SecurityUser { id: string; display_name: string; cases: SecurityCase[]; summary: { orders: number; cancelled: number; trades: number; traded_notional: number }; positions: Record<string, {qty: number; avg_cost: number}>; orders: Order[]; trades: Trade[]; calls: AgentCall[]; evidence_window?: string }
 
 export interface SecurityEventPage { items: ActivityEvent[]; before: number; next_offset: number | null }
+
+// ---------------------------------------------------------------- offers (discovered businesses)
+
+export interface OfferIn {
+  price?: number;
+  buyer_name: string;
+  buyer_email: string;
+  buyer_phone?: string;
+  message?: string;
+  /** demo only: deliver the letter to this address */
+  owner_email?: string;
+}
+
+export interface Offer {
+  _id: string;
+  company_id: string;
+  company_name: string;
+  buyer_id: string;
+  buyer_name: string;
+  price: number;
+  status: "queued" | "sent" | "accepted" | "declined" | "withdrawn";
+  delivery: "queued" | "smtp" | "resend" | "preview";
+  email: { to: string | null; subject: string; body: string };
+  created_at: Iso;
+}

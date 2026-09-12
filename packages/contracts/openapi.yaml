@@ -946,6 +946,175 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/companies/{cid}/offer:
+    post:
+      tags:
+      - offers
+      summary: Make Offer
+      description: Buyer asks to buy a discovered business. We write to the owner. Returns the letter
+        as sent or queued.
+      operationId: make_offer_api_v1_companies__cid__offer_post
+      parameters:
+      - name: cid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Cid
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfferIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offer'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/offers/mine:
+    get:
+      tags:
+      - offers
+      summary: My Offers
+      operationId: my_offers_api_v1_offers_mine_get
+      parameters:
+      - name: x-demo-user
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Demo-User
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Offer'
+                title: Response My Offers Api V1 Offers Mine Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/offers/{oid}:
+    get:
+      tags:
+      - offers
+      summary: Get Offer
+      operationId: get_offer_api_v1_offers__oid__get
+      parameters:
+      - name: oid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Oid
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offer'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/offers/{oid}/accept:
+    post:
+      tags:
+      - offers
+      summary: Accept
+      description: 'Demo: the owner accepts. The business lists on the exchange with quotes from the current
+        posterior.'
+      operationId: accept_api_v1_offers__oid__accept_post
+      parameters:
+      - name: oid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Oid
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offer'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/offers/{oid}/decline:
+    post:
+      tags:
+      - offers
+      summary: Decline
+      operationId: decline_api_v1_offers__oid__decline_post
+      parameters:
+      - name: oid
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Oid
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Offer'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/surveillance/audit:
     get:
       tags:
@@ -2035,6 +2204,10 @@ components:
           - ready
           - failed
           title: Status
+        listed:
+          type: boolean
+          title: Listed
+          default: true
         created_at:
           type: string
           title: Created At
@@ -2138,6 +2311,10 @@ components:
           - ready
           - failed
           title: Status
+        listed:
+          type: boolean
+          title: Listed
+          default: true
       type: object
       required:
       - _id
@@ -2249,6 +2426,10 @@ components:
           - type: string
           - type: 'null'
           title: Id
+        listed:
+          type: boolean
+          title: Listed
+          default: true
         name:
           type: string
           title: Name
@@ -2559,6 +2740,10 @@ components:
       title: Level
     MarketSummary:
       properties:
+        listed:
+          type: boolean
+          title: Listed
+          default: true
         shares_outstanding:
           type: integer
           title: Shares Outstanding
@@ -2620,6 +2805,123 @@ components:
       - fees_collected
       - halted
       title: MarketSummary
+    Offer:
+      properties:
+        _id:
+          type: string
+          title: Id
+        company_id:
+          type: string
+          title: Company Id
+        company_name:
+          type: string
+          title: Company Name
+        buyer_id:
+          type: string
+          title: Buyer Id
+        buyer_name:
+          type: string
+          title: Buyer Name
+        price:
+          type: number
+          title: Price
+        status:
+          type: string
+          enum:
+          - queued
+          - sent
+          - accepted
+          - declined
+          - withdrawn
+          title: Status
+        delivery:
+          type: string
+          enum:
+          - queued
+          - smtp
+          - resend
+          - preview
+          title: Delivery
+        email:
+          $ref: '#/components/schemas/OfferEmail'
+        created_at:
+          type: string
+          title: Created At
+      type: object
+      required:
+      - _id
+      - company_id
+      - company_name
+      - buyer_id
+      - buyer_name
+      - price
+      - status
+      - delivery
+      - email
+      - created_at
+      title: Offer
+    OfferEmail:
+      properties:
+        to:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: To
+        subject:
+          type: string
+          title: Subject
+        body:
+          type: string
+          title: Body
+      type: object
+      required:
+      - to
+      - subject
+      - body
+      title: OfferEmail
+    OfferIn:
+      properties:
+        price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Price
+          description: USD for the whole business; default is our estimate
+        buyer_name:
+          type: string
+          maxLength: 80
+          minLength: 2
+          title: Buyer Name
+        buyer_email:
+          type: string
+          maxLength: 120
+          minLength: 5
+          title: Buyer Email
+        buyer_phone:
+          anyOf:
+          - type: string
+            maxLength: 40
+          - type: 'null'
+          title: Buyer Phone
+        message:
+          anyOf:
+          - type: string
+            maxLength: 1200
+          - type: 'null'
+          title: Message
+          description: optional paragraph in the buyer's own words
+        owner_email:
+          anyOf:
+          - type: string
+            maxLength: 120
+          - type: 'null'
+          title: Owner Email
+          description: 'demo: deliver to this address'
+      type: object
+      required:
+      - buyer_name
+      - buyer_email
+      title: OfferIn
     Order:
       properties:
         _id:

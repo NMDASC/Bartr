@@ -33,6 +33,7 @@ class ObservablesIn(BaseModel):
 
 class CompanyIn(ObservablesIn):
     id: str | None = None
+    listed: bool = True
     name: str
     city: str | None = None
     address: str | None = None
@@ -141,6 +142,7 @@ class Treasury(BaseModel):
 
 
 class MarketSummary(BaseModel):
+    listed: bool = True
     shares_outstanding: int
     float: float
     retained: float
@@ -178,6 +180,7 @@ class Company(BaseModel):
     valuation: Valuation | None
     sources: list[Source]
     status: CompanyStatus
+    listed: bool = True
     created_at: str
     market: MarketSummary | None
     observables: dict[str, Any]
@@ -199,6 +202,7 @@ class CompanyCard(BaseModel):
     v0_per_share: float | None
     confidence: float | None
     status: CompanyStatus
+    listed: bool = True
     model_config = {"populate_by_name": True}
 
 
@@ -392,3 +396,34 @@ class AgentChatRequest(BaseModel):
     session_id: str
     message: str = Field(min_length=1, max_length=8000)
     request_id: str | None = Field(default=None, max_length=100)
+
+
+# ---------------------------------------------------------------- offers (discovered businesses, not yet on the exchange)
+
+class OfferIn(BaseModel):
+    price: float | None = Field(default=None, description="USD for the whole business; default is our estimate")
+    buyer_name: str = Field(min_length=2, max_length=80)
+    buyer_email: str = Field(min_length=5, max_length=120)
+    buyer_phone: str | None = Field(default=None, max_length=40)
+    message: str | None = Field(default=None, max_length=1200, description="optional paragraph in the buyer's own words")
+    owner_email: str | None = Field(default=None, max_length=120, description="demo: deliver to this address")
+
+
+class OfferEmail(BaseModel):
+    to: str | None
+    subject: str
+    body: str
+
+
+class Offer(BaseModel):
+    id: str = Field(alias="_id")
+    company_id: str
+    company_name: str
+    buyer_id: str
+    buyer_name: str
+    price: float
+    status: Literal["queued", "sent", "accepted", "declined", "withdrawn"]
+    delivery: Literal["queued", "smtp", "resend", "preview"]
+    email: OfferEmail
+    created_at: str
+    model_config = {"populate_by_name": True}

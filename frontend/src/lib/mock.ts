@@ -16,6 +16,8 @@ import type {
   CompanyCard,
   DiscoveryEvent,
   Flag,
+  Offer,
+  OfferIn,
   Order,
   Portfolio,
   SearchIntent,
@@ -132,7 +134,9 @@ export async function getCompany(id: string): Promise<Company | null> {
       high: Math.round(v0 * Math.exp(0.8416 * sigma)),
       estimates: COMPANY.valuation.estimates.map((e) => ({ ...e, value: Math.round(e.value * scale) })),
     },
+    listed: true,
     market: {
+      listed: true,
       shares_outstanding: SHARES,
       float: FLOAT,
       retained: SHARES - FLOAT,
@@ -510,3 +514,24 @@ export async function acquire(companyId: string) {
 
 export async function myOrders(id?:string):Promise<Order[]> { return ledger.filter(o=>!id||o.market_id===id).map(o=>({...o})).reverse(); }
 export async function cancelOrder(id:string):Promise<Order> {const o=ledger.find(o=>o._id===id);if(!o)throw new Error("Order not found");if(o.status==="open"||o.status==="partial"){o.status="cancelled";o.cancelled_at=new Date().toISOString();const m=market(o.market_id);m.orders=m.orders.filter(x=>x.id!==id);for(const fn of m.subs)fn({type:"book",book:buildBook(m)});}return {...o};}
+
+const offers = new Map<string, Offer>();
+export async function makeOffer(companyId: string, body: OfferIn): Promise<Offer> {
+  const c = await getCompany(companyId);
+  const price = body.price ?? c?.valuation?.v0 ?? 250000;
+  const o: Offer = {
+    _id: `off_${Math.random().toString(36).slice(2, 10)}`, company_id: companyId, company_name: c?.name ?? companyId, buyer_id: "mock",
+    buyer_name: body.buyer_name, price, status: "queued", delivery: "queued", created_at: new Date().toISOString(),
+    email: { to: body.owner_email ?? null, subject: `An offer for ${c?.name ?? companyId}`,
+      body: `To the owner of ${c?.name ?? companyId},\n\nMy name is ${body.buyer_name}. I would like to make you an offer of $${price.toLocaleString()} for the business as it stands today.\n\nSincerely,\n${body.buyer_name}` },
+  };
+  offers.set(o._id, o);
+  return o;
+}
+export async function acceptOffer(offerId: string): Promise<Offer> {
+  const o = offers.get(offerId);
+  if (!o) throw new Error("no such offer");
+  const a = { ...o, status: "accepted" as const };
+  offers.set(offerId, a);
+  return a;
+}

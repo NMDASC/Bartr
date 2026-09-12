@@ -156,7 +156,7 @@ def save_company(engine, data: dict) -> dict:
         profile_fields = {"name", "category", "state", "city", "address", "website", "phone", "description"}
         company.update({k: v for k, v in data.items() if v is not None and k in profile_fields})
     else:
-        company = engine.create_company({**merged, "id": cid})
+        company = engine.create_company({**merged, "id": cid, "listed": False})  # discovered, not on the exchange until the owner says so
     company["observables"] = inputs
     company["evidence"] = evidence
     documents = {p["url"]: p for p in [*(previous.get("source_documents", []) if previous else []), *data.get("source_documents", [])]}

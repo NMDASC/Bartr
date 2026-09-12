@@ -42,6 +42,10 @@ class Job:
         self.events.append(event)
         self.changed.set()
 
+    def status_line(self, phase: str, message: str, **extra):
+        """What the search is doing right now, for the results page activity feed."""
+        self.emit({"type": "status", "phase": phase, "message": message, "t": time.time(), **extra})
+
 
 class DiscoveryJobs:
     def __init__(self, engine, provider: Querit | None = None):
@@ -51,7 +55,7 @@ class DiscoveryJobs:
         self.live_slots = asyncio.Semaphore(2)
 
     def start(self, request: DiscoveryRequest, intent: dict | None = None) -> Job:
-        request = request.model_copy(update={"q": request.q.strip(), "live": request.live if request.live is not None else os.getenv("DISCOVERY_LIVE", "0") == "1"})
+        request = request.model_copy(update={"q": request.q.strip(), "live": request.live if request.live is not None else os.getenv("DISCOVERY_LIVE", "1") == "1"})
         if not request.q:
             raise ValueError("Enter a search query")
         now = time.monotonic()
@@ -138,9 +142,13 @@ class DiscoveryJobs:
 
     async def live(self, job: Job):
         async with self.live_slots:
+            cat = (job.intent.get("category") or "business").replace("_", " ")
+            where = job.intent.get("city") or job.intent.get("state") or "the area"
             if not job.intent_enriched:
+                job.status_line("intent", "Reading the brief")
                 await self.enrich_intent(job)
             query = retrieval_query(job.request.q, job.intent)
+            job.status_line("sourcing", f"Looking for {cat}s in {where}: Google Places and the open web")
             pages = await self.provider.search(query, count=12)
             try:
                 places = await text_search(query, count=6)
@@ -148,22 +156,31 @@ class DiscoveryJobs:
                 places = []
                 job.warnings.append("Some location details were unavailable")
             if not pages and not places:
+                job.status_line("sourcing", f"Nothing new turned up for {cat}s in {where}")
                 return
+            job.status_line("sourcing", f"Found {len(places)} on the map and {len(pages)} pages worth reading", places=len(places), pages=len(pages))
             place_pages = [{"url": p["source_url"], "title": p["name"], "content": json.dumps(p)} for p in places]
             structured_places = [company for p in places if (company := sourced_company(p)) is not None]
+            for p in places[:6]:
+                job.status_line("appraising", f"Appraising {p.get('name', 'a business')} from its footprint: reviews, tenure, category benchmarks")
             self.ingest(ExtractedCompanies(companies=structured_places), place_pages, job)
+            job.status_line("reading", f"Reading {min(len(pages), 6)} pages about {cat}s in {where}")
             pages = await self.source_pages(pages[:6], job)
             pages.extend(place_pages)
+            job.status_line("extracting", "Pulling out individual businesses, owners and any figures with their sources")
             initial = await self.extract(pages)
             self.ingest(initial, pages, job)
+            job.status_line("ranking", f"{len(job.results)} candidates so far, ranked by evidence")
             # Budgeted targeted enrichment, important for business financials.
             for item in initial.companies[:min(3, job.request.limit)]:
                 if not _matches(item.model_dump(), {**job.intent, "min_value": None, "max_value": None}):
                     continue
                 try:
+                    job.status_line("financials", f"Looking for revenue, cash flow or a listing for {item.name}")
                     more = await self.provider.search(f'"{item.name}" {item.city or ""} {item.state or ""} revenue cash flow asking price', count=3)
                     more = await self.source_pages(more, job)
                     if more:
+                        job.status_line("financials", f"Reading {len(more)} pages about {item.name}")
                         enriched = await self.extract(more, timeout=35)
                         # A targeted search cannot replace an unrelated business.
                         enriched.companies = [c for c in enriched.companies if c.name.casefold() == item.name.casefold()]
@@ -189,9 +206,12 @@ class DiscoveryJobs:
     async def run(self, job: Job):
         try:
             job.emit({"type": "intent", "intent": job.intent})
+            job.status_line("stored", "Checking businesses we have already found and appraised")
             self.rank(job)
             for hit in job.results:
                 job.emit({"type": "company_ready", "company": {**hit["company"], "relevance": hit["relevance"]}})
+            where = job.intent.get("city") or job.intent.get("state") or "the area"
+            job.status_line("stored", f"{len(job.results)} already appraised in {where}" if job.results else f"Nothing on file yet for {where}", count=len(job.results))
             configured = bool(os.getenv("QUERIT_API_KEY")) and llm.is_configured("xai")
             if job.request.live and not configured:
                 job.warnings.append("Live search unavailable")
@@ -200,6 +220,7 @@ class DiscoveryJobs:
             if job.request.live and configured:
                 await asyncio.wait_for(self.live(job), timeout=180)
             job.status = "partial" if job.warnings else "done"
+            job.status_line("finished", f"Ranked {len(job.results)} businesses by evidence")
         except asyncio.CancelledError:
             job.status = "cancelled"
             raise

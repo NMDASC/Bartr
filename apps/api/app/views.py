@@ -39,7 +39,7 @@ def sources(c: dict) -> list[dict]:
 
 def market_summary(m: dict) -> dict:
     b, pr = m["belief"], m["prior"]
-    return {"shares_outstanding": m["shares_outstanding"], "float": m["float_shares"], "retained": m["retained"], "tick": 0.01,
+    return {"listed": bool(m.get("listed", True)), "shares_outstanding": m["shares_outstanding"], "float": m["float_shares"], "retained": m["retained"], "tick": 0.01,
             "last_price": m["last_price"], "ref_price": m["ref_price"], "batch_interval_s": m["batch_interval_s"],
             "next_batch_at": iso(m["next_batch_at"]), "band_pct": m["band_pct"],
             "belief": {"mu": b["mu"], "sigma": b["sigma"], "s_m": b["s_m"], "n_rounds": b["n_rounds"],
@@ -56,7 +56,7 @@ def company(c: dict, m: dict | None) -> dict:
             "website": c.get("website"), "phone": c.get("phone"), "rating": o.get("rating"), "review_count": o.get("review_count") or 0,
             "founded_year": (datetime.now().year - yrs) if yrs else None, "owners": c.get("owners", []),
             "description": c.get("description"), "financials": financials(c), "valuation": valuation(c["valuation"], c["created_at"]),
-            "sources": sources(c), "evidence": c.get("evidence", []), "status": c.get("status", "ready"), "created_at": iso(c["created_at"]),
+            "sources": sources(c), "evidence": c.get("evidence", []), "status": c.get("status", "ready"), "listed": bool(c.get("listed", True)), "created_at": iso(c["created_at"]),
             "market": market_summary(m) if m else None, "observables": o}
 
 
@@ -67,7 +67,7 @@ def card(c: dict, m: dict, book: dict) -> dict:
             "bid": book["bids"][0]["price"] if book["bids"] else None, "ask": book["asks"][0]["price"] if book["asks"] else None,
             "last": m["last_price"], "indicative_price": book["indicative_price"],
             "v0_per_share": round(c["valuation"]["v0"] / SHARES, 2), "confidence": confidence_from_sigma(c["valuation"]["sigma"]),
-            "status": c.get("status", "ready")}
+            "status": c.get("status", "ready"), "listed": bool(c.get("listed", True))}
 
 
 def book(m: dict, levels_bids: list[dict], levels_asks: list[dict], indicative: float | None, n_open: int) -> dict:

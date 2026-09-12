@@ -116,6 +116,7 @@ async def researched(name: str, question: str, *, allowed_domains: list[str] | N
             c.responses.create(model=llm.default_model("xai"), input=[{"role": "user", "content": question}], tools=[tool]),
             timeout=_timeout("deep"))
         raw = response_snapshot(resp)
+        llm.record_usage(llm.default_model("xai"), getattr(resp, "usage", None) and type("U", (), {"prompt_tokens": getattr(resp.usage, "input_tokens", 0), "completion_tokens": getattr(resp.usage, "output_tokens", 0)})())
         out = getattr(resp, "output_text", None) or ""
         if not out:
             # fall back to walking the output items
