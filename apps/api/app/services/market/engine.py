@@ -161,7 +161,7 @@ class Engine:
             o["status"] = "cancelled"
             o["cancelled_at"] = _now()
             self.store.put_order(o)
-            self.store.audit({"t": _now(), "actor": uid, "action": "cancel_order", "payload": {"id": oid}})
+            self.store.audit({"t": _now(), "actor": uid, "action": "cancel_order", "payload": {"id": oid, "market_id": o["market_id"]}})
             if self.hub:
                 self.hub.publish(o["market_id"], {"type": "book", "book": self.book(o["market_id"])})
         return o
@@ -181,9 +181,9 @@ class Engine:
         return [auction.Order(o["id"], o["user_id"], o["side"], round(o["qty"] - o["filled_qty"], 2), o["limit_price"], o["seq"], o["origin"])
                 for o in self.store.open_orders(mid)]
 
-    def book(self, mid: str) -> dict:
+    def book(self, mid: str, *, market: dict | None = None) -> dict:
         from app import views
-        m = self.store.get_market(mid)
+        m = market if market is not None else self.store.get_market(mid)
         orders = self._treasury_orders(m) + self._user_orders(mid)
         agg: dict[tuple[str, float, str], float] = {}
         for o in orders:
@@ -288,8 +288,11 @@ class Engine:
         while bi < len(buys) and si < len(sells):
             q = round(min(brem[bi], srem[si]), 2)
             if q > 0:
-                self.store.add_trade({"id": _id("tr"), "market_id": mid, "batch_id": batch["id"], "buyer_id": buys[bi].user_id,
-                                      "seller_id": sells[si].user_id, "qty": q, "price": p, "t": batch["t"]})
+                trade = {"id": _id("tr"), "market_id": mid, "batch_id": batch["id"], "buyer_id": buys[bi].user_id,
+                         "seller_id": sells[si].user_id, "qty": q, "price": p, "t": batch["t"]}
+                self.store.add_trade(trade)
+                self.store.audit({"id": "audit_" + trade["id"], "t": batch["t"], "actor": "exchange", "action": "trade",
+                                  "market_id": mid, "payload": dict(trade)})
             brem[bi] = round(brem[bi] - q, 2)
             srem[si] = round(srem[si] - q, 2)
             if brem[bi] <= 0: bi += 1
@@ -324,9 +327,10 @@ class Engine:
         from app import views
         return views.company(c, self.store.get_market(c["id"]))
 
-    def card(self, c: dict) -> dict:
+    def card(self, c: dict, *, market: dict | None = None) -> dict:
         from app import views
-        return views.card(c, self.store.get_market(c["id"]), self.book(c["id"]))
+        m = market if market is not None else self.store.get_market(c["id"])
+        return views.card(c, m, self.book(c["id"], market=m))
 
     def portfolio(self, uid: str) -> dict:
         u = self.user(uid)
