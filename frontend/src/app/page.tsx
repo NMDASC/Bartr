@@ -1,9 +1,11 @@
 import { SearchBar } from "@/components/search/search-bar";
 import { CityShortcuts } from "@/components/search/city-shortcuts";
 import { LandingTape } from "@/components/search/landing-tape";
+import { LandingHeroField } from "@/components/search/landing-hero-field";
 import { LandingMirror } from "@/components/search/landing-mirror";
 import type { Company } from "@contracts/types";
 import exampleCompany from "@contracts/examples/company.json";
+import exampleCards from "@contracts/examples/company-cards.json";
 import { LandingValuationJourney } from "@/components/search/landing-valuation-journey";
 import { Label } from "@/components/ui/label";
 import { LandingTrending, BatchClock } from "@/components/search/landing-trending";
@@ -25,15 +27,22 @@ const examples = ["laundromat in Pittsburgh", "car wash in Waco", "machine shop 
 const TRENDING = ["co_squirrel_hill_wash", "co_sudsy_tulsa", "co_lonestar_wash", "co_mon_valley_auto", "co_three_rivers_hvac"];
 
 export default async function Home() {
-  const [fetched, all] = await Promise.all([getCompany("co_squirrel_hill_wash").catch(() => null), listCompanies().catch(() => [])]);
+  const [fetched, fetchedAll] = await Promise.all([
+    getCompany("co_squirrel_hill_wash").catch(() => null),
+    listCompanies().catch(() => []),
+  ]);
+  // the marketing row is the page's proof of life, so a cold or unreachable API
+  // must not empty it. Same fallback the hero already uses for its valuation.
+  const all = fetchedAll.length ? fetchedAll : (exampleCards as unknown as typeof fetchedAll);
   const picked = TRENDING.map((id) => all.find((c) => c._id === id)).filter((c) => c && c.status === "ready");
   const rows = (picked.length >= 5 ? picked : all.filter((c) => c.status === "ready")).slice(0, 5) as typeof all;
   const hero = fetched?.valuation ? fetched : (exampleCompany as Company);
 
   return (
     <>
-      <section className="bg-background">
-        <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
+      <section className="relative isolate overflow-hidden bg-background">
+        <LandingHeroField />
+        <div className="relative mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 xl:border-l xl:border-r xl:border-line">
           <div className="grid gap-12 pt-20 pb-16 md:pt-28 md:pb-24 xl:grid-cols-[minmax(0,1fr)_380px] xl:gap-16 3xl:grid-cols-[minmax(0,1fr)_440px]">
             <div className="max-w-2xl">
               <Label className="mb-4 block">Discovery engine and exchange</Label>

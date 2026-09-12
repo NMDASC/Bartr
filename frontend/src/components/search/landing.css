@@ -336,6 +336,15 @@
   transition: transform 400ms cubic-bezier(0, 0, 0.2, 1);
 }
 
+/* hero backdrop: one value posterior per hairline, drawn once on arrival.
+   The dash pair lives here rather than inline so prefers-reduced-motion can
+   still win and show the curves fully drawn. */
+.bl-hero-curve {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: bl-draw 1200ms cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+
 /* a stroke that draws itself once in view */
 @keyframes bl-draw {
   to {
@@ -377,7 +386,8 @@
   .bl-hologram-scan,
   .bl-search-orbit,
   .bl-search-scan,
-  .bl-draw {
+  .bl-draw,
+  .bl-hero-curve {
     animation: none !important;
   }
 
@@ -388,7 +398,8 @@
     clip-path: none;
   }
 
-  .bl-draw {
+  .bl-draw,
+  .bl-hero-curve {
     stroke-dashoffset: 0;
   }
 
