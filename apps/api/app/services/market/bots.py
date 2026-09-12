@@ -11,19 +11,17 @@ from app.services.market.engine import Engine
 from app.services.market.kelly import kelly_fraction
 from app.services.market.treasury import SHARES
 
-# Demo markets stay quiet until someone opens the book. That way Bid for
-# acquisition starts at round 1 instead of a tape the bots already ran.
-DEMO_MARKETS = frozenset({"co_squirrel_hill_wash"})
+# Markets stay quiet until someone opens that company's bid page (GET book or
+# the market websocket). Bid for acquisition starts that market at round 1
+# instead of a tape the bots already ran.
 _active: set[str] = set()
 
 
 def held(market_id: str) -> bool:
-    return market_id in DEMO_MARKETS and market_id not in _active
+    return market_id not in _active
 
 
 def activate(engine: Engine, market_id: str) -> None:
-    if market_id not in DEMO_MARKETS:
-        return
     first = market_id not in _active
     _active.add(market_id)
     if not first:
