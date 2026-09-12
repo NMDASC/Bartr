@@ -82,9 +82,6 @@ export function DepthPlate({ book, tick, last }: { book: Book | null; tick: numb
       ) : (
         <div className="h-[150px]" />
       )}
-      <figcaption className="border-t border-accent/30 px-2.5 py-1.5 font-mono text-[10px] text-muted-foreground">
-        argmax over p of min(demand, supply). One price per batch.
-      </figcaption>
     </Plate>
   );
 }

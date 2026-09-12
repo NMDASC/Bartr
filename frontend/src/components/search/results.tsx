@@ -14,7 +14,7 @@ import { cn } from "@/lib/cn";
 type Phase = "idle" | "streaming" | "done";
 
 export function Results({ q }: { q: string }) {
-  const [phase, setPhase] = useState<Phase>("idle");
+  const [phase, setPhase] = useState<Phase>(q ? "streaming" : "idle");
   const [intent, setIntent] = useState<SearchIntent | null>(null);
   const [cards, setCards] = useState<Map<string, CompanyCard>>(new Map());
   const [order, setOrder] = useState<string[]>([]);
@@ -22,11 +22,9 @@ export function Results({ q }: { q: string }) {
   const [band, setBand] = useState("");
   const [sort, setSort] = useState<"conf" | "value" | "name">("conf");
 
+  // page.tsx mounts this with key={q}, so a new query is a fresh component; no reset needed here
   useEffect(() => {
     if (!q) return;
-    setPhase("streaming");
-    setCards(new Map());
-    setOrder([]);
     const stop = streamSearch(q, (e) => {
       if (e.type === "intent") setIntent(e.intent);
       if (e.type === "company_stub" || e.type === "company_ready") {
@@ -64,7 +62,7 @@ export function Results({ q }: { q: string }) {
   const readyCount = rows.filter((c) => c.status === "ready").length;
 
   if (!q) {
-    return <p className="pb-20 text-[16px] secondary">Describe a business. Category and a place is enough.</p>;
+    return null;
   }
 
   return (

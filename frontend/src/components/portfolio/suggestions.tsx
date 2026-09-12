@@ -26,13 +26,7 @@ export function Suggestions({ initial, bankroll }: { initial: Suggestion[]; bank
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-        <div>
-          <Label className="mb-2 block">Suggested stakes</Label>
-          <h2 className="text-[30px] md:text-[32px] leading-[1.2]">Sized by Kelly, matched by profile.</h2>
-          <p className="mt-subhead text-[16px] secondary max-w-xl">
-            f = clamp(k · ln(value / price) / σ², 0, 20%). Edge is the log gap between model value and the last clearing price.
-          </p>
-        </div>
+        <h2 className="text-[30px] md:text-[32px] leading-[1.2]">Suggested stakes</h2>
         <label className="flex items-center gap-3">
           <Label tracking="tight">Kelly multiplier</Label>
           <input type="range" min={0.25} max={1} step={0.05} value={mult} onChange={(e) => setMult(Number(e.target.value))} className="w-40 accent-[#755cfe]" />
@@ -71,9 +65,9 @@ export function Suggestions({ initial, bankroll }: { initial: Suggestion[]; bank
           </li>
         ))}
       </ul>
-      <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
-        Sum capped at 80% of cash{scale < 1 ? ` · scaled ×${scale.toFixed(2)}` : ""}. Diagonal covariance, thin markets.
-      </p>
+      {scale < 1 ? (
+        <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">scaled ×{scale.toFixed(2)}</p>
+      ) : null}
     </div>
   );
 }
