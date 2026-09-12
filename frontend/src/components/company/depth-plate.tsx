@@ -5,7 +5,7 @@ import type { Book } from "@contracts/types";
 import { Plate } from "@/components/ui/plate";
 
 /**
- * BTR. 1.1  The auction as a picture. demand(p) = buy qty with limit >= p, supply(p) = sell qty
+ * The auction as a picture. demand(p) = buy qty with limit >= p, supply(p) = sell qty
  * with limit <= p. The clearing price is where min(demand, supply) is largest. Both curves are
  * computed from the live book, so this is evidence, not ornament.
  */
@@ -60,7 +60,7 @@ export function DepthPlate({ book, tick, last }: { book: Book | null; tick: numb
   const caption = geo ? `${geo.star.p.toFixed(2)} · ${geo.star.v} sh` : "";
 
   return (
-    <Plate id="BTR. 1.1" caption={caption} className="h-full">
+    <Plate id="This round" caption={caption} className="h-full">
       {geo ? (
         <svg key={tick} viewBox={`0 0 ${geo.W} ${geo.H}`} className="block w-full h-auto" role="img" aria-label={`Demand and supply curves; clearing price ${geo.star.p.toFixed(2)} at volume ${geo.star.v}`}>
           {/* axis */}
