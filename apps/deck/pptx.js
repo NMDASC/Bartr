@@ -4,7 +4,7 @@ const pptxgen = require('pptxgenjs');
 const path = require('path');
 const NOTES = [
   'The laundromat on Murray Avenue is worth 570,768 dollars, give or take 22 percent. Today you can buy 20 shares of it. That is Bartr.',
-  '36.2 million small businesses. Almost none has a continuously visible price. Want a laundromat in Squirrel Hill? There is no list.',
+  'Who here is from CMU? Who has eaten at Grapow? Ever thought about putting money into it? There is no way to. Thirty-six million small businesses, half of all jobs, and you cannot invest in any of them unless you buy the whole thing. Half are owned by someone over 55. Four out of five that try to sell never find a buyer. Most are profitable. They close because nobody can write a check for the whole thing.',
   'We connect buyers and sellers. Owners get cash for 30 percent and keep the keys. Investors get 20 shares with a price and a way out. Acquirers get the owner s ear and a letter of intent.',
   'Six things, all running: connect buyers and sellers, find businesses, appraise with a range, run the market, keep it fair, watch every trade.',
   'Type laundromat in Pittsburgh. Places, Querit, Grok. Every number keeps the sentence it came from. 53 real businesses priced.',

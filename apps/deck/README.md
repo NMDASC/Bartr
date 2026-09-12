@@ -40,7 +40,7 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 | Time | Slide | Say |
 |---|---|---|
 | 0:00 | 1 Title | "The laundromat on Murray Avenue is worth $570,768, give or take 22 percent. Today you can buy 20 shares of it. That is Bartr." |
-| 0:08 | 2 Problem | "33 million small businesses. Almost none has a price. Want a laundromat in Squirrel Hill? There is no list." |
+| 0:08 | 2 Problem | "Who here is from CMU? Who's eaten at Grapow? Ever thought about putting money into it? There's no way to. Thirty-six million small businesses, half of all jobs, and you can't invest in any of them unless you buy the whole thing. Half are owned by someone over 55, and four out of five that try to sell never find a buyer. Most are profitable. They close because nobody can write a check for the whole thing." |
 | 0:17 | 3 Who it is for | "We connect buyers and sellers. Owners get cash for 30 percent and keep the keys. Investors get 20 shares with a price and a way out. Acquirers get the owner's ear and a letter of intent." |
 | 0:30 | 4 What it does | "Six things, all running: connect buyers and sellers, find businesses, appraise with a range, run the market, keep it fair, watch every trade." |
 | 0:40 | 5 Discover | "Type laundromat in Pittsburgh. Places, Querit, Grok. Every number keeps the sentence it came from. 53 real businesses priced." |
