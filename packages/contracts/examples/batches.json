@@ -1,0 +1,7 @@
+[
+  { "_id": "b_0041", "market_id": "c_tulsa_suds_01", "t": "2026-09-12T03:13:20Z", "clearing_price": 103.10, "volume": 58,  "imbalance":  12, "n_buy": 6, "n_sell": 4 },
+  { "_id": "b_0042", "market_id": "c_tulsa_suds_01", "t": "2026-09-12T03:13:30Z", "clearing_price": 103.55, "volume": 91,  "imbalance": -7,  "n_buy": 8, "n_sell": 9 },
+  { "_id": "b_0043", "market_id": "c_tulsa_suds_01", "t": "2026-09-12T03:13:40Z", "clearing_price": 103.95, "volume": 44,  "imbalance":  31, "n_buy": 9, "n_sell": 3 },
+  { "_id": "b_0044", "market_id": "c_tulsa_suds_01", "t": "2026-09-12T03:13:50Z", "clearing_price": 104.60, "volume": 133, "imbalance":  58, "n_buy": 14, "n_sell": 5 },
+  { "_id": "b_0045", "market_id": "c_tulsa_suds_01", "t": "2026-09-12T03:14:00Z", "clearing_price": 104.18, "volume": 76,  "imbalance": -19, "n_buy": 7, "n_sell": 10 }
+]

@@ -9,3 +9,8 @@ node_modules/
 .next/
 .DS_Store
 apps/api/seeds/cache/
+
+# web
+frontend/.next/
+dist/
+*.log

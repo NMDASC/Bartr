@@ -1,0 +1,36 @@
+[
+  {
+    "_id": "f_0007",
+    "market_id": "c_tulsa_suds_01",
+    "batch_id": "b_0044",
+    "rule": "wash_trading",
+    "severity": "high",
+    "subjects": ["u_bot_17", "u_bot_23"],
+    "explanation": "Accounts u_bot_17 and u_bot_23 traded 240 shares against each other across batches 0042 to 0044 and have no counterparties outside this pair. Volume with no net position change is the signature of wash trading used to manufacture a price print.",
+    "reviewer": "grok",
+    "reviews": [
+      { "reviewer": "rules", "severity": "high" },
+      { "reviewer": "grok", "severity": "high" },
+      { "reviewer": "k2",   "severity": "high" }
+    ],
+    "disputed": false,
+    "t": "2026-09-12T03:13:52Z"
+  },
+  {
+    "_id": "f_0008",
+    "market_id": "c_tulsa_suds_01",
+    "batch_id": "b_0044",
+    "rule": "pump",
+    "severity": "medium",
+    "subjects": ["u_demo_judge3"],
+    "explanation": "Clearing price moved 0.63 percent on a batch where one account supplied 71 percent of buy volume. Consistent with a single large buyer rather than coordinated manipulation, so severity is capped at medium.",
+    "reviewer": "grok",
+    "reviews": [
+      { "reviewer": "rules", "severity": "high" },
+      { "reviewer": "grok", "severity": "medium" },
+      { "reviewer": "k2",   "severity": "high" }
+    ],
+    "disputed": true,
+    "t": "2026-09-12T03:13:53Z"
+  }
+]

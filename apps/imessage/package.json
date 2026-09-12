@@ -1,0 +1,19 @@
+{
+  "name": "jb-imessage",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "JB over iMessage. Text the line, get the same discovery and trading agent the web app uses. Built on Photon Spectrum.",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "TERMINAL_UI=1 bun run src/index.ts",
+    "typecheck": "bun --bun node_modules/typescript/bin/tsc --noEmit"
+  },
+  "dependencies": {
+    "spectrum-ts": "^12.8.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.6.0"
+  }
+}
