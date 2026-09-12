@@ -3,7 +3,7 @@ import { SearchBar } from "@/components/search/search-bar";
 import { CityShortcuts } from "@/components/search/city-shortcuts";
 import { LandingTape } from "@/components/search/landing-tape";
 import { LandingMirror } from "@/components/search/landing-mirror";
-import { LandingTrending } from "@/components/search/landing-trending";
+import { LandingTrending, BatchClock } from "@/components/search/landing-trending";
 import { LandingClearing } from "@/components/search/landing-clearing";
 import { Label } from "@/components/ui/label";
 import { listCompanies } from "@/lib/api";
@@ -43,7 +43,7 @@ export default async function Home() {
         <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-14 md:py-20 xl:border-l xl:border-r xl:border-line">
           <div className="max-w-2xl">
             <Label className="mb-2 block">Coverage</Label>
-            <h2 className="text-[30px] md:text-[32px] leading-[1.2]">The ones you were never going to see.</h2>
+            <h2 className="text-[30px] md:text-[36px] 3xl:text-[44px] leading-[1.2]">The businesses you were never going to see.</h2>
           </div>
           <div className="mt-10">
             <LandingMirror />
@@ -53,17 +53,24 @@ export default async function Home() {
 
       <section className="border-t border-line">
         <div className="mx-auto max-w-7xl 3xl:max-w-8xl px-4 sm:px-6 py-14 xl:border-l xl:border-r xl:border-line">
-          <div className="flex items-end justify-between gap-4 mb-6">
+          <div className="mb-8 flex items-end justify-between gap-4">
             <div>
-              <Label className="mb-2 block">Trending</Label>
-              <h2 className="text-[30px] md:text-[32px] leading-[1.2]">Markets clearing right now.</h2>
+              <Label className="mb-3 block">Trending</Label>
+              {/* Display scale, one step above the other section headings. This is
+                  the page's proof moment, so it is the one heading that carries it. */}
+              <h2 className="text-[40px] md:text-[52px] 3xl:text-[64px] leading-[1.02] tracking-[-0.02em]">
+                Markets clearing right now.
+              </h2>
             </div>
-            <Link
-              href="/search?q=laundromat%20in%20Pittsburgh"
-              className="hidden sm:inline font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground transition-colors duration-150 ease-out hover:text-accent"
-            >
-              All markets
-            </Link>
+            <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
+              <BatchClock />
+              <Link
+                href="/search?q=laundromat%20in%20Pittsburgh"
+                className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground transition-colors duration-150 ease-out hover:text-accent"
+              >
+                All markets
+              </Link>
+            </div>
           </div>
 
           <LandingTrending companies={trending} />

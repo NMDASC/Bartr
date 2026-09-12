@@ -43,6 +43,29 @@ function Spark({ id, up }: { id: string; up: boolean }) {
 type Live = { bid: number; ask: number; last: number; dir: "up" | "down" | null; v: number };
 
 /**
+ * The countdown to the next batch, sat beside the heading, because "right now"
+ * is a claim the page can actually back with a number.
+ */
+export function BatchClock() {
+  const [left, setLeft] = useState(10);
+  useEffect(() => {
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = () => {
+      setLeft(Math.ceil((10_000 - ((performance.now() - t0) % 10_000)) / 1000));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return (
+    <span className="font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums text-muted-foreground">
+      Next batch {String(left).padStart(2, "0")}s
+    </span>
+  );
+}
+
+/**
  * The trending ledger. Prices move on the same ten second cadence as a real
  * market, a row shows its recent path on hover, and the last print keeps the
  * colour of the direction it moved.

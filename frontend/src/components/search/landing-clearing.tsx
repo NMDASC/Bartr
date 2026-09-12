@@ -147,7 +147,7 @@ export function LandingClearing() {
           <div className="grid items-center gap-10 lg:grid-cols-[300px_1fr]">
             <div>
               <Label className="mb-2 block">Clearing</Label>
-              <h2 className="text-[30px] md:text-[32px] leading-[1.2]">One price, every ten seconds.</h2>
+              <h2 className="text-[30px] md:text-[36px] 3xl:text-[44px] leading-[1.2]">One price, every ten seconds.</h2>
 
               <ol className="mt-8 flex flex-col">
                 {steps.map((s, i) => {
