@@ -74,7 +74,7 @@ export function useMarket(id: string, enabled = true): MarketView {
   }, [id, enabled]);
 
   const last = batches.at(-1)?.clearing_price ?? book?.last ?? null;
-  const prev = batches.length >= 2 ? batches[batches.length - 2].clearing_price : null;
+  const prev = batches.length >= 2 ? batches[batches.length - 2].clearing_price ?? null : null;
   const dir = last !== null && prev !== null && last !== prev ? (last > prev ? "up" : "down") : null;
   return { book, batches, last, prev, tick, dir, changed, ready };
 }

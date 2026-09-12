@@ -62,7 +62,11 @@ export function PriceChart({ batches, refPrice, dir }: { batches: Batch[]; refPr
   useEffect(() => {
     const s = series.current;
     if (!s) return;
-    s.setData(batches.map((b) => ({ time: Math.floor(Date.parse(b.t) / 1000) as UTCTimestamp, value: b.clearing_price })));
+    s.setData(
+      batches
+        .filter((b): b is Batch & { clearing_price: number } => b.clearing_price !== null)
+        .map((b) => ({ time: Math.floor(Date.parse(b.t) / 1000) as UTCTimestamp, value: b.clearing_price })),
+    );
     chart.current?.timeScale().fitContent();
 
     // one marker, always on the newest print, so the eye lands on what just happened

@@ -249,7 +249,7 @@ function market(id: string): MarketState {
     subs: new Set(),
     r,
     n: 1000,
-    sumLnP: batches.reduce((a, b) => a + Math.log(b.clearing_price * SHARES), 0),
+    sumLnP: batches.reduce((a, b) => (b.clearing_price === null ? a : a + Math.log(b.clearing_price * SHARES)), 0),
     rounds: batches.length,
     unsold: Math.round(FLOAT * 0.62),
     proceeds: 0,
