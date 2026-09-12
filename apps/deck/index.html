@@ -188,6 +188,11 @@ svg.flow.light .lg { filter: none; }
 #live .qr { right: 140px; bottom: 60px; width: 150px; height: 150px; }
 #live .qr span { font-size: 15px; }
 
+.ft { border: 1px solid rgba(0,0,0,0.14); border-radius: 16px; padding: 26px 28px; background: rgba(0,0,0,0.02); }
+.ft h3 { font-size: 27px; font-weight: 600; margin: 0 0 10px; letter-spacing: -0.015em; display: flex; align-items: center; gap: 12px; }
+.ft h3 i { font-style: normal; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 18px; font-weight: 600; flex: none; }
+.ft p { font-size: 21px; line-height: 1.45; margin: 0; color: var(--ink-2); }
+
 .kcard { position: absolute; right: 140px; top: 190px; width: 760px; border: 1px solid rgba(255,255,255,0.22); border-radius: 18px; padding: 26px 34px; background: rgba(255,255,255,0.035); }
 .kcard .krow { display: flex; justify-content: space-between; align-items: baseline; font-size: 23px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--paper-2); }
 .kcard .krow b { color: var(--paper); font-weight: 600; font-size: 30px; }
@@ -267,16 +272,25 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
 
 <!-- 3 Use case -->
 <section class="slide" data-theme="light" id="s3">
-  <p class="kicker fu">What Bartr is</p>
-  <div style="position:absolute; left:140px; right:140px; top:180px;">
-    <h2 class="hl fu" style="font-size:62px;">Buyer: see what a shop is worth, buy 20 shares of it, or buy all of it.</h2>
-    <h2 class="hl fu" style="font-size:62px; margin-top:18px;">Owner: sell 30% of your shop to the crowd and keep running it.</h2>
-    <p class="sub muted fu" style="margin-top:36px; max-width:1600px; font-size:30px;">Crowdfunding sites raise money for small businesses. BizBuySell sells them whole. Neither one prices a business every day, and neither lets you start with one share and end up with the keys. Bartr does.</p>
-    <div class="cols3" style="margin-top:56px;">
-      <div class="fu"><h3>Discover</h3><p>Type "laundromat in Pittsburgh". Bartr finds the businesses on the web and prices each one, with a range that says how sure we are. An owner can also ask to list.</p></div>
-      <div class="fu"><h3>Exchange</h3><p>Every business is 10,000 shares. The owner sells 3,000 of them. You can buy 20 of the laundromat on Murray Avenue.</p></div>
-      <div class="fu"><h3>Acquire</h3><p>Want the whole thing? Bartr drafts a letter of intent at the last traded price and a Pittsburgh diligence checklist with links to the official forms.</p></div>
-    </div>
+  <p class="kicker fu">Who Bartr is for</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:140px; font-size:76px;">We connect buyers and sellers.</h2>
+  <div class="fu" style="position:absolute; left:140px; top:262px;">
+    <svg class="flow light" data-flow="stake" viewBox="0 0 1640 620" width="1640" height="620"></svg>
+  </div>
+  <p class="legend fu" style="font-size:21px; color:var(--ink); line-height:1.5;">Crowdfunding sites raise money for small businesses. BizBuySell sells them whole. Neither one prices a business every day, and neither lets a buyer start with 20 shares and end up with the keys. Bartr does.</p>
+</section>
+
+<!-- 3b Features -->
+<section class="slide" data-theme="light" id="s3b">
+  <p class="kicker fu">What Bartr does</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:150px; font-size:64px;">Six things, each one built and running.</h2>
+  <div style="position:absolute; left:140px; right:140px; top:290px; display:grid; grid-template-columns: repeat(3, 1fr); gap:26px;">
+    <div class="ft fu"><h3><i>1</i>Connect buyers and sellers</h3><p>Every business we find is on the site before its owner has heard of us. A buyer clicks "make an offer"; Bartr writes the owner a short letter. When the owner accepts, the business lists and 3,000 shares go on sale.</p></div>
+    <div class="ft fu"><h3><i>2</i>Find small businesses</h3><p>Search in plain words, "laundromat in Pittsburgh". Google Places finds them, Querit reads the web, Grok builds a profile where every number keeps the sentence it came from. 53 real Pittsburgh businesses are already priced.</p></div>
+    <div class="ft fu"><h3><i>3</i>Appraise and price with a range</h3><p>Five valuation methods, Grok's research and K2's second opinion, each with its own typical miss, blended into one value and a range. The owner's asks and buyback come straight from that range.</p></div>
+    <div class="ft fu"><h3><i>4</i>Run the market</h3><p>Asks and bids clear in rounds, one price for everyone in the round. Our value updates from what buyers paid and the owner requotes. The portfolio page shows the gap on every business and sizes your stake to your risk level.</p></div>
+    <div class="ft fu"><h3><i>5</i>Keep it fair</h3><p>Price checks, no trading with yourself, size limits, a 10% band, halts after two band hits, proportional fills, an audit log that is never edited. All in the engine, all tested.</p></div>
+    <div class="ft fu"><h3><i>6</i>Watch every trade</h3><p>Rules scan the last 20 rounds of every market for wash trades, spoofing, pumps and concentration. Grok and K2 review each flag separately. Grok also attacks the market as red team so the rules get tested. Admins see it all on one dashboard.</p></div>
   </div>
 </section>
 
@@ -442,27 +456,23 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
 <!-- 12 Agentic security panel -->
 <section class="slide" data-theme="dark" id="s12">
   <p class="kicker fu">Security</p>
-  <p class="kicker right muted fu">The last 20 rounds of every market, checked on every page load</p>
-  <h2 class="hl fu" style="position:absolute; left:140px; top:160px; font-size:68px;">Rules scan every trade. Two models review every flag.</h2>
-  <div class="fu" style="position:absolute; left:140px; top:320px;">
-    <svg class="flow" data-flow="panel" viewBox="0 0 1640 330" width="1640" height="330"></svg>
+  <p class="kicker right muted fu">Three layers. The third one attacks the first two.</p>
+  <h2 class="hl fu" style="position:absolute; left:140px; top:160px; font-size:66px;">Rules catch it. Two models judge it. Grok tries to beat it.</h2>
+  <div class="fu" style="position:absolute; left:140px; top:300px;">
+    <svg class="flow" data-flow="panel" viewBox="0 0 1640 300" width="1640" height="300"></svg>
   </div>
-  <div style="position:absolute; left:140px; right:140px; top:710px; display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; column-gap:44px;">
-    <div class="fu" style="border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
+  <div style="position:absolute; left:140px; right:140px; top:690px; display:grid; grid-template-columns: 1fr 1fr 1fr; column-gap:50px;">
+    <div class="fu" style="border-top:1px solid rgba(255,255,255,0.18); padding-top:18px;">
       <p class="label" style="margin:0;"><span style="color:var(--red); font-weight:600;">&#9679;&nbsp; Flagged</span>&nbsp;&nbsp;wash trading, high</p>
-      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">wash_a and wash_b have traded 9 times and only with each other. The volume looks real but neither one's stake ever changed.</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">Rule: wash_a and wash_b have traded 9 times and only with each other. The volume looks real but neither one's stake ever changed.</p>
     </div>
-    <div class="fu" style="--d:400ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
-      <p class="label" style="margin:0;"><b>Grok</b>&nbsp;&nbsp;explains (example)</p>
-      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">"Alternating sides at the clearing price with no other counterparties. No economic purpose; treat as manipulation."</p>
+    <div class="fu" style="--d:400ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:18px;">
+      <p class="label" style="margin:0;"><b>Grok</b>&nbsp;&nbsp;high &nbsp;·&nbsp; <b>K2</b>&nbsp;&nbsp;high &nbsp;·&nbsp; agree</p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">Grok (example): "Alternating sides at the clearing price with no other counterparties. No economic purpose; treat as manipulation." K2 reached the same severity without seeing it.</p>
     </div>
-    <div class="fu" style="--d:800ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
-      <p class="label" style="margin:0;"><b>K2</b>&nbsp;&nbsp;agrees, high</p>
-      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">Separate call, same evidence, no view of Grok's answer. If the two disagree, the flag is marked disputed and both opinions are shown.</p>
-    </div>
-    <div class="fu" style="--d:1200ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:20px;">
-      <p class="label" style="margin:0;"><b>Red team</b>&nbsp;&nbsp;Grok attacks the market</p>
-      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">Grok plans a wash, a spoof or a pump and runs it through bot accounts. Then we see whether the rules and the reviewers catch it. Every attempt is in the audit log.</p>
+    <div class="fu" style="--d:800ms; border-top:1px solid rgba(255,255,255,0.18); padding-top:18px;">
+      <p class="label" style="margin:0;"><b>What happens next</b></p>
+      <p class="label muted" style="margin-top:10px; font-size:20px; line-height:1.45;">The flag and both reviews go on the admin dashboard and into the audit log. Two rounds in a row at the price band halt a market. Every red team attempt is logged with whether it was caught.</p>
     </div>
   </div>
 </section>
@@ -520,7 +530,7 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
   <p class="small muted fu" style="position:absolute; left:140px; bottom:70px; margin:0;">Nico &nbsp;&nbsp; Vir &nbsp;&nbsp; Aditya &nbsp;&nbsp; Zhiyuan &nbsp;&nbsp;·&nbsp;&nbsp; HackCMU 2026 &nbsp;&nbsp;·&nbsp;&nbsp; Discover, Exchange, Acquire</p>
 </section>
 
-<div id="presenter"><b>0:00</b> &nbsp; <span id="pn">1</span> / 15</div>
+<div id="presenter"><b>0:00</b> &nbsp; <span id="pn">1</span> / 16</div>
 </div>
 
 <script>
@@ -664,6 +674,25 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
     }
   }
   const FLOWS = {
+    stake: {
+      labels: [{ x: 0, y: 20, t: 'Sellers' }, { x: 560, y: 20, t: 'Bartr' }, { x: 1240, y: 20, t: 'Buyers' }],
+      groups: [{ x: 540, y: 40, w: 560, h: 580, t: 'what happens in between' }],
+      nodes: [
+        { id: 'ownb', x: 0, y: 60, w: 400, h: 150, t: 'Businesses not for sale', s: ['found on the web, priced, and shown', 'on the site before the owner has', 'heard of us. A buyer\u2019s offer starts', 'the conversation'] },
+        { id: 'own', x: 0, y: 300, w: 400, h: 200, t: 'The owner', s: ['runs a laundromat, a car wash, a shop.', 'Wants some cash out without a bank', 'and without selling the whole thing.', '', 'Gets: a letter from a real buyer, 3,000', 'shares sold in five lots, keeps 7,000'] },
+        { id: 'd', x: 560, y: 80, w: 520, h: 92, t: '1  Find and price it', s: ['Places, Querit, Grok, five valuation', 'methods, a range not a number'], glyph: 'ticket' },
+        { id: 'o', x: 560, y: 188, w: 520, h: 92, t: '2  Offer, then list', s: ['a buyer makes an offer, Bartr writes the', 'owner; accept, and 30% goes on sale'], glyph: 'book' },
+        { id: 't', x: 560, y: 296, w: 520, h: 92, t: '3  Trade in rounds', s: ['one price per round, our value updates,', 'the owner requotes'], glyph: 'line', acc: true },
+        { id: 'k', x: 560, y: 404, w: 520, h: 92, t: '4  Size the stake', s: ['the gap between our value and the price,', 'Kelly, your risk slider'], glyph: 'gauge' },
+        { id: 'w', x: 560, y: 512, w: 520, h: 92, t: '5  Watch and protect', s: ['fairness rules, two model review,', 'Grok red team, halts, audit log'], glyph: 'shield' },
+        { id: 'acq', x: 1240, y: 60, w: 400, h: 150, t: 'The acquirer', s: ['wants the whole company.', '', 'Gets: an offer letter to the owner, then a', 'letter of intent and a diligence checklist'] },
+        { id: 'inv', x: 1240, y: 300, w: 400, h: 200, t: 'The investor', s: ['wants to own a piece of the shops', 'around them, priced honestly, with', 'a way out.', '', 'Gets: 20 shares of a laundromat, the', 'gap shown, a stake sized to their risk'] },
+      ],
+      edges: [
+        { a: 'ownb', b: 'd', l: 'discovered', ly: -8 }, { a: 'o', b: 'own', l: 'letter, then 3,000 shares', ly: 22, lx: -10 },
+        { a: 'acq', b: 'o', l: 'offer', ly: 22, lx: 10 }, { a: 'inv', b: 't', l: 'bids in, shares out', ly: -8, both: true },
+      ],
+    },
     discover: {
       nodes: [
         { id: 'q', x: 0, y: 0, w: 500, h: 84, t: '"laundromat in Pittsburgh"', s: 'We read the query: what kind of business, which city', acc: true },
@@ -690,15 +719,17 @@ html.print #bgL, html.print #bgD, html.print #presenter { display: none; }
       edges: [{ a: 'o', b: 'c' }, { a: 'c', b: 'st' }, { a: 'st', b: 'l' }, { a: 'l', b: 'b' }, { a: 'b', b: 'a' }, { a: 'a', b: 'u', acc: true }, { a: 'u', b: 'bd', acc: true }, { a: 'bd', b: 'r' }, { a: 'r', b: 'au' }],
     },
     panel: {
+      labels: [{ x: 0, y: 20, t: 'Layer 1: rules, deterministic' }, { x: 640, y: 20, t: 'Layer 2: two models, separately' }, { x: 1280, y: 20, t: 'Layer 3: attack it' }],
       nodes: [
-        { id: 't', x: 0, y: 100, w: 260, h: 110, t: 'Round tape', s: ['every order, fill, cancel', 'and book snapshot'], glyph: 'ledger' },
-        { id: 'r', x: 320, y: 100, w: 300, h: 110, t: 'Rules', s: ['wash trades, spoofing, pumps, one', 'account holding too much, band hits'], glyph: 'shield' },
-        { id: 'g', x: 690, y: 0, w: 300, h: 110, t: 'Grok  (xAI)', s: ['reads the flag and says in plain', 'words whether it is real'] },
-        { id: 'k', x: 690, y: 200, w: 300, h: 110, t: 'K2  (IFM)', s: ['a second model, same flag,', 'never sees Grok\u2019s answer'] },
-        { id: 'v', x: 1060, y: 100, w: 260, h: 110, t: 'Verdict', s: ['both agree, or disputed', 'with both opinions shown'] },
-        { id: 'a', x: 1380, y: 100, w: 260, h: 110, t: 'Feed', s: ['the flag and both reviews go', 'on the surveillance page'], acc: true },
+        { id: 't', x: 0, y: 116, w: 280, h: 110, t: 'Last 20 rounds', s: ['every order, fill, cancel', 'and book snapshot'], glyph: 'ledger' },
+        { id: 'r', x: 320, y: 116, w: 280, h: 110, t: 'Five rules', s: ['wash trades, spoofing, pumps,', 'concentration, band hits'], glyph: 'shield' },
+        { id: 'g', x: 640, y: 56, w: 280, h: 96, t: 'Grok reads the flag', s: ['says in plain words whether', 'it is real, and how severe'] },
+        { id: 'k', x: 640, y: 190, w: 280, h: 96, t: 'K2 reads the same flag', s: ['a different model, a separate', 'call, never sees Grok\u2019s answer'] },
+        { id: 'v', x: 960, y: 116, w: 280, h: 110, t: 'Verdict on the page', s: ['agree: one severity. Disagree:', 'marked disputed, both shown'], acc: true },
+        { id: 'rt', x: 1280, y: 56, w: 360, h: 96, t: 'Grok as red team', s: ['plans a wash, a spoof or a pump,', 'runs it through bot accounts'], warn: true },
+        { id: 'mk', x: 1280, y: 190, w: 360, h: 96, t: 'The live market', s: ['the attack lands in real rounds;', 'layers 1 and 2 have to catch it'] },
       ],
-      edges: [{ a: 't', b: 'r' }, { a: 'r', b: 'g' }, { a: 'r', b: 'k' }, { a: 'g', b: 'v' }, { a: 'k', b: 'v' }, { a: 'v', b: 'a', acc: true }],
+      edges: [{ a: 't', b: 'r' }, { a: 'r', b: 'g', l: 'flag', ly: -6 }, { a: 'r', b: 'k' }, { a: 'g', b: 'v' }, { a: 'k', b: 'v' }, { a: 'rt', b: 'mk', l: 'attacks', lx: 60, ly: 4 }],
     },
     appraise: {
       nodes: [
