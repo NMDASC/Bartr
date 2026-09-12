@@ -1,28 +1,37 @@
-# JB demo deck
+# Bartr demo deck
 
 `index.html` is the deck. Single file, no build step. Open it in Chrome.
 
 ## Present
 
 1. `open apps/deck/index.html` in Chrome, press `F` for full screen.
-2. Keys: `→` `space` next (reveals the second beat on slide 2 first), `←` back, `Home` `End`, `P` presenter clock (starts when you leave slide 1, turns white at 2:50), `R` replays the auction on slide 7, `Esc` leaves full screen. Clicking the right two thirds of the screen also advances.
-3. `#7` in the URL jumps to a slide. The deck scales to any 16:9 or 16:10 window (tested 1920x1080 and 1440x900).
-4. Slide 7 plays on its own when you land on it: bids arrive during the countdown, then the curves draw, the clearing price snaps in and the fills flash. About 7 seconds. It is the real algorithm from slide 6 running in JS on a real book (owner ladder and floor from `scripts/demo_pricing.py`, round 2).
-5. If Chrome dies, `JB.pdf` has the same 12 slides at their final state. `JB.pptx` is the same as images with the talk track in the notes.
+2. Keys: `→` `space` next (reveals the second beat on slide 2 first), `←` back, `Home` `End`, `P` presenter clock (starts when you leave slide 1, turns white at 2:50), `R` replays the marketplace on slide 8, `Esc` leaves full screen. Clicking the right two thirds of the screen also advances.
+3. `#8` in the URL jumps to a slide. The deck scales to any window (tested 1920x1080 and 1440x900).
+4. Slide 8 plays on its own when you land on it: traders quote from their cards, each quote flies into the book, the countdown hits zero, demand and supply draw, the clearing price snaps in, fills flash and the buyers light up. About 9 seconds. It runs the real clearing rule from slide 7 on a real book (owner ladder and floor from `scripts/demo_pricing.py`, round 2).
+5. If Chrome dies, `Bartr.pdf` has the same 14 slides at their final state. `Bartr.pptx` is the same as images with the talk track in the notes.
 
 Fonts: SF Pro on a Mac, Inter from Google Fonts otherwise. KaTeX loads from cdnjs. Both need network once; after that Chrome caches them. Open the deck once on the venue wifi before we go up.
 
-## Screenshots (drop in at 1 PM Saturday)
+## Screenshots
 
-Each placeholder is a 1440x900 frame with a `<!-- SCREENSHOT: route -->` comment above it. Save a 1440x900 PNG (or any 16:10 capture) into `assets/` with the exact name and it appears in the frame with no other change:
+Real captures of the frontend live in `assets/` (1440x900, taken from `next start` against the local API with seeds and bots). To refresh them:
 
-| Slide | File | Route | What to show |
-|---|---|---|---|
-| 3 | `assets/search.png` | `/search?q=laundromat+in+pittsburgh` | results streaming in: Squirrel Hill Wash and Fold, Butler Street Laundromat, Bloomfield Coin Laundry |
-| 4 | `assets/company.png` | `/company/co_squirrel_hill_wash` | profile, sources, the five estimators, valuation range bar |
-| 8 | `assets/portfolio.png` | `/portfolio` | four Kelly sized suggestions |
-| 9 | `assets/acquire.png` | `/company/co_squirrel_hill_wash/acquire` | LOI draft and the Pittsburgh checklist with citations |
-| 7, 12 | `assets/qr.png` | live site | square QR, any size |
+```
+cd apps/api && SEED=1 BOTS=1 .venv/bin/uvicorn app.main:app --port 8000
+cd frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 npx next build && NEXT_PUBLIC_API_URL=http://localhost:8000 npx next start -p 3005
+CH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+"$CH" --headless=new --hide-scrollbars --window-size=1440,900 --virtual-time-budget=20000 --screenshot=apps/deck/assets/search.png "http://localhost:3005/search?q=laundromat+in+pittsburgh"
+```
+
+| Slide | File | Route |
+|---|---|---|
+| 4 | `assets/search.png` | `/search?q=laundromat+in+pittsburgh` |
+| 5 | `assets/company.png` | `/company/co_squirrel_hill_wash` |
+| 10 | `assets/portfolio.png` | `/portfolio` (the portfolio page is server rendered as user `server`; seed positions for that user first, and push a few markets below model value so Suggested stakes is not empty) |
+| 11 | `assets/acquire.png` | `/company/co_squirrel_hill_wash/acquire` |
+| 8, 14 | `assets/qr.png` | QR of the live site, still a placeholder |
+
+Sponsor logos are in `assets/logos/` (simple-icons, CC0). No xAI, IFM or Querit mark exists there, so those are wordmarks.
 
 Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 
@@ -30,23 +39,25 @@ Then rerun `./apps/deck/export.sh` to refresh the PDF and pptx.
 
 | Time | Slide | Say |
 |---|---|---|
-| 0:00 | 1 Title | "JB. A stock market for the businesses that will never be listed." |
-| 0:05 | 2 Problem | "33 million small businesses in the US. None of them has a price." Beat. "If you wanted to buy a laundromat in Squirrel Hill tonight, you could not even find the list." |
-| 0:20 | 3 Discover | "Type laundromat in Pittsburgh. Places finds the businesses, Querit reads the web about each one, Grok extracts a profile with cited sources. Results stream in with a bid, an ask and a confidence." |
-| 0:40 | 4 One company | "Squirrel Hill Wash and Fold. Sources, five independent estimators, and a range, not a number: 475 to 686 thousand." |
-| 0:55 | 5 Pricing | "Each estimator is a belief about log value with its own uncertainty. Precision weighted, inflated when they disagree, calibrated on real listings with the price hidden. The owner's floor and ask ladder are quantiles of the same posterior." |
-| 1:15 | 6 Clearing | "Every ten seconds we run a uniform price auction and clear at the volume maximizing price. One price, no speed advantage, pro rata rationing, a price band, and the valuation updates from every round. The platform never trades." |
-| 1:30 | 7 Live | "Scan the QR and bid." Let the batch clear. "Bids came in, countdown hit zero, demand met supply at 60.76, everyone trades at that price, the owner sold from the ladder." |
-| 1:55 | 8 Portfolio | "Given your profile, four stakes sized by half Kelly on the gap between model value and market price." |
-| 2:10 | 9 Acquire | "From a share to the whole company. A drafted LOI and a Pittsburgh specific diligence checklist: city registration, Allegheny County Health Department, PA bulk sale clearance. Every item cited." |
-| 2:30 | 10 Surveillance | "Every round, two model families read the tape. A planted wash trade: Grok flags it, K2 concurs. Independent review, immutable audit log." |
-| 2:45 | 11 Stack | "Grok, IFM K2, Querit, MongoDB Atlas Vector Search, Auth0, Vultr, Vercel. Next.js and FastAPI, built in Cursor. Track: Optimization." |
-| 2:55 | 12 Close | "JB. Price everything." |
+| 0:00 | 1 Title | "Bartr. Discover, exchange, acquire. The first stock market for the businesses that will never be listed." |
+| 0:06 | 2 Problem | "33 million small businesses. None of them has a price." Beat. "If you wanted to buy a laundromat in Squirrel Hill tonight, you could not even find the list." |
+| 0:18 | 3 What Bartr is | "One place to find a small business, own a piece of it, and buy the whole thing. Nobody has built that exchange before." |
+| 0:30 | 4 Discover | "Type laundromat in Pittsburgh. Places finds them, Querit reads the web, Grok extracts a cited profile, the ensemble prices it with a range." |
+| 0:45 | 5 One company | "Squirrel Hill Wash and Fold. 571 thousand, 475 to 686. Live book, countdown, order ticket." |
+| 0:55 | 6 Pricing | "Every piece of evidence is its own estimate with its own uncertainty. Precision weighted, wider when they disagree, calibrated on real listings." |
+| 1:08 | 7 Market | "The owner is the other side. An ask ladder for 30 percent at P55 to P80, a buyback floor at P20. Every ten seconds, one price for everyone. The platform never trades." |
+| 1:22 | 8 Live | "Scan the QR and bid." Let it clear. "One price for all four buyers, the owner sold from the ladder." |
+| 1:45 | 9 Anti arbitrage | "Fair by construction. Clamp, self trade check, limits, one uniform price, a ten percent band, pro rata fills, audit log. Speed buys nothing." |
+| 1:58 | 10 Portfolio | "Built for you to make money. Edge on every suggestion, your own Kelly dial, always an exit at the floor. We are never your counterparty." |
+| 2:12 | 11 Acquire | "From a share to the whole company. LOI and a Pittsburgh checklist, every item cited." |
+| 2:24 | 12 Security | "Every trade is reviewed by a panel of AI agents. Rules, Grok, K2. The planted wash trade gets flagged, explained, frozen." |
+| 2:38 | 13 Stack | "Next.js on Vercel, FastAPI on Vultr, Atlas Vector Search, Auth0, Places, Querit, Grok, K2. Built in Cursor. Track: Optimization." |
+| 2:52 | 14 Close | "Bartr. Discover. Exchange. Acquire." |
 
 ## Files
 
 - `index.html` the deck
-- `JB.pdf` fallback, 12 pages, 16:9
-- `JB.pptx` fallback, slide images with notes
+- `Bartr.pdf` fallback, 14 pages, 16:9
+- `Bartr.pptx` fallback, slide images with notes
 - `export.sh` regenerates both with headless Chrome (`pptx.js` builds the pptx, needs node)
-- `assets/` screenshots and QR go here
+- `assets/` screenshots, logos, QR
