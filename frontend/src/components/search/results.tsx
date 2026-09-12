@@ -66,7 +66,7 @@ export function Results({ q }: { q: string }) {
           {intent ? (
             <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-[11px] text-muted-foreground">
               <dt className="uppercase tracking-[0.08em]">cat</dt>
-              <dd className="text-foreground">{intent.category}</dd>
+              <dd className="text-foreground">{intent.category === "default" ? "any" : intent.category.replace(/_/g, " ")}</dd>
               <dt className="uppercase tracking-[0.08em]">naics</dt>
               <dd className="text-foreground">{intent.naics_guess ?? "\u2014"}</dd>
               <dt className="uppercase tracking-[0.08em]">state</dt>
@@ -133,8 +133,25 @@ export function Results({ q }: { q: string }) {
         ) : null}
 
         {error ? <p role="alert" className="py-4 text-down">{error}</p> : null}
-        {warnings.length ? <ul className="py-3 text-[13px] secondary">{warnings.map(w => <li key={w}>{w}</li>)}</ul> : null}
-        {phase === "error" || phase === "partial" ? <Button size="sm" className="mb-4" onClick={() => { dispatch({ type: "reset" }); setAttempt(a => a + 1); }}>Retry search</Button> : null}
+        {warnings.length && rows.length === 0 ? (
+          <ul className="py-3 text-[13px] secondary">
+            {warnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        ) : null}
+        {(phase === "error" || phase === "partial") && rows.length === 0 ? (
+          <Button
+            size="sm"
+            className="mb-4"
+            onClick={() => {
+              dispatch({ type: "reset" });
+              setAttempt((a) => a + 1);
+            }}
+          >
+            Retry search
+          </Button>
+        ) : null}
         {(phase === "done" || phase === "partial") && rows.length === 0 ? <p className="py-4 secondary">{phase === "partial" ? "No saved matches." : "No matching companies."}</p> : null}
 
         <div className="hidden md:grid grid-cols-[1fr_110px_88px_88px_88px_120px] gap-4 px-3 pb-2 border-b border-line">
